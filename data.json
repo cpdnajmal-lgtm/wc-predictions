@@ -1,0 +1,390 @@
+{
+  "matches": [
+    {
+      "id": "match_1",
+      "team_a": "Mexico",
+      "team_b": "South Africa",
+      "date": "June 11",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_2",
+      "team_a": "South Korea",
+      "team_b": "Czech Republic",
+      "date": "June 11",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_3",
+      "team_a": "Canada",
+      "team_b": "Bosnia & Herzegovina",
+      "date": "June 12",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_4",
+      "team_a": "USA",
+      "team_b": "Paraguay",
+      "date": "June 12",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_5",
+      "team_a": "Qatar",
+      "team_b": "Switzerland",
+      "date": "June 13",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_6",
+      "team_a": "Brazil",
+      "team_b": "Morocco",
+      "date": "June 13",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_7",
+      "team_a": "Haiti",
+      "team_b": "Scotland",
+      "date": "June 13",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_8",
+      "team_a": "Australia",
+      "team_b": "Turkey",
+      "date": "June 13",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_9",
+      "team_a": "Germany",
+      "team_b": "Curacao",
+      "date": "June 14",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_10",
+      "team_a": "Ivory Coast",
+      "team_b": "Ecuador",
+      "date": "June 14",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_11",
+      "team_a": "Netherlands",
+      "team_b": "Japan",
+      "date": "June 14",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_12",
+      "team_a": "Sweden",
+      "team_b": "Tunisia",
+      "date": "June 14",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_13",
+      "team_a": "Belgium",
+      "team_b": "Egypt",
+      "date": "June 15",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_14",
+      "team_a": "Iran",
+      "team_b": "New Zealand",
+      "date": "June 15",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_15",
+      "team_a": "Spain",
+      "team_b": "Cape Verde",
+      "date": "June 15",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_16",
+      "team_a": "Saudi Arabia",
+      "team_b": "Uruguay",
+      "date": "June 15",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_17",
+      "team_a": "France",
+      "team_b": "Senegal",
+      "date": "June 16",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_18",
+      "team_a": "Iraq",
+      "team_b": "Norway",
+      "date": "June 16",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_19",
+      "team_a": "Argentina",
+      "team_b": "Algeria",
+      "date": "June 16",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_20",
+      "team_a": "Austria",
+      "team_b": "Jordan",
+      "date": "June 16",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_21",
+      "team_a": "Portugal",
+      "team_b": "DR Congo",
+      "date": "June 17",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_22",
+      "team_a": "Uzbekistan",
+      "team_b": "Colombia",
+      "date": "June 17",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_23",
+      "team_a": "England",
+      "team_b": "Croatia",
+      "date": "June 17",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_24",
+      "team_a": "Ghana",
+      "team_b": "Panama",
+      "date": "June 17",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_25",
+      "team_a": "Czech Republic",
+      "team_b": "South Africa",
+      "date": "June 18",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_26",
+      "team_a": "Mexico",
+      "team_b": "South Korea",
+      "date": "June 18",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_27",
+      "team_a": "Switzerland",
+      "team_b": "Bosnia & Herzegovina",
+      "date": "June 18",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_28",
+      "team_a": "Canada",
+      "team_b": "Qatar",
+      "date": "June 18",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_29",
+      "team_a": "Scotland",
+      "team_b": "Morocco",
+      "date": "June 19",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_30",
+      "team_a": "Brazil",
+      "team_b": "Haiti",
+      "date": "June 19",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_31",
+      "team_a": "USA",
+      "team_b": "Australia",
+      "date": "June 19",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_32",
+      "team_a": "Turkey",
+      "team_b": "Paraguay",
+      "date": "June 19",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_33",
+      "team_a": "Germany",
+      "team_b": "Ivory Coast",
+      "date": "June 20",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_34",
+      "team_a": "Ecuador",
+      "team_b": "Curacao",
+      "date": "June 20",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_35",
+      "team_a": "Netherlands",
+      "team_b": "Sweden",
+      "date": "June 20",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_36",
+      "team_a": "Tunisia",
+      "team_b": "Japan",
+      "date": "June 20",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_37",
+      "team_a": "Belgium",
+      "team_b": "Iran",
+      "date": "June 21",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_38",
+      "team_a": "New Zealand",
+      "team_b": "Egypt",
+      "date": "June 21",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_39",
+      "team_a": "Spain",
+      "team_b": "Saudi Arabia",
+      "date": "June 21",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_40",
+      "team_a": "Uruguay",
+      "team_b": "Cape Verde",
+      "date": "June 21",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_41",
+      "team_a": "France",
+      "team_b": "Iraq",
+      "date": "June 22",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_42",
+      "team_a": "Norway",
+      "team_b": "Senegal",
+      "date": "June 22",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_43",
+      "team_a": "Argentina",
+      "team_b": "Austria",
+      "date": "June 22",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_44",
+      "team_a": "Jordan",
+      "team_b": "Algeria",
+      "date": "June 22",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_45",
+      "team_a": "Portugal",
+      "team_b": "Uzbekistan",
+      "date": "June 23",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_46",
+      "team_a": "Colombia",
+      "team_b": "DR Congo",
+      "date": "June 23",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_47",
+      "team_a": "England",
+      "team_b": "Ghana",
+      "date": "June 23",
+      "result_winner": "",
+      "result_scorer": ""
+    },
+    {
+      "id": "match_48",
+      "team_a": "Panama",
+      "team_b": "Croatia",
+      "date": "June 23",
+      "result_winner": "",
+      "result_scorer": ""
+    }
+  ],
+  "predictions": {},
+  "players": []
+}

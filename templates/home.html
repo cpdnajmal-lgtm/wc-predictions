@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚽ MIAC WC 2026 Predictions</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0f0f23 100%); color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        h1 { text-align: center; margin-bottom: 3px; font-size: 1.8em; background: linear-gradient(135deg, #00d4aa, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { margin: 25px 0 12px; color: #00d4aa; font-size: 1em; text-transform: uppercase; letter-spacing: 2px; }
+        .subtitle { text-align: center; color: #555; margin-bottom: 20px; font-size: 0.85em; letter-spacing: 1px; }
+        .nav { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .nav a { background: linear-gradient(135deg, #00d4aa, #00a88a); color: #0f0f23; padding: 12px 28px; border-radius: 25px; text-decoration: none; font-weight: 700; font-size: 0.95em; box-shadow: 0 4px 15px rgba(0,212,170,0.3); }
+        .nav a:hover { transform: scale(1.05); }
+        .nav .admin-btn { background: #2a2a5e; color: #888; box-shadow: none; padding: 12px 16px; }
+        .flash { background: linear-gradient(135deg, #00d4aa, #00a88a); color: #0f0f23; padding: 12px 15px; border-radius: 10px; margin-bottom: 15px; font-weight: 600; text-align: center; box-shadow: 0 4px 15px rgba(0,212,170,0.2); }
+        .scoring { background: rgba(26,26,62,0.8); border-radius: 12px; padding: 12px; margin-bottom: 20px; font-size: 0.82em; text-align: center; border: 1px solid #2a2a5e; backdrop-filter: blur(10px); }
+        .scoring span { color: #00d4aa; font-weight: 700; }
+
+        /* Leaderboard */
+        .leaderboard { margin-bottom: 20px; }
+        .lb-item { display: flex; align-items: center; padding: 6px 12px; margin-bottom: 3px; border-radius: 8px; background: rgba(26,26,62,0.6); border: 1px solid #2a2a5e; }
+        .lb-item.top-1 { background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05)); border-color: #ffd700; }
+        .lb-item.top-2 { background: linear-gradient(135deg, rgba(192,192,192,0.15), rgba(192,192,192,0.05)); border-color: #c0c0c0; }
+        .lb-item.top-3 { background: linear-gradient(135deg, rgba(205,127,50,0.15), rgba(205,127,50,0.05)); border-color: #cd7f32; }
+        .lb-rank { width: 28px; font-size: 0.9em; font-weight: 800; }
+        .lb-rank.r1 { color: #ffd700; }
+        .lb-rank.r2 { color: #c0c0c0; }
+        .lb-rank.r3 { color: #cd7f32; }
+        .lb-rank.r-other { color: #555; font-size: 0.85em; }
+        .lb-name { flex: 1; font-weight: 600; font-size: 0.85em; }
+        .lb-points { font-size: 1em; font-weight: 800; color: #00d4aa; }
+        .lb-pts-label { font-size: 0.5em; color: #666; font-weight: 400; margin-left: 2px; }
+
+        /* Match cards */
+        .match-card { background: rgba(26,26,62,0.6); border-radius: 14px; padding: 16px; margin-bottom: 12px; border: 1px solid #2a2a5e; backdrop-filter: blur(10px); }
+        .match-teams { font-size: 1.05em; font-weight: 700; text-align: center; }
+        .match-date { color: #555; font-size: 0.8em; text-align: center; margin-top: 4px; }
+        .match-result { color: #00d4aa; font-size: 0.9em; text-align: center; margin-top: 6px; font-weight: 600; }
+        .predictions-grid { margin-top: 10px; border-top: 1px solid #2a2a4e; padding-top: 8px; }
+        .pred-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.85em; }
+        .pred-name { color: #888; }
+        .pred-pick { color: #eee; font-weight: 600; }
+        .empty { color: #444; text-align: center; padding: 25px; font-size: 0.9em; }
+        .kickoff-time { color: #00d4aa; font-size: 0.75em; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <h1>⚽ MIAC WC 2026</h1>
+    <p class="subtitle">PREDICTION CONTEST</p>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="nav">
+        <a href="{{ url_for('predict') }}">🎯 Predict Now</a>
+        <a href="{{ url_for('stats') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📊 Stats</a>
+        <a href="{{ url_for('set_fav_team') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">🏳️ My Team</a>
+        <a href="{{ url_for('admin') }}" class="admin-btn">⚙️</a>
+    </div>
+
+    <div class="scoring">
+        Winner correct = <span>1 pt</span> &nbsp;•&nbsp; Score correct = <span>1 pt</span> &nbsp;•&nbsp; Both correct = <span>3 pts 🔥</span>
+    </div>
+
+    {% if prediction_king %}
+    <div style="text-align:center; background:linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05)); border:1px solid #ffd700; border-radius:12px; padding:12px; margin-bottom:20px;">
+        <div style="font-size:1.5em;">👑</div>
+        <div style="color:#ffd700; font-weight:700; font-size:0.95em;">Prediction King of the Day</div>
+        <div style="color:#eee; font-weight:800; font-size:1.1em; margin-top:4px;">{{ prediction_king.names|join(', ') }}</div>
+        <div style="color:#00d4aa; font-size:0.85em; margin-top:2px;">+{{ prediction_king.points }} pts 🔥</div>
+    </div>
+    {% endif %}
+
+    {% if locked_matches %}
+    <h2>🔴 Live / Started</h2>
+    {% for match in locked_matches %}
+    <div class="match-card" style="border-color:#e74c3c;">
+        <div class="match-teams">{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
+        <div class="match-date">{{ match.date }} &nbsp;•&nbsp; <span style="color:#e74c3c; font-size:0.75em; font-weight:600;">🔒 LOCKED</span></div>
+        {% if all_predictions.get(match.id) %}
+        <div style="color:#666; font-size:0.75em; text-align:center; margin-top:6px;">{{ all_predictions[match.id]|length }} predictions</div>
+        <div class="predictions-grid">
+            {% for player, pred in all_predictions[match.id].items() %}
+            <div class="pred-row">
+                <span class="pred-name">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</span>
+                <span class="pred-pick">{{ pred.winner }} ({{ pred.scorer }})</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <h2>📅 Today's Matches</h2>
+    {% if today_matches or locked_matches %}
+    <a href="{{ url_for('stats') }}" style="display:block; text-align:center; background:rgba(0,212,170,0.1); border:1px solid #00d4aa; border-radius:10px; padding:8px; margin-bottom:15px; font-size:0.85em; text-decoration:none; color:inherit;">
+        🎯 <strong style="color:#00d4aa;">{{ today_predicted }}/{{ total_players }}</strong> predicted today ({{ (today_predicted * 100 / total_players)|int if total_players > 0 else 0 }}%)
+        {% if yesterday_predicted > 0 %}
+        <span style="color:#666;"> • Yesterday: {{ yesterday_predicted }} ({{ (yesterday_predicted * 100 / total_players)|int }}%)</span>
+        {% if today_predicted > yesterday_predicted %} 📈{% elif today_predicted < yesterday_predicted %} 📉{% endif %}
+        {% endif %}
+        <span style="color:#00d4aa; font-size:0.8em; display:block; margin-top:4px;">Tap for full stats & graphs →</span>
+    </a>
+    {% if not_predicted %}
+    <div style="text-align:center; background:rgba(231,76,60,0.1); border:1px solid rgba(231,76,60,0.3); border-radius:10px; padding:8px; margin-bottom:15px; font-size:0.75em; color:#e74c3c;">
+        ⚠️ Not predicted yet: {{ not_predicted|join(', ') }}
+    </div>
+    {% endif %}
+    {% endif %}
+    {% if today_matches %}
+    {% for match in today_matches %}
+    <div class="match-card">
+        <div class="match-teams">{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
+        <div class="match-date">{{ match.date }} &nbsp;•&nbsp; <span class="kickoff-time">{{ format_time(match.kickoff) }} IST</span></div>
+        <div class="countdown" data-day="{{ match.date.replace('June ', '') }}" data-time="{{ match.kickoff }}" style="color:#e74c3c; font-size:0.75em; text-align:center; margin-top:3px; font-weight:600;"></div>
+        {% if all_predictions.get(match.id) %}
+        {% set preds_list = all_predictions[match.id].values()|list %}
+        {% set total_preds = preds_list|length %}
+        {% set team_a_count = preds_list|selectattr('winner', 'equalto', match.team_a)|list|length %}
+        {% set team_b_count = preds_list|selectattr('winner', 'equalto', match.team_b)|list|length %}
+        {% set draw_count = preds_list|selectattr('winner', 'equalto', 'Draw')|list|length %}
+        {% set team_a_pct = (team_a_count * 100 / total_preds)|int if total_preds > 0 else 0 %}
+        {% set team_b_pct = (team_b_count * 100 / total_preds)|int if total_preds > 0 else 0 %}
+        {% set draw_pct = (draw_count * 100 / total_preds)|int if total_preds > 0 else 0 %}
+        <div style="margin-top:10px; font-size:0.75em;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:3px; color:#aaa;">
+                <span>{{ get_flag(match.team_a) }} {{ team_a_pct }}%</span>
+                <span>🤝 {{ draw_pct }}%</span>
+                <span>{{ team_b_pct }}% {{ get_flag(match.team_b) }}</span>
+            </div>
+            <div style="display:flex; height:6px; border-radius:3px; overflow:hidden; background:#1a1a3e;">
+                <div style="width:{{ team_a_pct }}%; background:#00d4aa;"></div>
+                <div style="width:{{ draw_pct }}%; background:#ffd700;"></div>
+                <div style="width:{{ team_b_pct }}%; background:#e74c3c;"></div>
+            </div>
+            <div style="text-align:center; color:#666; margin-top:4px;">{{ total_preds }} predictions</div>
+        </div>
+        <div class="predictions-grid">
+            {% for player, pred in all_predictions[match.id].items() %}
+            <div class="pred-row">
+                <span class="pred-name">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</span>
+                <span class="pred-pick">{{ pred.winner }} ({{ pred.scorer }})</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="color:#444; text-align:center; margin-top:8px; font-size:0.8em;">No predictions yet</div>
+        {% endif %}
+        <div style="text-align:center; margin-top:10px;">
+            <a href="{{ url_for('predict') }}" style="color:#00d4aa; font-size:0.8em; text-decoration:none;">✏️ Edit My Prediction</a>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="text-align:center; padding:20px; background:rgba(26,26,62,0.6); border-radius:12px; border:1px solid #2a2a5e;">
+        <div style="font-size:1.5em; margin-bottom:8px;">⏰</div>
+        <div style="color:#888; font-size:0.9em;">Predictions open at <strong style="color:#00d4aa;">10 AM IST</strong></div>
+        <div style="color:#555; font-size:0.8em; margin-top:5px;">Tonight's matches will appear soon!</div>
+    </div>
+    {% endif %}
+
+    <h2>🏆 Leaderboard ({{ leaderboard|length }})</h2>
+    {% if leaderboard %}
+    <div class="leaderboard">
+        {% for player, points, rank in leaderboard[:10] %}
+        <div class="lb-item {% if rank == 1 %}top-1{% elif rank == 2 %}top-2{% elif rank == 3 %}top-3{% endif %}">
+            <div class="lb-rank {% if rank == 1 %}r1{% elif rank == 2 %}r2{% elif rank == 3 %}r3{% else %}r-other{% endif %}">
+                {% if rank == 1 %}🥇{% elif rank == 2 %}🥈{% elif rank == 3 %}🥉{% else %}{{ rank }}{% endif %}
+            </div>
+            <div class="lb-name"><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a></div>
+            <div class="lb-points">{{ points }}<span class="lb-pts-label">pts</span></div>
+        </div>
+        {% endfor %}
+        {% if leaderboard|length > 10 %}
+        <div id="lb-rest" style="display:none;">
+            {% for player, points, rank in leaderboard[10:] %}
+            <div class="lb-item">
+                <div class="lb-rank r-other">{{ rank }}</div>
+                <div class="lb-name"><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a></div>
+                <div class="lb-points">{{ points }}<span class="lb-pts-label">pts</span></div>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="text-align:center; margin-top:8px;">
+            <span onclick="document.getElementById('lb-rest').style.display = document.getElementById('lb-rest').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Show') ? '▲ Hide' : '▼ Show all ({{ leaderboard|length }})';" style="color:#00d4aa; font-size:0.8em; cursor:pointer;">▼ Show all ({{ leaderboard|length }})</span>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <p class="empty">No players yet. Be the first to predict! 🎯</p>
+    {% endif %}
+
+    {% if completed %}
+    <h2>✅ Recent Results</h2>
+    {% for item in recap %}
+    <div class="match-card">
+        <div class="match-teams">{{ get_flag(item.match.team_a) }} {{ item.match.team_a }} vs {{ item.match.team_b }} {{ get_flag(item.match.team_b) }}</div>
+        <div class="match-result">🏆 {{ item.match.result_winner }} &nbsp;•&nbsp; ⚽ {{ item.match.result_scorer }}</div>
+        {% if item.scorers %}
+        <div style="margin-top:8px; border-top:1px solid #2a2a4e; padding-top:6px;">
+            {% for s in item.scorers %}
+            <span style="display:inline-block; background:{% if s.points == 3 %}rgba(255,215,0,0.15){% else %}rgba(0,212,170,0.15){% endif %}; padding:3px 10px; border-radius:12px; margin:2px; font-size:0.8em; font-weight:600; color:{% if s.points == 3 %}#ffd700{% else %}#00d4aa{% endif %};">
+                {{ s.name }} +{{ s.points }}{% if s.points == 3 %}🔥{% endif %}
+            </span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div style="color:#444; font-size:0.75em; margin-top:6px;">No one got it right 😅</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <script>
+    function updateCountdowns() {
+        document.querySelectorAll('.countdown').forEach(function(el) {
+            try {
+                var day = parseInt(el.dataset.day);
+                var timeParts = el.dataset.time.split(':');
+                var hour = parseInt(timeParts[0]);
+                var min = parseInt(timeParts[1] || 0);
+                if (isNaN(day) || isNaN(hour) || isNaN(min)) { el.textContent = ''; return; }
+                // IST is UTC+5:30
+                var kickoff = new Date(Date.UTC(2026, 5, day, hour - 5, min - 30, 0));
+                var now = new Date();
+                var diff = kickoff - now;
+                if (diff <= 0) {
+                    el.textContent = '🔒 Locked';
+                } else {
+                    var h = Math.floor(diff / 3600000);
+                    var m = Math.floor((diff % 3600000) / 60000);
+                    var s = Math.floor((diff % 60000) / 1000);
+                    el.textContent = '⏰ Locks in ' + h + 'h ' + m + 'm ' + s + 's';
+                }
+            } catch(e) { el.textContent = ''; }
+        });
+    }
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 {{ player }}'s Predictions</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0f0f23 100%); color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        h1 { text-align: center; margin-bottom: 5px; font-size: 1.4em; }
+        .total { text-align: center; margin-bottom: 20px; }
+        .total-pts { font-size: 2.5em; font-weight: 800; color: #00d4aa; text-shadow: 0 0 15px rgba(0,212,170,0.3); }
+        .total-label { color: #666; font-size: 0.85em; }
+        .nav { text-align: center; margin-bottom: 20px; }
+        .nav a { color: #00d4aa; text-decoration: none; font-size: 0.9em; }
+        .pred-card { background: rgba(26,26,62,0.6); border-radius: 12px; padding: 14px; margin-bottom: 10px; border: 1px solid #2a2a5e; }
+        .pred-match { font-weight: 700; font-size: 0.95em; margin-bottom: 4px; }
+        .pred-details { display: flex; justify-content: space-between; align-items: center; }
+        .pred-pick { color: #aaa; font-size: 0.85em; }
+        .pred-points { font-weight: 800; font-size: 1.2em; border-radius: 20px; padding: 4px 12px; }
+        .pts-3 { color: #ffd700; background: rgba(255,215,0,0.15); }
+        .pts-1 { color: #00d4aa; background: rgba(0,212,170,0.15); }
+        .pts-0 { color: #e74c3c; background: rgba(231,76,60,0.15); }
+        .pts-pending { color: #666; background: rgba(100,100,100,0.15); }
+        .result-line { font-size: 0.75em; color: #555; margin-top: 4px; }
+        .empty { color: #444; text-align: center; padding: 30px; }
+    </style>
+</head>
+<body>
+    <h1>📊 {{ player }}</h1>
+    <div class="total">
+        <div class="total-pts">{{ total_points }}</div>
+        <div class="total-label">Total Points</div>
+    </div>
+    <div class="nav"><a href="{{ url_for('home') }}">← Back to Home</a></div>
+
+    {% if history %}
+    {% for item in history %}
+    <div class="pred-card">
+        <div class="pred-match">{{ item.match.team_a }} vs {{ item.match.team_b }}</div>
+        <div class="pred-details">
+            <div class="pred-pick">
+                🎯 {{ item.pred.winner }} ({{ item.pred.scorer }})
+            </div>
+            {% if item.status == "scored" %}
+                {% if item.points == 3 %}
+                <div class="pred-points pts-3">+3 🔥</div>
+                {% elif item.points == 1 %}
+                <div class="pred-points pts-1">+1</div>
+                {% else %}
+                <div class="pred-points pts-0">0</div>
+                {% endif %}
+            {% else %}
+            <div class="pred-points pts-pending">⏳</div>
+            {% endif %}
+        </div>
+        {% if item.status == "scored" %}
+        <div class="result-line">Result: {{ item.match.result_winner }} ({{ item.match.result_scorer }})</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="empty">No predictions yet.</p>
+    {% endif %}
+</body>
+</html>

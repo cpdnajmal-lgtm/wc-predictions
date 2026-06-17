@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏳️ Pick Your Team</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f23; color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 10px; font-size: 1.4em; }
+        p { text-align: center; color: #888; font-size: 0.9em; margin-bottom: 20px; }
+        .nav { text-align: center; margin-bottom: 20px; }
+        .nav a { color: #00d4aa; text-decoration: none; font-size: 0.9em; }
+        .flash { background: #00d4aa; color: #0f0f23; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 600; text-align: center; }
+        form { background: #1a1a3e; border-radius: 12px; padding: 20px; border: 1px solid #2a2a5e; }
+        label { display: block; color: #00d4aa; font-weight: 600; margin-bottom: 5px; font-size: 0.85em; }
+        select, input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #2a2a5e; background: #0f0f23; color: #eee; font-size: 1em; margin-bottom: 12px; }
+        select:focus, input:focus { outline: none; border-color: #00d4aa; }
+        button { width: 100%; padding: 14px; background: linear-gradient(135deg, #00d4aa, #00a88a); color: #0f0f23; border: none; border-radius: 25px; font-size: 1.1em; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🏳️ Pick Your Team!</h1>
+    <p>Choose your favorite World Cup team. Their flag will appear next to your name on the leaderboard!</p>
+    <div class="nav"><a href="{{ url_for('home') }}">← Back</a></div>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <label>Your Name</label>
+        <select name="player" required>
+            <option value="">-- Select --</option>
+            {% for player in players %}
+            <option value="{{ player }}">{{ player }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Your PIN</label>
+        <input type="password" name="pin" placeholder="4-digit PIN" maxlength="4" inputmode="numeric" required>
+
+        <label>Your Favorite Team</label>
+        <select name="team" required>
+            <option value="">-- Pick a team --</option>
+            {% for team in teams %}
+            <option value="{{ team }}">{{ flags[team] }} {{ team }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">🏳️ Set My Team</button>
+    </form>
+</body>
+</html>

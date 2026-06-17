@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Stats - MIAC WC 2026</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0f0f23 100%); color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        h1 { text-align: center; margin-bottom: 3px; font-size: 1.8em; background: linear-gradient(135deg, #00d4aa, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { margin: 25px 0 12px; color: #00d4aa; font-size: 1em; text-transform: uppercase; letter-spacing: 2px; }
+        .subtitle { text-align: center; color: #555; margin-bottom: 20px; font-size: 0.85em; letter-spacing: 1px; }
+        .nav { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+        .nav a { background: #2a2a5e; color: #eee; padding: 10px 18px; border-radius: 25px; text-decoration: none; font-weight: 600; font-size: 0.85em; }
+        .nav a.active { background: linear-gradient(135deg, #00d4aa, #00a88a); color: #0f0f23; box-shadow: 0 4px 15px rgba(0,212,170,0.3); }
+
+        .card { background: rgba(26,26,62,0.6); border-radius: 14px; padding: 16px; margin-bottom: 16px; border: 1px solid #2a2a5e; backdrop-filter: blur(10px); }
+        .card-title { color: #00d4aa; font-size: 0.85em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+        /* Summary grid */
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .stat-box { background: rgba(26,26,62,0.8); border-radius: 12px; padding: 14px 10px; text-align: center; border: 1px solid #2a2a5e; }
+        .stat-value { font-size: 1.5em; font-weight: 800; color: #00d4aa; }
+        .stat-label { font-size: 0.65em; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Chart container */
+        .chart-container { position: relative; width: 100%; margin: 10px 0; }
+        .chart-container canvas { width: 100% !important; }
+
+        /* Player table */
+        .player-table { width: 100%; border-collapse: collapse; font-size: 0.78em; }
+        .player-table th { color: #00d4aa; text-align: left; padding: 8px 5px; border-bottom: 1px solid #2a2a5e; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; }
+        .player-table td { padding: 6px 5px; border-bottom: 1px solid rgba(42,42,94,0.4); }
+        .player-table tr:hover { background: rgba(0,212,170,0.05); }
+        .pct-bar { display: inline-block; height: 5px; border-radius: 3px; background: #00d4aa; vertical-align: middle; margin-left: 4px; }
+
+        /* Streak badges */
+        .streak-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .streak-item { background: rgba(26,26,62,0.8); border-radius: 10px; padding: 10px; border: 1px solid #2a2a5e; display: flex; align-items: center; gap: 8px; }
+        .streak-fire { font-size: 1.3em; }
+        .streak-info { flex: 1; }
+        .streak-name { font-size: 0.8em; font-weight: 600; }
+        .streak-detail { font-size: 0.7em; color: #888; }
+        .streak-value { font-size: 1.1em; font-weight: 800; color: #ffd700; }
+
+        /* Daily breakdown */
+        .day-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(42,42,94,0.3); }
+        .day-row:last-child { border-bottom: none; }
+        .day-label { width: 65px; font-size: 0.8em; font-weight: 600; color: #aaa; }
+        .day-bar-track { flex: 1; height: 22px; background: rgba(26,26,62,0.8); border-radius: 11px; overflow: hidden; position: relative; }
+        .day-bar-fill { height: 100%; border-radius: 11px; display: flex; align-items: center; padding-left: 8px; font-size: 0.7em; font-weight: 700; color: #0f0f23; transition: width 0.3s; }
+        .day-pct { width: 42px; text-align: right; font-size: 0.8em; font-weight: 700; color: #00d4aa; }
+        .day-details { display: none; padding: 8px 0 8px 65px; font-size: 0.75em; }
+        .day-details.show { display: block; }
+        .day-missing { color: #e74c3c; }
+        .day-present { color: #00d4aa; }
+
+        /* Upsets */
+        .upset-card { background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.3); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+        .upset-teams { font-weight: 700; font-size: 0.9em; }
+        .upset-detail { font-size: 0.78em; color: #aaa; margin-top: 4px; }
+        .upset-detail strong { color: #e74c3c; }
+
+        /* Top teams */
+        .team-bar-row { display: flex; align-items: center; margin-bottom: 6px; }
+        .team-bar-label { width: 85px; font-size: 0.78em; font-weight: 600; white-space: nowrap; overflow: hidden; }
+        .team-bar-track { flex: 1; height: 18px; background: rgba(26,26,62,0.8); border-radius: 9px; overflow: hidden; margin: 0 8px; }
+        .team-bar-fill { height: 100%; border-radius: 9px; background: linear-gradient(90deg, #00d4aa, #00ff88); display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 0.65em; font-weight: 700; color: #0f0f23; }
+        .team-bar-count { font-size: 0.72em; color: #888; width: 32px; text-align: right; }
+
+        .tab-bar { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; }
+        .tab-btn { background: rgba(26,26,62,0.8); border: 1px solid #2a2a5e; color: #aaa; padding: 6px 14px; border-radius: 20px; font-size: 0.75em; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .tab-btn.active { background: #00d4aa; color: #0f0f23; border-color: #00d4aa; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .back-link { display: block; text-align: center; color: #00d4aa; text-decoration: none; font-size: 0.9em; margin-top: 20px; padding: 12px; }
+    </style>
+</head>
+<body>
+    <h1>📊 Stats & Analytics</h1>
+    <p class="subtitle">MIAC WC 2026 PREDICTIONS</p>
+
+    <div class="nav">
+        <a href="{{ url_for('home') }}">🏠 Home</a>
+        <a href="{{ url_for('predict') }}">🎯 Predict</a>
+        <a href="{{ url_for('stats') }}" class="active">📊 Stats</a>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="stat-box">
+            <div class="stat-value">{{ summary.completed_matches }}/{{ summary.total_matches }}</div>
+            <div class="stat-label">Matches Done</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ summary.total_players }}</div>
+            <div class="stat-label">Players</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ summary.total_predictions }}</div>
+            <div class="stat-label">Predictions</div>
+        </div>
+    </div>
+
+    <div class="summary-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="stat-box">
+            <div class="stat-value" style="color:#ffd700;">{{ summary.overall_winner_pct }}%</div>
+            <div class="stat-label">Winner Accuracy</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" style="color:#e74c3c;">{{ summary.overall_scorer_pct }}%</div>
+            <div class="stat-label">Scorer Accuracy</div>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-bar">
+        <div class="tab-btn active" onclick="switchTab('overview')">Overview</div>
+        <div class="tab-btn" onclick="switchTab('daily')">Daily</div>
+        <div class="tab-btn" onclick="switchTab('players')">Players</div>
+        <div class="tab-btn" onclick="switchTab('trends')">Trends</div>
+    </div>
+
+    <!-- ===== OVERVIEW TAB ===== -->
+    <div class="tab-content active" id="tab-overview">
+
+        <!-- Points Progression Chart -->
+        {% if match_labels %}
+        <div class="card">
+            <div class="card-title">📈 Points Race</div>
+            <div class="chart-container">
+                <canvas id="pointsChart" height="220"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Most Picked Teams -->
+        {% if top_teams %}
+        <div class="card">
+            <div class="card-title">🏳️ Most Backed Teams</div>
+            {% for team, count in top_teams %}
+            <div class="team-bar-row">
+                <div class="team-bar-label">{{ get_flag(team) }} {{ team }}</div>
+                <div class="team-bar-track">
+                    <div class="team-bar-fill" style="width:{{ (count * 100 / top_teams[0][1])|int }}%;">
+                        {% if (count * 100 / top_teams[0][1])|int > 30 %}{{ count }}{% endif %}
+                    </div>
+                </div>
+                <div class="team-bar-count">{{ ((count * 100) / total_picks)|round(0)|int }}%</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Upsets -->
+        {% if upsets %}
+        <div class="card">
+            <div class="card-title">🤯 Biggest Upsets</div>
+            <p style="font-size:0.72em; color:#666; margin-bottom:10px;">Matches where the majority got it wrong</p>
+            {% for upset in upsets %}
+            <div class="upset-card">
+                <div class="upset-teams">{{ get_flag(upset.match.team_a) }} {{ upset.match.team_a }} vs {{ upset.match.team_b }} {{ get_flag(upset.match.team_b) }}</div>
+                <div class="upset-detail">
+                    {{ upset.predicted_pct }}% predicted <strong>{{ upset.predicted }}</strong> but <strong>{{ upset.actual }}</strong> won!
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- ===== DAILY TAB ===== -->
+    <div class="tab-content" id="tab-daily">
+
+        <!-- Daily Participation Breakdown -->
+        <div class="card">
+            <div class="card-title">📅 Daily Prediction Rate</div>
+            <p style="font-size:0.72em; color:#666; margin-bottom:12px;">Tap a day to see who missed</p>
+            {% for day in daily_breakdown %}
+            {% set bar_color = '#00d4aa' if day.pct >= 70 else '#ffd700' if day.pct >= 40 else '#e74c3c' %}
+            <div class="day-row" onclick="toggleDay('day-{{ loop.index }}')" style="cursor:pointer;">
+                <div class="day-label">{{ day.date.replace('June ', 'Jun ') }}</div>
+                <div class="day-bar-track">
+                    <div class="day-bar-fill" style="width:{{ day.pct }}%; background:{{ bar_color }};">
+                        {{ day.predicted_count }}/{{ day.total }}
+                    </div>
+                </div>
+                <div class="day-pct">{{ day.pct }}%</div>
+            </div>
+            <div class="day-details" id="day-{{ loop.index }}">
+                {% if day.not_predicted %}
+                <span class="day-missing">❌ Missed: {{ day.not_predicted|join(', ') }}</span>
+                {% else %}
+                <span class="day-present">✅ Everyone predicted!</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Daily Participation Chart -->
+        {% if participation_labels %}
+        <div class="card">
+            <div class="card-title">📊 Participation Trend</div>
+            <div class="chart-container">
+                <canvas id="participationChart" height="180"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Daily Accuracy Trend -->
+        {% if daily_accuracy_labels %}
+        <div class="card">
+            <div class="card-title">🎯 Daily Winner Accuracy</div>
+            <div class="chart-container">
+                <canvas id="dailyAccuracyChart" height="180"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- ===== PLAYERS TAB ===== -->
+    <div class="tab-content" id="tab-players">
+
+        <!-- Prediction Streaks -->
+        {% if player_streaks %}
+        <div class="card">
+            <div class="card-title">🔥 Prediction Streaks</div>
+            <p style="font-size:0.72em; color:#666; margin-bottom:10px;">Consecutive days predicted</p>
+            <div class="streak-grid">
+                {% for player in players|sort(attribute='') %}
+                {% set streak = player_streaks[player] %}
+                {% if streak.max > 0 %}
+                <div class="streak-item">
+                    <div class="streak-fire">{% if streak.current >= 3 %}🔥{% elif streak.current >= 1 %}✅{% else %}💤{% endif %}</div>
+                    <div class="streak-info">
+                        <div class="streak-name">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</div>
+                        <div class="streak-detail">Best: {{ streak.max }} days</div>
+                    </div>
+                    <div class="streak-value">{{ streak.current }}d</div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Player Accuracy Table -->
+        <div class="card">
+            <div class="card-title">🏅 Player Accuracy</div>
+            <table class="player-table">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Preds</th>
+                        <th>Win%</th>
+                        <th>Scr%</th>
+                        <th>🔥</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for player in players|sort(attribute='') %}
+                    {% set ps = player_stats[player] %}
+                    {% if ps.total_preds > 0 %}
+                    <tr>
+                        <td><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a></td>
+                        <td>{{ ps.total_preds }}</td>
+                        <td>{{ ps.winner_pct }}%<span class="pct-bar" style="width:{{ ps.winner_pct * 0.4 }}px;"></span></td>
+                        <td>{{ ps.scorer_pct }}%<span class="pct-bar" style="width:{{ ps.scorer_pct * 0.4 }}px; background:#ffd700;"></span></td>
+                        <td>{{ ps.perfect }}</td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Winner Accuracy Chart (bar) -->
+        {% if players and match_labels %}
+        <div class="card">
+            <div class="card-title">📊 Winner Accuracy Ranking</div>
+            <div class="chart-container">
+                <canvas id="accuracyChart" height="250"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- ===== TRENDS TAB ===== -->
+    <div class="tab-content" id="tab-trends">
+
+        <!-- Points Per Day Chart -->
+        {% if daily_points_labels %}
+        <div class="card">
+            <div class="card-title">📊 Points Earned Per Day</div>
+            <div class="chart-container">
+                <canvas id="dailyPointsChart" height="220"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Points Race (duplicate for trends context) -->
+        {% if match_labels %}
+        <div class="card">
+            <div class="card-title">📈 Cumulative Points</div>
+            <div class="chart-container">
+                <canvas id="pointsChart2" height="220"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Accuracy over time -->
+        {% if daily_accuracy_labels %}
+        <div class="card">
+            <div class="card-title">🎯 Group Accuracy Over Time</div>
+            <p style="font-size:0.72em; color:#666; margin-bottom:8px;">How good are we getting at predicting winners?</p>
+            <div class="chart-container">
+                <canvas id="accuracyTrendChart" height="180"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <a href="{{ url_for('home') }}" class="back-link">← Back to Home</a>
+
+    <script>
+    // Tab switching
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        event.target.classList.add('active');
+        // Trigger chart resize after tab switch
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+    }
+
+    // Toggle daily details
+    function toggleDay(id) {
+        var el = document.getElementById(id);
+        el.classList.toggle('show');
+    }
+
+    // Chart.js global dark theme
+    Chart.defaults.color = '#aaa';
+    Chart.defaults.borderColor = 'rgba(42,42,94,0.6)';
+
+    // Palette for player lines
+    const palette = ['#00d4aa','#ffd700','#e74c3c','#3498db','#9b59b6','#e67e22','#1abc9c','#f39c12','#2ecc71','#e91e63','#00bcd4','#ff5722','#8bc34a','#673ab7','#ff9800','#03a9f4','#cddc39','#795548'];
+
+    {% if match_labels %}
+    // Points Race Line Chart
+    function createPointsChart(canvasId) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        return new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ match_labels|tojson }},
+                datasets: [
+                    {% for player in players %}
+                    {% if points_over_time[player] %}
+                    {
+                        label: '{{ player }}',
+                        data: {{ points_over_time[player]|tojson }},
+                        borderColor: palette[{{ loop.index0 }} % palette.length],
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 1.5,
+                        tension: 0.3,
+                    },
+                    {% endif %}
+                    {% endfor %}
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
+                },
+                scales: {
+                    x: { ticks: { font: { size: 7 }, maxRotation: 45 } },
+                    y: { beginAtZero: true, ticks: { font: { size: 9 } } }
+                },
+                interaction: { mode: 'index', intersect: false },
+            }
+        });
+    }
+    createPointsChart('pointsChart');
+    createPointsChart('pointsChart2');
+    {% endif %}
+
+    {% if participation_labels %}
+    // Participation Rate Bar Chart
+    new Chart(document.getElementById('participationChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: {{ participation_labels|tojson }},
+            datasets: [{
+                label: 'Participation %',
+                data: {{ participation_rates|tojson }},
+                borderColor: '#00d4aa',
+                backgroundColor: 'rgba(0,212,170,0.15)',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: '#00d4aa',
+                fill: true,
+                tension: 0.3,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { font: { size: 8 }, maxRotation: 45 } },
+                y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%', font: { size: 9 } } }
+            }
+        }
+    });
+    {% endif %}
+
+    {% if daily_accuracy_labels %}
+    // Daily Accuracy Line Chart
+    function createAccuracyLine(canvasId) {
+        new Chart(document.getElementById(canvasId).getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: {{ daily_accuracy_labels|tojson }},
+                datasets: [{
+                    label: 'Winner Accuracy %',
+                    data: {{ daily_accuracy_values|tojson }},
+                    borderColor: '#ffd700',
+                    backgroundColor: 'rgba(255,215,0,0.1)',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#ffd700',
+                    fill: true,
+                    tension: 0.3,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { font: { size: 8 }, maxRotation: 45 } },
+                    y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%', font: { size: 9 } } }
+                }
+            }
+        });
+    }
+    createAccuracyLine('dailyAccuracyChart');
+    createAccuracyLine('accuracyTrendChart');
+    {% endif %}
+
+    {% if daily_points_labels %}
+    // Daily Points Grouped Bar Chart
+    new Chart(document.getElementById('dailyPointsChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ daily_points_labels|tojson }},
+            datasets: [
+                {% for player in players %}
+                {
+                    label: '{{ player }}',
+                    data: {{ player_daily_points[player]|tojson }},
+                    backgroundColor: palette[{{ loop.index0 }} % palette.length] + '99',
+                    borderColor: palette[{{ loop.index0 }} % palette.length],
+                    borderWidth: 1,
+                    borderRadius: 3,
+                },
+                {% endfor %}
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
+            },
+            scales: {
+                x: { stacked: false, ticks: { font: { size: 8 }, maxRotation: 45 } },
+                y: { beginAtZero: true, ticks: { font: { size: 9 } } }
+            }
+        }
+    });
+    {% endif %}
+
+    {% if players and match_labels %}
+    // Winner Accuracy Horizontal Bar
+    const accCtx = document.getElementById('accuracyChart').getContext('2d');
+    const accPlayers = [];
+    const accWin = [];
+    const accScr = [];
+    {% for player in players|sort(attribute='') %}
+    {% set ps = player_stats[player] %}
+    {% if ps.total_preds > 0 %}
+    accPlayers.push('{{ player }}');
+    accWin.push({{ ps.winner_pct }});
+    accScr.push({{ ps.scorer_pct }});
+    {% endif %}
+    {% endfor %}
+    // Sort by winner accuracy
+    const accPairs = accPlayers.map((p, i) => ({name: p, win: accWin[i], scr: accScr[i]}));
+    accPairs.sort((a, b) => b.win - a.win);
+
+    new Chart(accCtx, {
+        type: 'bar',
+        data: {
+            labels: accPairs.map(p => p.name),
+            datasets: [
+                {
+                    label: 'Winner %',
+                    data: accPairs.map(p => p.win),
+                    backgroundColor: 'rgba(0,212,170,0.7)',
+                    borderColor: '#00d4aa',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                },
+                {
+                    label: 'Scorer %',
+                    data: accPairs.map(p => p.scr),
+                    backgroundColor: 'rgba(255,215,0,0.7)',
+                    borderColor: '#ffd700',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } },
+            scales: {
+                x: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%', font: { size: 9 } } },
+                y: { ticks: { font: { size: 9 } } }
+            }
+        }
+    });
+    {% endif %}
+    </script>
+</body>
+</html>

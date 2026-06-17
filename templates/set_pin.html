@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Set PIN</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f23; color: #eee; padding: 15px; max-width: 400px; margin: 50px auto; text-align: center; }
+        h1 { margin-bottom: 10px; font-size: 1.4em; }
+        p { color: #888; margin-bottom: 20px; font-size: 0.9em; }
+        form { background: #1a1a3e; border-radius: 12px; padding: 25px; border: 1px solid #2a2a5e; }
+        input { width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #2a2a5e; background: #0f0f23; color: #eee; font-size: 1.2em; margin-bottom: 15px; text-align: center; letter-spacing: 8px; }
+        input:focus { outline: none; border-color: #00d4aa; }
+        button { width: 100%; padding: 14px; background: linear-gradient(135deg, #00d4aa, #00a88a); color: #0f0f23; border: none; border-radius: 25px; font-size: 1.1em; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔐 Set Your PIN</h1>
+    <p>Hi {{ player }}! Set a 4-digit PIN to secure your predictions. You'll need it every time you predict.</p>
+    <form method="POST">
+        <input type="hidden" name="action" value="set_pin">
+        <input type="hidden" name="player" value="{{ player }}">
+        <input type="text" name="pin" placeholder="• • • •" maxlength="4" pattern="\d{4}" inputmode="numeric" required>
+        <button type="submit">Set PIN</button>
+    </form>
+</body>
+</html>

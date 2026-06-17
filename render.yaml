@@ -1,0 +1,9 @@
+# Render deployment config
+# Just connect your GitHub repo on render.com and it auto-deploys
+services:
+  - type: web
+    name: wc-predictions
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    plan: free

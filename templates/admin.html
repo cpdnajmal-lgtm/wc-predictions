@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f23; color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 15px; font-size: 1.4em; }
+        h2 { margin: 20px 0 12px; color: #00d4aa; font-size: 1.1em; }
+        .nav { text-align: center; margin-bottom: 20px; }
+        .nav a { color: #00d4aa; text-decoration: none; }
+        .flash { background: #00d4aa; color: #0f0f23; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 600; text-align: center; }
+        .card { background: #1a1a3e; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid #2a2a5e; }
+        label { display: block; color: #00d4aa; font-weight: 600; margin-bottom: 5px; font-size: 0.8em; }
+        input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2a2a5e; background: #0f0f23; color: #eee; font-size: 1em; margin-bottom: 8px; }
+        input:focus, select:focus { outline: none; border-color: #00d4aa; }
+        .row { display: flex; gap: 8px; }
+        .row > div { flex: 1; }
+        button { padding: 10px 16px; background: #00d4aa; color: #0f0f23; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .btn-sm { padding: 6px 12px; font-size: 0.85em; }
+        .match-item { background: #0f0f23; border-radius: 8px; padding: 12px; margin-bottom: 8px; border: 1px solid #2a2a5e; }
+        .match-title { font-weight: 700; font-size: 0.95em; }
+        .match-info { color: #666; font-size: 0.8em; margin-top: 2px; }
+        .result-tag { color: #00d4aa; font-size: 0.85em; margin-top: 4px; }
+        .empty-msg { color: #444; padding: 15px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>⚙️ Admin</h1>
+    <div class="nav"><a href="{{ url_for('home') }}">← Back to Home</a></div>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    <!-- Enter Results for today's session -->
+    <h2>📝 Enter Results</h2>
+    {% for match in pending %}
+    <div class="match-item">
+        <div class="match-title">{{ match.team_a }} vs {{ match.team_b }}</div>
+        <div class="match-info">{{ match.date }} • {{ format_time(match.kickoff) }} IST</div>
+        {% if match.result_winner %}
+        <div class="result-tag">✅ {{ match.result_winner }} • {{ match.result_scorer }}</div>
+        {% endif %}
+        <form method="POST" style="margin-top:8px;">
+            <input type="hidden" name="action" value="update_result">
+            <input type="hidden" name="match_id" value="{{ match.id }}">
+            <div class="row">
+                <div>
+                    <label>Winner</label>
+                    <select name="result_winner">
+                        <option value="">-- Pick --</option>
+                        <option value="{{ match.team_a }}" {% if match.result_winner == match.team_a %}selected{% endif %}>{{ match.team_a }}</option>
+                        <option value="{{ match.team_b }}" {% if match.result_winner == match.team_b %}selected{% endif %}>{{ match.team_b }}</option>
+                        <option value="Draw" {% if match.result_winner == "Draw" %}selected{% endif %}>Draw</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Score</label>
+                    <input name="result_scorer" placeholder="e.g. 2-1" value="{{ match.result_scorer }}">
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:6px;">
+                <button type="submit" class="btn-sm">Save Result</button>
+            </div>
+        </form>
+        <details style="margin-top:6px;">
+            <summary style="color:#888; font-size:0.75em; cursor:pointer;">⚙️ Edit time / Delete</summary>
+            <form method="POST" style="margin-top:6px;">
+                <input type="hidden" name="action" value="edit_match">
+                <input type="hidden" name="match_id" value="{{ match.id }}">
+                <div class="row">
+                    <div><label>Date</label><input name="date" value="{{ match.date }}" style="font-size:0.85em;"></div>
+                    <div><label>Kickoff (24h)</label><input name="kickoff" value="{{ match.kickoff }}" placeholder="00:30" style="font-size:0.85em;"></div>
+                </div>
+                <button type="submit" class="btn-sm" style="font-size:0.75em;">Update Time</button>
+            </form>
+            <form method="POST" style="margin-top:6px;" onsubmit="return confirm('Delete this match? All predictions for it will be lost!')">
+                <input type="hidden" name="action" value="delete_match">
+                <input type="hidden" name="match_id" value="{{ match.id }}">
+                <button type="submit" class="btn-sm" style="background:#e74c3c; color:white; font-size:0.75em;">🗑 Delete Match</button>
+            </form>
+        </details>
+    </div>
+    {% else %}
+    <p class="empty-msg">No matches to update right now.</p>
+    {% endfor %}
+
+    <!-- Add Match -->
+    <h2>➕ Add Match</h2>
+    <div class="card">
+        <form method="POST">
+            <input type="hidden" name="action" value="add_match">
+            <div class="row">
+                <div><label>Team A</label><input name="team_a" placeholder="Brazil" required></div>
+                <div><label>Team B</label><input name="team_b" placeholder="Germany" required></div>
+            </div>
+            <label>Date</label>
+            <input name="date" placeholder="June 15" required>
+            <button type="submit">Add Match</button>
+        </form>
+    </div>
+
+    <!-- Players -->
+    <h2>👥 Players ({{ data.players|length }})</h2>
+    <div class="card">
+        {% for player in data.players %}
+        <span style="display:inline-block; background:#0f0f23; padding:4px 10px; border-radius:15px; margin:3px; font-size:0.85em;">
+            {{ player }}
+            <form method="POST" style="display:inline;" onsubmit="return confirm('Reset PIN for {{ player }}?')">
+                <input type="hidden" name="action" value="reset_pin">
+                <input type="hidden" name="player_name" value="{{ player }}">
+                <button type="submit" style="background:none; color:#ffd700; padding:0 4px; font-size:0.8em; border:none; cursor:pointer;">🔑</button>
+            </form>
+            <form method="POST" style="display:inline;" onsubmit="return confirm('Delete {{ player }}? This removes all their predictions!')">
+                <input type="hidden" name="action" value="delete_player">
+                <input type="hidden" name="player_name" value="{{ player }}">
+                <button type="submit" style="background:none; color:#e74c3c; padding:0 4px; font-size:1em; border:none; cursor:pointer;">×</button>
+            </form>
+        </span>
+        {% endfor %}
+    </div>
+</body>
+</html>

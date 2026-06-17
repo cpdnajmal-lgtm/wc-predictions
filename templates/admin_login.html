@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔒 Admin Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f23; color: #eee; padding: 15px; max-width: 400px; margin: 50px auto; text-align: center; }
+        h1 { margin-bottom: 20px; font-size: 1.4em; }
+        .flash { background: #e74c3c; color: white; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 600; }
+        form { background: #1a1a3e; border-radius: 12px; padding: 25px; border: 1px solid #2a2a5e; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #2a2a5e; background: #0f0f23; color: #eee; font-size: 1em; margin-bottom: 15px; text-align: center; }
+        input:focus { outline: none; border-color: #00d4aa; }
+        button { width: 100%; padding: 12px; background: linear-gradient(135deg, #00d4aa, #00a88a); color: #0f0f23; border: none; border-radius: 25px; font-size: 1em; font-weight: 700; cursor: pointer; }
+        .nav { margin-top: 20px; }
+        .nav a { color: #00d4aa; text-decoration: none; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <h1>🔒 Admin Access</h1>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <input type="hidden" name="action" value="login">
+        <input type="password" name="password" placeholder="Enter password" required>
+        <button type="submit">Unlock</button>
+    </form>
+
+    <div class="nav"><a href="{{ url_for('home') }}">← Back to Home</a></div>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 MIAC WC Predict</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f23; color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 15px; font-size: 1.4em; }
+        .nav { text-align: center; margin-bottom: 20px; }
+        .nav a { color: #00d4aa; text-decoration: none; font-size: 0.9em; }
+        .flash { background: #00d4aa; color: #0f0f23; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 600; text-align: center; }
+        form { background: #1a1a3e; border-radius: 12px; padding: 20px; border: 1px solid #2a2a5e; }
+        label { display: block; color: #00d4aa; font-weight: 600; margin-bottom: 5px; font-size: 0.85em; }
+        select, input[type="text"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #2a2a5e; background: #0f0f23; color: #eee; font-size: 1em; margin-bottom: 12px; }
+        select:focus, input:focus { outline: none; border-color: #00d4aa; }
+        .match-section { border-top: 1px solid #2a2a5e; padding-top: 15px; margin-top: 15px; }
+        .match-title { font-size: 1.1em; font-weight: 700; text-align: center; margin-bottom: 12px; }
+        .row { display: flex; gap: 10px; }
+        .row > div { flex: 1; }
+        button { width: 100%; padding: 14px; background: linear-gradient(135deg, #00d4aa, #00a88a); color: #0f0f23; border: none; border-radius: 25px; font-size: 1.1em; font-weight: 700; cursor: pointer; margin-top: 15px; }
+        button:hover { opacity: 0.9; }
+        .empty { color: #444; text-align: center; padding: 30px; }
+        .hint { color: #666; font-size: 0.8em; margin-bottom: 12px; text-align: center; }
+        #newPlayerBox { display: none; }
+    </style>
+</head>
+<body>
+    <h1>🎯 MIAC WC Predictions</h1>
+    <div class="nav"><a href="{{ url_for('home') }}">← Back</a></div>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    {% if not matches %}
+    <p class="empty">No matches today to predict.<br>Check back tomorrow!</p>
+    {% else %}
+    <form method="POST">
+        <label style="font-size:1em; margin-bottom:8px;">⚠️ Your Name</label>
+        <input type="text" id="nameSearch" placeholder="🔍 Search your name..." style="font-size:1em; padding:12px; margin-bottom:6px;" oninput="filterNames()">
+        <select name="player" id="playerSelect" style="border:2px solid #00d4aa; font-size:1.1em; padding:14px;" required>
+            <option value="">-- Select --</option>
+            {% for player in players %}
+            <option value="{{ player }}">{{ player }}</option>
+            {% endfor %}
+            <option value="__new__">➕ New here? Register</option>
+        </select>
+        <div id="newPlayerBox">
+            <input type="text" name="new_player" placeholder="Type your name (one time only)">
+            <input type="text" name="new_pin" placeholder="Set a 4-digit PIN (e.g. 1234)" maxlength="4" pattern="\d{4}" inputmode="numeric">
+        </div>
+
+        <div id="pinBox" style="display:none;">
+            <label>Your PIN</label>
+            <input type="password" name="pin" placeholder="Enter your 4-digit PIN" maxlength="4" inputmode="numeric">
+            <div id="editNote" style="color:#00d4aa; font-size:0.8em; margin-bottom:10px; display:none;">✏️ Your previous predictions are loaded. Change what you need and save.</div>
+        </div>
+
+        <p class="hint">Predict the winner and first goal scorer for each match</p>
+        <div style="background:#0f0f23; border:1px solid #2a2a5e; border-radius:8px; padding:12px; margin-bottom:15px; font-size:0.8em; color:#888;">
+            <strong style="color:#00d4aa;">📝 How to predict:</strong><br>
+            • <strong>Winner:</strong> Pick the team you think will win (or Draw)<br>
+            • <strong>Score:</strong> Type the final score (e.g., "2-1", "0-0", "3-2")<br>
+            • Format: goals_team_a - goals_team_b (e.g., for Brazil vs Morocco, "2-1" means Brazil 2, Morocco 1)
+        </div>
+
+        {% for match in matches %}
+        <div class="match-section">
+            <div class="match-title">{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
+            {% if match.locked %}
+            <div style="text-align:center; color:#e74c3c; font-size:0.85em; margin-bottom:8px;">🔒 Predictions locked (match started)</div>
+            {% else %}
+            <div style="text-align:center; color:#666; font-size:0.75em; margin-bottom:8px;">⏰ Kickoff: {{ format_time(match.kickoff) }} IST</div>
+            <div class="row">
+                <div>
+                    <label>Winner</label>
+                    <select name="winner_{{ match.id }}">
+                        <option value="">-- Pick --</option>
+                        <option value="{{ match.team_a }}">{{ match.team_a }}</option>
+                        <option value="{{ match.team_b }}">{{ match.team_b }}</option>
+                        <option value="Draw">Draw</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Score</label>
+                    <input type="text" name="scorer_{{ match.id }}" placeholder="e.g. 2-1">
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <button type="submit">💾 Save Predictions</button>
+    </form>
+
+    <script>
+        function filterNames() {
+            var search = document.getElementById('nameSearch').value.toLowerCase();
+            var select = document.getElementById('playerSelect');
+            for (var i = 0; i < select.options.length; i++) {
+                var opt = select.options[i];
+                if (opt.value === '' || opt.value === '__new__') {
+                    opt.style.display = '';
+                } else {
+                    opt.style.display = opt.text.toLowerCase().includes(search) ? '' : 'none';
+                }
+            }
+        }
+
+        var playerSelect = document.getElementById('playerSelect');
+        
+        function loadPredictions() {
+            var val = playerSelect.value;
+            var isNew = val === '__new__';
+            document.getElementById('newPlayerBox').style.display = isNew ? 'block' : 'none';
+            document.getElementById('pinBox').style.display = (!isNew && val) ? 'block' : 'none';
+            
+            if (!isNew && val) {
+                fetch('/predict/load', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'player=' + encodeURIComponent(val)
+                })
+                .then(r => r.json())
+                .then(data => {
+                    var hasData = false;
+                    for (var matchId in data) {
+                        var winnerEl = document.querySelector('[name="winner_' + matchId + '"]');
+                        var scorerEl = document.querySelector('[name="scorer_' + matchId + '"]');
+                        if (winnerEl && data[matchId].winner) { winnerEl.value = data[matchId].winner; hasData = true; }
+                        if (scorerEl && data[matchId].scorer) { scorerEl.value = data[matchId].scorer; hasData = true; }
+                    }
+                    document.getElementById('editNote').style.display = hasData ? 'block' : 'none';
+                });
+            }
+        }
+        
+        playerSelect.addEventListener('change', loadPredictions);
+    </script>
+    {% endif %}
+</body>
+</html>
