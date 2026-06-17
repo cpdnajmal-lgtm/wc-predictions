@@ -81,8 +81,30 @@
         <div class="match-teams">{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
         <div class="match-date">{{ match.date }} &nbsp;•&nbsp; <span style="color:#e74c3c; font-size:0.75em; font-weight:600;">🔒 LOCKED</span></div>
         {% if all_predictions.get(match.id) %}
-        <div style="color:#666; font-size:0.75em; text-align:center; margin-top:6px;">{{ all_predictions[match.id]|length }} predictions</div>
-        <div class="predictions-grid">
+        {% set preds_list = all_predictions[match.id].values()|list %}
+        {% set total_preds = preds_list|length %}
+        {% set team_a_count = preds_list|selectattr('winner', 'equalto', match.team_a)|list|length %}
+        {% set team_b_count = preds_list|selectattr('winner', 'equalto', match.team_b)|list|length %}
+        {% set draw_count = preds_list|selectattr('winner', 'equalto', 'Draw')|list|length %}
+        {% set team_a_pct = (team_a_count * 100 / total_preds)|int if total_preds > 0 else 0 %}
+        {% set team_b_pct = (team_b_count * 100 / total_preds)|int if total_preds > 0 else 0 %}
+        {% set draw_pct = (draw_count * 100 / total_preds)|int if total_preds > 0 else 0 %}
+        <div style="margin-top:10px; font-size:0.75em;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:3px; color:#aaa;">
+                <span>{{ get_flag(match.team_a) }} {{ team_a_pct }}%</span>
+                <span>🤝 {{ draw_pct }}%</span>
+                <span>{{ team_b_pct }}% {{ get_flag(match.team_b) }}</span>
+            </div>
+            <div style="display:flex; height:6px; border-radius:3px; overflow:hidden; background:#1a1a3e;">
+                <div style="width:{{ team_a_pct }}%; background:#00d4aa;"></div>
+                <div style="width:{{ draw_pct }}%; background:#ffd700;"></div>
+                <div style="width:{{ team_b_pct }}%; background:#e74c3c;"></div>
+            </div>
+            <div onclick="togglePreds('locked-{{ loop.index }}')" style="text-align:center; color:#888; margin-top:6px; cursor:pointer; font-size:1em;">
+                <span id="locked-{{ loop.index }}-toggle">👁️ {{ total_preds }} predictions — tap to view</span>
+            </div>
+        </div>
+        <div class="predictions-grid" id="locked-{{ loop.index }}" style="display:none;">
             {% for player, pred in all_predictions[match.id].items() %}
             <div class="pred-row">
                 <span class="pred-name">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</span>
@@ -137,9 +159,11 @@
                 <div style="width:{{ draw_pct }}%; background:#ffd700;"></div>
                 <div style="width:{{ team_b_pct }}%; background:#e74c3c;"></div>
             </div>
-            <div style="text-align:center; color:#666; margin-top:4px;">{{ total_preds }} predictions</div>
+            <div onclick="togglePreds('upcoming-{{ loop.index }}')" style="text-align:center; color:#888; margin-top:6px; cursor:pointer; font-size:1em;">
+                <span id="upcoming-{{ loop.index }}-toggle">👁️ {{ total_preds }} predictions — tap to view</span>
+            </div>
         </div>
-        <div class="predictions-grid">
+        <div class="predictions-grid" id="upcoming-{{ loop.index }}" style="display:none;">
             {% for player, pred in all_predictions[match.id].items() %}
             <div class="pred-row">
                 <span class="pred-name">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</span>
@@ -216,6 +240,21 @@
     {% endif %}
 
     <script>
+    function togglePreds(id) {
+        var el = document.getElementById(id);
+        var toggle = document.getElementById(id + '-toggle');
+        if (el.style.display === 'none') {
+            el.style.display = 'block';
+            toggle.textContent = '🔽 Tap to hide';
+        } else {
+            el.style.display = 'none';
+            toggle.textContent = toggle.textContent.replace('Tap to hide', 'tap to view');
+            // Restore original text
+            var count = el.querySelectorAll('.pred-row').length;
+            toggle.textContent = '👁️ ' + count + ' predictions — tap to view';
+        }
+    }
+
     function updateCountdowns() {
         document.querySelectorAll('.countdown').forEach(function(el) {
             try {
