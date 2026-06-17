@@ -247,12 +247,17 @@ def calculate_leaderboard():
     today_scores = {player: 0 for player in players}
     prev_scores = {player: 0 for player in players}
     now_ist = datetime.now(IST)
-    # Session dates for "king of the day" - check current AND previous session
-    if now_ist.hour < 10:
+    # Session = evening matches + next morning matches (until 6 PM boundary)
+    # Before 6 PM: show previous session's king (last night's results)
+    # 6 PM onwards: current session starts, show tonight's king once results come in
+    if now_ist.hour < 18:
+        # Before 6 PM: we're showing last night's session as current
         session_dates_current = [f"June {now_ist.day - 1}", f"June {now_ist.day}"]
         session_dates_prev = [f"June {now_ist.day - 2}", f"June {now_ist.day - 1}"]
     else:
+        # After 6 PM: current session is tonight + tomorrow morning
         session_dates_current = [f"June {now_ist.day}", f"June {now_ist.day + 1}"]
+        # Previous session is last night + this morning
         session_dates_prev = [f"June {now_ist.day - 1}", f"June {now_ist.day}"]
     for match in matches:
         if not match.get("result_winner"):
@@ -273,15 +278,16 @@ def calculate_leaderboard():
                 points = 3
             scores[player] = scores.get(player, 0) + points
             if match.get("date") in session_dates_current:
-                # Only count matches with kickoff in the session window
                 try:
                     hour = int(match.get("kickoff", "0").split(":")[0])
                     match_date = match.get("date", "")
-                    if now_ist.hour >= 10:
-                        if (match_date == f"June {now_ist.day}" and hour >= 18) or (match_date == f"June {now_ist.day + 1}" and hour < 10):
+                    if now_ist.hour < 18:
+                        # Before 6 PM: session is yesterday evening + today morning
+                        if (match_date == f"June {now_ist.day - 1}" and hour >= 18) or (match_date == f"June {now_ist.day}" and hour < 10):
                             today_scores[player] = today_scores.get(player, 0) + points
                     else:
-                        if (match_date == f"June {now_ist.day - 1}" and hour >= 18) or (match_date == f"June {now_ist.day}" and hour < 10):
+                        # After 6 PM: session is today evening + tomorrow morning
+                        if (match_date == f"June {now_ist.day}" and hour >= 18) or (match_date == f"June {now_ist.day + 1}" and hour < 10):
                             today_scores[player] = today_scores.get(player, 0) + points
                 except:
                     pass
@@ -290,15 +296,15 @@ def calculate_leaderboard():
                 try:
                     hour = int(match.get("kickoff", "0").split(":")[0])
                     match_date = match.get("date", "")
-                    if now_ist.hour >= 10:
-                        if (match_date == f"June {now_ist.day - 1}" and hour >= 18) or (match_date == f"June {now_ist.day}" and hour < 10):
+                    if now_ist.hour < 18:
+                        if (match_date == f"June {now_ist.day - 2}" and hour >= 18) or (match_date == f"June {now_ist.day - 1}" and hour < 10):
                             prev_scores[player] = prev_scores.get(player, 0) + points
                     else:
-                        if (match_date == f"June {now_ist.day - 2}" and hour >= 18) or (match_date == f"June {now_ist.day - 1}" and hour < 10):
+                        if (match_date == f"June {now_ist.day - 1}" and hour >= 18) or (match_date == f"June {now_ist.day}" and hour < 10):
                             prev_scores[player] = prev_scores.get(player, 0) + points
                 except:
                     pass
-    # Use previous session if current has no scores
+    # Show previous session's king until current session has scores
     final_today = today_scores if max(today_scores.values(), default=0) > 0 else prev_scores
     return sorted(scores.items(), key=lambda x: x[-1], reverse=True), final_today
 
