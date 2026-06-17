@@ -471,12 +471,11 @@ def home():
             except:
                 pass
 
-        # Find today's prediction king
+        # Find today's prediction king (minimum 3 points required)
         prediction_king = None
-        king_points = 0
         if today_scores:
             max_pts = max(today_scores.values())
-            if max_pts > 0:
+            if max_pts >= 3:
                 kings = [p for p, pts in today_scores.items() if pts == max_pts]
                 prediction_king = {"names": kings, "points": max_pts}
 
