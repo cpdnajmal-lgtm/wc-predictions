@@ -66,6 +66,14 @@
         Winner correct = <span>1 pt</span> &nbsp;•&nbsp; Score correct = <span>1 pt</span> &nbsp;•&nbsp; Both correct = <span>3 pts 🔥</span>
     </div>
 
+    {% if announcements %}
+    {% for ann in announcements %}
+    <div style="text-align:center; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.3); border-radius:10px; padding:10px; margin-bottom:12px; font-size:0.85em; color:#ffd700;">
+        📢 {{ ann.message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
     {% if prediction_king %}
     <div style="text-align:center; background:linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05)); border:1px solid #ffd700; border-radius:12px; padding:12px; margin-bottom:20px;">
         <div style="font-size:1.5em;">👑</div>

@@ -14,8 +14,9 @@
         .flash { background: #00d4aa; color: #0f0f23; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: 600; text-align: center; }
         .card { background: #1a1a3e; border-radius: 12px; padding: 15px; margin-bottom: 12px; border: 1px solid #2a2a5e; }
         label { display: block; color: #00d4aa; font-weight: 600; margin-bottom: 5px; font-size: 0.8em; }
-        input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2a2a5e; background: #0f0f23; color: #eee; font-size: 1em; margin-bottom: 8px; }
-        input:focus, select:focus { outline: none; border-color: #00d4aa; }
+        input, select, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2a2a5e; background: #0f0f23; color: #eee; font-size: 1em; margin-bottom: 8px; }
+        textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #00d4aa; }
         .row { display: flex; gap: 8px; }
         .row > div { flex: 1; }
         button { padding: 10px 16px; background: #00d4aa; color: #0f0f23; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
@@ -25,6 +26,11 @@
         .match-info { color: #666; font-size: 0.8em; margin-top: 2px; }
         .result-tag { color: #00d4aa; font-size: 0.85em; margin-top: 4px; }
         .empty-msg { color: #444; padding: 15px; text-align: center; }
+        .pred-list { margin-top: 8px; font-size: 0.8em; }
+        .pred-list .pred-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(42,42,94,0.3); }
+        .pred-list .pred-name { color: #888; }
+        .pred-list .pred-pick { color: #eee; font-weight: 600; }
+        .announcement-item { background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 0.85em; color: #ffd700; }
     </style>
 </head>
 <body>
@@ -35,58 +41,124 @@
     {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
     {% endwith %}
 
-    <!-- Enter Results for today's session -->
-    <h2>📝 Enter Results</h2>
-    {% for match in pending %}
-    <div class="match-item">
-        <div class="match-title">{{ match.team_a }} vs {{ match.team_b }}</div>
-        <div class="match-info">{{ match.date }} • {{ format_time(match.kickoff) }} IST</div>
-        {% if match.result_winner %}
-        <div class="result-tag">✅ {{ match.result_winner }} • {{ match.result_scorer }}</div>
+    <!-- Broadcast Message -->
+    <h2>📢 Broadcast</h2>
+    <div class="card">
+        {% if announcements %}
+        <div style="margin-bottom: 10px;">
+            <p style="color:#888; font-size:0.75em; margin-bottom:6px;">Active announcements:</p>
+            {% for ann in announcements %}
+            <div class="announcement-item">{{ ann.message }}</div>
+            {% endfor %}
+            <form method="POST" style="margin-top:8px;">
+                <input type="hidden" name="action" value="clear_announcements">
+                <button type="submit" class="btn-sm" style="background:#e74c3c; color:white; font-size:0.75em;">Clear All</button>
+            </form>
+        </div>
         {% endif %}
-        <form method="POST" style="margin-top:8px;">
-            <input type="hidden" name="action" value="update_result">
-            <input type="hidden" name="match_id" value="{{ match.id }}">
-            <div class="row">
+        <form method="POST">
+            <input type="hidden" name="action" value="broadcast">
+            <label>Message (shows on home page for everyone)</label>
+            <textarea name="message" placeholder="e.g. Predictions close in 30 min! 🔒" required></textarea>
+            <button type="submit">📢 Post Announcement</button>
+        </form>
+    </div>
+
+    <!-- Bulk Enter Results -->
+    <h2>📝 Enter Results</h2>
+    {% if pending %}
+    <form method="POST">
+        <input type="hidden" name="action" value="bulk_results">
+        {% for match in pending %}
+        <div class="match-item">
+            <div class="match-title">{{ match.team_a }} vs {{ match.team_b }}</div>
+            <div class="match-info">{{ match.date }} • {{ format_time(match.kickoff) }} IST</div>
+            {% if match.result_winner %}
+            <div class="result-tag">✅ {{ match.result_winner }} • {{ match.result_scorer }}</div>
+            {% endif %}
+            <div class="row" style="margin-top:8px;">
                 <div>
                     <label>Winner</label>
-                    <select name="result_winner">
-                        <option value="">-- Pick --</option>
-                        <option value="{{ match.team_a }}" {% if match.result_winner == match.team_a %}selected{% endif %}>{{ match.team_a }}</option>
-                        <option value="{{ match.team_b }}" {% if match.result_winner == match.team_b %}selected{% endif %}>{{ match.team_b }}</option>
-                        <option value="Draw" {% if match.result_winner == "Draw" %}selected{% endif %}>Draw</option>
+                    <select name="winner_{{ match.id }}">
+                        <option value="">-- Skip --</option>
+                        <option value="{{ match.team_a }}">{{ match.team_a }}</option>
+                        <option value="{{ match.team_b }}">{{ match.team_b }}</option>
+                        <option value="Draw">Draw</option>
                     </select>
                 </div>
                 <div>
                     <label>Score</label>
-                    <input name="result_scorer" placeholder="e.g. 2-1" value="{{ match.result_scorer }}">
+                    <input name="scorer_{{ match.id }}" placeholder="e.g. 2-1">
                 </div>
             </div>
-            <div style="display:flex; gap:8px; margin-top:6px;">
-                <button type="submit" class="btn-sm">Save Result</button>
-            </div>
-        </form>
-        <details style="margin-top:6px;">
-            <summary style="color:#888; font-size:0.75em; cursor:pointer;">⚙️ Edit time / Delete</summary>
-            <form method="POST" style="margin-top:6px;">
-                <input type="hidden" name="action" value="edit_match">
-                <input type="hidden" name="match_id" value="{{ match.id }}">
-                <div class="row">
-                    <div><label>Date</label><input name="date" value="{{ match.date }}" style="font-size:0.85em;"></div>
-                    <div><label>Kickoff (24h)</label><input name="kickoff" value="{{ match.kickoff }}" placeholder="00:30" style="font-size:0.85em;"></div>
+            <!-- View predictions for this match -->
+            {% if match_predictions.get(match.id) %}
+            <details style="margin-top:6px;">
+                <summary style="color:#00d4aa; font-size:0.75em; cursor:pointer;">👁️ {{ match_predictions[match.id]|length }} predictions</summary>
+                <div class="pred-list">
+                    {% for player, pred in match_predictions[match.id].items() %}
+                    <div class="pred-row">
+                        <span class="pred-name">{{ player }}</span>
+                        <span class="pred-pick">{{ pred.winner }} ({{ pred.scorer }})</span>
+                    </div>
+                    {% endfor %}
                 </div>
-                <button type="submit" class="btn-sm" style="font-size:0.75em;">Update Time</button>
-            </form>
-            <form method="POST" style="margin-top:6px;" onsubmit="return confirm('Delete this match? All predictions for it will be lost!')">
-                <input type="hidden" name="action" value="delete_match">
-                <input type="hidden" name="match_id" value="{{ match.id }}">
-                <button type="submit" class="btn-sm" style="background:#e74c3c; color:white; font-size:0.75em;">🗑 Delete Match</button>
-            </form>
-        </details>
-    </div>
+            </details>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" style="width:100%; margin-top:10px;">💾 Save All Results</button>
+    </form>
     {% else %}
     <p class="empty-msg">No matches to update right now.</p>
-    {% endfor %}
+    {% endif %}
+
+    <!-- Single Result Entry (for editing existing results) -->
+    <details style="margin-top:12px;">
+        <summary style="color:#888; font-size:0.85em; cursor:pointer;">📝 Update single match result</summary>
+        {% for match in pending %}
+        <div class="match-item" style="margin-top:8px;">
+            <div class="match-title">{{ match.team_a }} vs {{ match.team_b }}</div>
+            <form method="POST" style="margin-top:6px;">
+                <input type="hidden" name="action" value="update_result">
+                <input type="hidden" name="match_id" value="{{ match.id }}">
+                <div class="row">
+                    <div>
+                        <label>Winner</label>
+                        <select name="result_winner">
+                            <option value="">-- Pick --</option>
+                            <option value="{{ match.team_a }}" {% if match.result_winner == match.team_a %}selected{% endif %}>{{ match.team_a }}</option>
+                            <option value="{{ match.team_b }}" {% if match.result_winner == match.team_b %}selected{% endif %}>{{ match.team_b }}</option>
+                            <option value="Draw" {% if match.result_winner == "Draw" %}selected{% endif %}>Draw</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Score</label>
+                        <input name="result_scorer" placeholder="e.g. 2-1" value="{{ match.result_scorer }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn-sm">Save</button>
+            </form>
+            <details style="margin-top:6px;">
+                <summary style="color:#888; font-size:0.75em; cursor:pointer;">⚙️ Edit time / Delete</summary>
+                <form method="POST" style="margin-top:6px;">
+                    <input type="hidden" name="action" value="edit_match">
+                    <input type="hidden" name="match_id" value="{{ match.id }}">
+                    <div class="row">
+                        <div><label>Date</label><input name="date" value="{{ match.date }}" style="font-size:0.85em;"></div>
+                        <div><label>Kickoff (24h)</label><input name="kickoff" value="{{ match.kickoff }}" placeholder="00:30" style="font-size:0.85em;"></div>
+                    </div>
+                    <button type="submit" class="btn-sm" style="font-size:0.75em;">Update Time</button>
+                </form>
+                <form method="POST" style="margin-top:6px;" onsubmit="return confirm('Delete this match?')">
+                    <input type="hidden" name="action" value="delete_match">
+                    <input type="hidden" name="match_id" value="{{ match.id }}">
+                    <button type="submit" class="btn-sm" style="background:#e74c3c; color:white; font-size:0.75em;">🗑 Delete</button>
+                </form>
+            </details>
+        </div>
+        {% endfor %}
+    </details>
 
     <!-- Add Match -->
     <h2>➕ Add Match</h2>
@@ -114,7 +186,7 @@
                 <input type="hidden" name="player_name" value="{{ player }}">
                 <button type="submit" style="background:none; color:#ffd700; padding:0 4px; font-size:0.8em; border:none; cursor:pointer;">🔑</button>
             </form>
-            <form method="POST" style="display:inline;" onsubmit="return confirm('Delete {{ player }}? This removes all their predictions!')">
+            <form method="POST" style="display:inline;" onsubmit="return confirm('Delete {{ player }}?')">
                 <input type="hidden" name="action" value="delete_player">
                 <input type="hidden" name="player_name" value="{{ player }}">
                 <button type="submit" style="background:none; color:#e74c3c; padding:0 4px; font-size:1em; border:none; cursor:pointer;">×</button>

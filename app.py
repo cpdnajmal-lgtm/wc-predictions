@@ -97,6 +97,15 @@ def init_db():
             NULL;
         END $$;
     """)
+    # Add nickname column if not exists
+    cur.execute("""
+        DO $$
+        BEGIN
+            ALTER TABLE players ADD COLUMN nickname TEXT DEFAULT '';
+        EXCEPTION WHEN duplicate_column THEN
+            NULL;
+        END $$;
+    """)
     conn.commit()
     cur.execute("""
         CREATE TABLE IF NOT EXISTS predictions (
@@ -105,6 +114,15 @@ def init_db():
             winner TEXT DEFAULT '',
             scorer TEXT DEFAULT '',
             PRIMARY KEY (player, match_id)
+        )
+    """)
+    # Announcements table
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS announcements (
+            id SERIAL PRIMARY KEY,
+            message TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT NOW(),
+            active BOOLEAN DEFAULT TRUE
         )
     """)
     # Add kickoff column if not exists (for existing databases)
@@ -158,6 +176,15 @@ def load_predictions():
             "scorer": row["scorer"],
         }
     return preds
+
+
+def load_announcements():
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("SELECT * FROM announcements WHERE active = TRUE ORDER BY created_at DESC LIMIT 3")
+    rows = cur.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 
 def seed_matches():
@@ -490,6 +517,7 @@ def home():
             not_predicted=[p for p in players if p not in today_predictors],
             prediction_king=prediction_king,
             player_teams=player_teams,
+            announcements=load_announcements(),
         )
     except Exception as e:
         return f"Error: {e}", 500
@@ -631,18 +659,14 @@ def _predict():
 
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
-    """Let players edit their display name."""
+    """Let players set a nickname/alias that shows alongside their name."""
     if request.method == "POST":
         player = request.form.get("player", "").strip()
         pin = request.form.get("pin", "").strip()
-        new_name = request.form.get("new_name", "").strip()
+        nickname = request.form.get("nickname", "").strip()
 
-        if not player or not pin or not new_name:
+        if not player or not pin:
             flash("Please fill in all fields")
-            return redirect(url_for("profile"))
-
-        if player == new_name:
-            flash("New name is the same as current name")
             return redirect(url_for("profile"))
 
         # Verify PIN
@@ -659,19 +683,14 @@ def profile():
             flash("Wrong PIN!")
             return redirect(url_for("profile"))
 
-        # Check if new name already exists
-        cur.execute("SELECT name FROM players WHERE name = %s", (new_name,))
-        if cur.fetchone():
-            conn.close()
-            flash(f"Name '{new_name}' is already taken!")
-            return redirect(url_for("profile"))
-
-        # Update name in all tables
-        cur.execute("UPDATE players SET name = %s WHERE name = %s", (new_name, player))
-        cur.execute("UPDATE predictions SET player = %s WHERE player = %s", (new_name, player))
+        # Update nickname
+        cur.execute("UPDATE players SET nickname = %s WHERE name = %s", (nickname, player))
         conn.commit()
         conn.close()
-        flash(f"Name changed: {player} → {new_name} ✅")
+        if nickname:
+            flash(f"Nickname set: {player} ({nickname}) ✅")
+        else:
+            flash(f"Nickname removed for {player} ✅")
         return redirect(url_for("home"))
 
     players = load_players()
@@ -816,6 +835,36 @@ def admin():
             conn.commit()
             flash(f"PIN reset for '{name}'. They can set a new one next time.")
 
+        elif action == "broadcast":
+            message = request.form.get("message", "").strip()
+            if message:
+                cur.execute("INSERT INTO announcements (message) VALUES (%s)", (message,))
+                conn.commit()
+                flash(f"Announcement posted! 📢")
+
+        elif action == "clear_announcements":
+            cur.execute("UPDATE announcements SET active = FALSE")
+            conn.commit()
+            flash("All announcements cleared.")
+
+        elif action == "bulk_results":
+            # Process multiple match results at once
+            updated = 0
+            for key in request.form:
+                if key.startswith("winner_"):
+                    match_id = key.replace("winner_", "")
+                    winner = request.form.get(f"winner_{match_id}", "").strip()
+                    scorer = request.form.get(f"scorer_{match_id}", "").strip()
+                    if winner:
+                        cur.execute(
+                            "UPDATE matches SET result_winner = %s, result_scorer = %s WHERE id = %s",
+                            (winner, scorer, match_id),
+                        )
+                        updated += 1
+            if updated:
+                conn.commit()
+                flash(f"Updated results for {updated} match(es)! ✅")
+
         conn.close()
         return redirect(url_for("admin"))
 
@@ -830,7 +879,17 @@ def admin():
         show_dates = [f"June {today_day}", f"June {today_day + 1}"]
     pending = [m for m in matches if m.get("date") in show_dates and not m.get("result_winner")]
     players = load_players()
-    return render_template("admin.html", data={"players": players}, today_matches=get_today_matches(), pending=pending)
+    predictions = load_predictions()
+    # Get predictions for pending matches (for the "view predictions" feature)
+    match_predictions = {}
+    for match in pending:
+        match_predictions[match["id"]] = {}
+        for player in players:
+            pred = predictions.get(player, {}).get(match["id"])
+            if pred:
+                match_predictions[match["id"]][player] = pred
+    announcements = load_announcements()
+    return render_template("admin.html", data={"players": players}, today_matches=get_today_matches(), pending=pending, match_predictions=match_predictions, announcements=announcements)
 
 
 @app.route("/stats")
