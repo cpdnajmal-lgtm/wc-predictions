@@ -1025,31 +1025,37 @@ def stats():
                 else:
                     not_predicted_players.add(player)
             pct = round(len(predicted_players) * 100 / len(players)) if players else 0
-            daily_breakdown.append({
-                "date": date,
-                "predicted": sorted(predicted_players),
-                "not_predicted": sorted(not_predicted_players),
-                "predicted_count": len(predicted_players),
-                "total": len(players),
-                "pct": pct,
-            })
+            # Only include days where at least someone predicted (hide pre-launch days)
+            if len(predicted_players) > 0:
+                daily_breakdown.append({
+                    "date": date,
+                    "predicted": sorted(predicted_players),
+                    "not_predicted": sorted(not_predicted_players),
+                    "predicted_count": len(predicted_players),
+                    "total": len(players),
+                    "pct": pct,
+                })
 
         # --- Participation rate per match day (for chart) ---
         participation_labels = [d["date"] for d in daily_breakdown]
         participation_rates = [d["pct"] for d in daily_breakdown]
 
         # --- Prediction streaks (consecutive days a player predicted) ---
+        # Only count from the day the player first predicted (ignore pre-join days)
         player_streaks = {}
         for player in players:
             current_streak = 0
             max_streak = 0
+            started = False  # track if player has made any prediction yet
             for date in sorted_dates:
                 match_ids = sessions[date]
                 predicted = any(predictions.get(player, {}).get(mid) for mid in match_ids)
                 if predicted:
+                    started = True
                     current_streak += 1
                     max_streak = max(max_streak, current_streak)
-                else:
+                elif started:
+                    # Only break streak after player has joined
                     current_streak = 0
             player_streaks[player] = {"current": current_streak, "max": max_streak}
 
