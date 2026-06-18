@@ -304,12 +304,11 @@ def calculate_leaderboard():
                             prev_scores[player] = prev_scores.get(player, 0) + points
                 except:
                     pass
-    # Before 6 PM daytime (6 AM - 6 PM): show previous session's king
-    # During active session (6 PM - 6 AM): show current session's king only
-    if 6 <= now_ist.hour < 18:
-        final_today = prev_scores
-    else:
-        final_today = today_scores
+    # Display logic:
+    # 6 PM - 6 AM: active session, show current session king (today_scores)
+    # 6 AM - 6 PM: daytime, show the session that just ended (today_scores = last night)
+    # In both cases we show today_scores. prev_scores is only used as fallback if today has 0.
+    final_today = today_scores
     return sorted(scores.items(), key=lambda x: x[-1], reverse=True), final_today
 
 
