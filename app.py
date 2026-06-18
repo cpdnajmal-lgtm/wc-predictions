@@ -247,18 +247,18 @@ def calculate_leaderboard():
     today_scores = {player: 0 for player in players}
     prev_scores = {player: 0 for player in players}
     now_ist = datetime.now(IST)
-    # Session = evening matches + next morning matches (until 6 PM boundary)
-    # Before 6 PM: show previous session's king (last night's results)
-    # 6 PM onwards: current session starts, show tonight's king once results come in
-    if now_ist.hour < 18:
-        # Before 6 PM: we're showing last night's session as current
+    # Session boundary: 6 PM to 6 PM
+    # 6 PM to 11:59 PM (hour >= 18): current session = today evening + tomorrow morning
+    # 12 AM to 5:59 PM (hour < 18): current session = yesterday evening + today morning
+    # "Previous session" is the one before that (for fallback display during 6 AM-6 PM daytime)
+    if now_ist.hour >= 18:
+        # Evening: session just started tonight
+        session_dates_current = [f"June {now_ist.day}", f"June {now_ist.day + 1}"]
+        session_dates_prev = [f"June {now_ist.day - 1}", f"June {now_ist.day}"]
+    else:
+        # After midnight / daytime: still in last night's session
         session_dates_current = [f"June {now_ist.day - 1}", f"June {now_ist.day}"]
         session_dates_prev = [f"June {now_ist.day - 2}", f"June {now_ist.day - 1}"]
-    else:
-        # After 6 PM: current session is tonight + tomorrow morning
-        session_dates_current = [f"June {now_ist.day}", f"June {now_ist.day + 1}"]
-        # Previous session is last night + this morning
-        session_dates_prev = [f"June {now_ist.day - 1}", f"June {now_ist.day}"]
     for match in matches:
         if not match.get("result_winner"):
             continue
@@ -281,13 +281,13 @@ def calculate_leaderboard():
                 try:
                     hour = int(match.get("kickoff", "0").split(":")[0])
                     match_date = match.get("date", "")
-                    if now_ist.hour < 18:
-                        # Before 6 PM: session is yesterday evening + today morning
-                        if (match_date == f"June {now_ist.day - 1}" and hour >= 18) or (match_date == f"June {now_ist.day}" and hour < 10):
+                    if now_ist.hour >= 18:
+                        # Tonight's session: today evening (>=18) + tomorrow morning (<10)
+                        if (match_date == f"June {now_ist.day}" and hour >= 18) or (match_date == f"June {now_ist.day + 1}" and hour < 10):
                             today_scores[player] = today_scores.get(player, 0) + points
                     else:
-                        # After 6 PM: session is today evening + tomorrow morning
-                        if (match_date == f"June {now_ist.day}" and hour >= 18) or (match_date == f"June {now_ist.day + 1}" and hour < 10):
+                        # After midnight: last night's session = yesterday evening (>=18) + today morning (<10)
+                        if (match_date == f"June {now_ist.day - 1}" and hour >= 18) or (match_date == f"June {now_ist.day}" and hour < 10):
                             today_scores[player] = today_scores.get(player, 0) + points
                 except:
                     pass
@@ -296,23 +296,19 @@ def calculate_leaderboard():
                 try:
                     hour = int(match.get("kickoff", "0").split(":")[0])
                     match_date = match.get("date", "")
-                    if now_ist.hour < 18:
-                        if (match_date == f"June {now_ist.day - 2}" and hour >= 18) or (match_date == f"June {now_ist.day - 1}" and hour < 10):
+                    if now_ist.hour >= 18:
+                        if (match_date == f"June {now_ist.day - 1}" and hour >= 18) or (match_date == f"June {now_ist.day}" and hour < 10):
                             prev_scores[player] = prev_scores.get(player, 0) + points
                     else:
-                        if (match_date == f"June {now_ist.day - 1}" and hour >= 18) or (match_date == f"June {now_ist.day}" and hour < 10):
+                        if (match_date == f"June {now_ist.day - 2}" and hour >= 18) or (match_date == f"June {now_ist.day - 1}" and hour < 10):
                             prev_scores[player] = prev_scores.get(player, 0) + points
                 except:
                     pass
-    # King display logic:
-    # A session runs from 6 PM to 6 PM next day.
-    # Before 6 PM (daytime): show last night's session king (prev_scores)
-    # After 6 PM (evening/night): show current session king only if results exist (no fallback)
+    # Before 6 PM daytime (6 AM - 6 PM): show previous session's king
+    # During active session (6 PM - 6 AM): show current session's king only
     if 6 <= now_ist.hour < 18:
-        # 6 AM to 6 PM: show previous session's king (last night)
         final_today = prev_scores
     else:
-        # 6 PM to 6 AM: we're in the current session, show tonight's king only
         final_today = today_scores
     return sorted(scores.items(), key=lambda x: x[-1], reverse=True), final_today
 
