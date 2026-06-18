@@ -1041,21 +1041,21 @@ def stats():
         participation_rates = [d["pct"] for d in daily_breakdown]
 
         # --- Prediction streaks (consecutive days a player predicted) ---
-        # Only count from the day the player first predicted (ignore pre-join days)
+        # Only count days where the app was active (at least one prediction exists for that day)
+        active_dates = [date for date in sorted_dates if any(
+            predictions.get(p, {}).get(mid) for p in players for mid in sessions[date]
+        )]
         player_streaks = {}
         for player in players:
             current_streak = 0
             max_streak = 0
-            started = False  # track if player has made any prediction yet
-            for date in sorted_dates:
+            for date in active_dates:
                 match_ids = sessions[date]
                 predicted = any(predictions.get(player, {}).get(mid) for mid in match_ids)
                 if predicted:
-                    started = True
                     current_streak += 1
                     max_streak = max(max_streak, current_streak)
-                elif started:
-                    # Only break streak after player has joined
+                else:
                     current_streak = 0
             player_streaks[player] = {"current": current_streak, "max": max_streak}
 
