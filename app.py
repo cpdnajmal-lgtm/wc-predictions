@@ -125,12 +125,13 @@ def init_db():
             active BOOLEAN DEFAULT TRUE
         )
     """)
+    conn.commit()
     # Add kickoff column if not exists (for existing databases)
     try:
         cur.execute("ALTER TABLE matches ADD COLUMN kickoff TEXT DEFAULT ''")
+        conn.commit()
     except:
         conn.rollback()
-    conn.commit()
     conn.close()
 
 
