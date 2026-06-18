@@ -629,6 +629,55 @@ def _predict():
     return render_template("predict.html", matches=today_matches, players=players, player_preds=player_preds)
 
 
+@app.route("/profile", methods=["GET", "POST"])
+def profile():
+    """Let players edit their display name."""
+    if request.method == "POST":
+        player = request.form.get("player", "").strip()
+        pin = request.form.get("pin", "").strip()
+        new_name = request.form.get("new_name", "").strip()
+
+        if not player or not pin or not new_name:
+            flash("Please fill in all fields")
+            return redirect(url_for("profile"))
+
+        if player == new_name:
+            flash("New name is the same as current name")
+            return redirect(url_for("profile"))
+
+        # Verify PIN
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT pin FROM players WHERE name = %s", (player,))
+        row = cur.fetchone()
+        if not row:
+            conn.close()
+            flash("Player not found")
+            return redirect(url_for("profile"))
+        if row[0] and pin != row[0]:
+            conn.close()
+            flash("Wrong PIN!")
+            return redirect(url_for("profile"))
+
+        # Check if new name already exists
+        cur.execute("SELECT name FROM players WHERE name = %s", (new_name,))
+        if cur.fetchone():
+            conn.close()
+            flash(f"Name '{new_name}' is already taken!")
+            return redirect(url_for("profile"))
+
+        # Update name in all tables
+        cur.execute("UPDATE players SET name = %s WHERE name = %s", (new_name, player))
+        cur.execute("UPDATE predictions SET player = %s WHERE player = %s", (new_name, player))
+        conn.commit()
+        conn.close()
+        flash(f"Name changed: {player} → {new_name} ✅")
+        return redirect(url_for("home"))
+
+    players = load_players()
+    return render_template("profile.html", players=players)
+
+
 @app.route("/my/<player_name>")
 def my_predictions(player_name):
     matches = load_matches()

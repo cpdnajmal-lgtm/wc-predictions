@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✏️ Edit Name - MIAC WC 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3e 50%, #0f0f23 100%); color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        h1 { text-align: center; margin-bottom: 3px; font-size: 1.8em; background: linear-gradient(135deg, #00d4aa, #00ff88); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { text-align: center; color: #555; margin-bottom: 20px; font-size: 0.85em; letter-spacing: 1px; }
+        .flash { background: linear-gradient(135deg, #00d4aa, #00a88a); color: #0f0f23; padding: 12px 15px; border-radius: 10px; margin-bottom: 15px; font-weight: 600; text-align: center; }
+        .flash.error { background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; }
+        .card { background: rgba(26,26,62,0.6); border-radius: 14px; padding: 20px; margin-bottom: 16px; border: 1px solid #2a2a5e; }
+        label { display: block; color: #00d4aa; font-size: 0.8em; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; margin-top: 14px; }
+        select, input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #2a2a5e; background: rgba(26,26,62,0.8); color: #eee; font-size: 1em; margin-bottom: 4px; }
+        select:focus, input:focus { outline: none; border-color: #00d4aa; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 25px; background: linear-gradient(135deg, #00d4aa, #00a88a); color: #0f0f23; font-size: 1em; font-weight: 700; cursor: pointer; margin-top: 20px; }
+        button:hover { transform: scale(1.02); }
+        .back-link { display: block; text-align: center; color: #00d4aa; text-decoration: none; font-size: 0.9em; margin-top: 20px; padding: 12px; }
+        .hint { color: #666; font-size: 0.75em; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <h1>✏️ Edit Name</h1>
+    <p class="subtitle">Change your display name</p>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <form method="POST">
+            <label>Your current name</label>
+            <select name="player" required>
+                <option value="">Select your name</option>
+                {% for player in players %}
+                <option value="{{ player }}">{{ player }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Your PIN</label>
+            <input type="password" name="pin" maxlength="4" pattern="[0-9]{4}" placeholder="4-digit PIN" required inputmode="numeric">
+            <p class="hint">Enter your 4-digit PIN to verify it's you</p>
+
+            <label>New name</label>
+            <input type="text" name="new_name" placeholder="Enter your new name" required maxlength="30">
+            <p class="hint">This will update your name across all predictions and leaderboard</p>
+
+            <button type="submit">Change Name</button>
+        </form>
+    </div>
+
+    <a href="{{ url_for('home') }}" class="back-link">← Back to Home</a>
+</body>
+</html>
