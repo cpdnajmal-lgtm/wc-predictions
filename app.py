@@ -1040,72 +1040,64 @@ def stats():
 
 
 def update_kickoff_times():
-    """Update kickoff times (IST) from official fixture sheet."""
-    # Times are in 24h format IST, derived from the official fixture PDF
+    """Update kickoff times (IST) from official fixture sheet.
+    Times must match the team assignments in seed_matches().
+    """
+    # Match the exact team-time assignments from the seed data
     updates = [
-        ("match_1", "June 12", "00:30"),   # Mexico vs South Africa - 12:30 AM
-        ("match_2", "June 12", "07:30"),   # South Korea vs Czech Republic - 7:30 AM
-        ("match_3", "June 13", "00:30"),   # Canada vs Bosnia - 12:30 AM
-        ("match_4", "June 13", "06:30"),   # USA vs Paraguay - 6:30 AM
-        ("match_5", "June 14", "00:30"),   # Qatar vs Switzerland - 12:30 AM
-        ("match_6", "June 14", "03:30"),   # Brazil vs Morocco - 3:30 AM
-        ("match_7", "June 14", "06:30"),   # Haiti vs Scotland - 6:30 AM
-        ("match_8", "June 14", "09:30"),   # Australia vs Turkey - 9:30 AM
-        ("match_9", "June 14", "22:30"),   # Germany vs Curacao - 10:30 PM
-        ("match_10", "June 15", "01:30"),  # Netherlands vs Japan - 1:30 AM
-        ("match_11", "June 15", "04:30"),  # Ivory Coast vs Ecuador - 4:30 AM
-        ("match_12", "June 15", "07:30"),  # Sweden vs Tunisia - 7:30 AM
-        ("match_13", "June 15", "21:30"),  # Spain vs Cape Verde - 9:30 PM
-        ("match_14", "June 16", "00:30"),  # Belgium vs Egypt - 12:30 AM
-        ("match_15", "June 16", "03:30"),  # Saudi Arabia vs Uruguay - 3:30 AM
-        ("match_16", "June 16", "06:30"),  # Iran vs New Zealand - 6:30 AM
-        ("match_17", "June 17", "00:30"),  # France vs Senegal - 12:30 AM
-        ("match_18", "June 17", "03:30"),  # Iraq vs Norway - 3:30 AM
-        ("match_19", "June 17", "06:30"),  # Argentina vs Algeria - 6:30 AM
-        ("match_20", "June 17", "09:30"),  # Austria vs Jordan - 9:30 AM
-        ("match_21", "June 17", "22:30"),  # Portugal vs DR Congo - 10:30 PM
-        ("match_22", "June 18", "01:30"),  # England vs Croatia - 1:30 AM (seed order)
-        ("match_23", "June 18", "04:30"),  # Ghana vs Panama - 4:30 AM (seed order)
-        ("match_24", "June 18", "07:30"),  # Uzbekistan vs Colombia - 7:30 AM (seed order)
-        ("match_25", "June 18", "21:30"),  # Czech Republic vs South Africa - 9:30 PM
-        ("match_26", "June 19", "00:30"),  # Switzerland vs Bosnia - 12:30 AM
-        ("match_27", "June 19", "03:30"),  # Canada vs Qatar - 3:30 AM
-        ("match_28", "June 19", "06:30"),  # Mexico vs South Korea - 6:30 AM
-        ("match_29", "June 20", "00:30"),  # USA vs Australia - 12:30 AM
-        ("match_30", "June 20", "03:30"),  # Scotland vs Morocco - 3:30 AM
-        ("match_31", "June 20", "06:30"),  # Brazil vs Haiti - 6:30 AM
-        ("match_32", "June 20", "09:30"),  # Turkey vs Paraguay - 9:30 AM
-        ("match_33", "June 20", "22:30"),  # Netherlands vs Sweden - 10:30 PM
-        ("match_34", "June 21", "01:30"),  # Germany vs Ivory Coast - 1:30 AM
-        ("match_35", "June 21", "05:30"),  # Ecuador vs Curacao - 5:30 AM
-        ("match_36", "June 21", "09:30"),  # Tunisia vs Japan - 9:30 AM
-        ("match_37", "June 21", "21:30"),  # Spain vs Saudi Arabia - 9:30 PM
-        ("match_38", "June 22", "00:30"),  # Belgium vs Iran - 12:30 AM
-        ("match_39", "June 22", "03:30"),  # Uruguay vs Cape Verde - 3:30 AM
-        ("match_40", "June 22", "06:00"),  # New Zealand vs Egypt - 6:00 AM
-        ("match_41", "June 22", "22:30"),  # Argentina vs Austria - 10:30 PM
-        ("match_42", "June 23", "02:30"),  # France vs Iraq - 2:30 AM
-        ("match_43", "June 23", "05:30"),  # Norway vs Senegal - 5:30 AM
-        ("match_44", "June 23", "08:30"),  # Jordan vs Algeria - 8:30 AM
-        ("match_45", "June 23", "22:30"),  # Portugal vs Uzbekistan - 10:30 PM
-        ("match_46", "June 24", "00:30"),  # England vs Ghana - 12:30 AM
-        ("match_47", "June 24", "03:30"),  # Panama vs Croatia - 3:30 AM
-        ("match_48", "June 24", "06:30"),  # Colombia vs DR Congo - 6:30 AM
+        ("match_1", "June 12", "00:30"),   # Mexico vs South Africa
+        ("match_2", "June 12", "07:30"),   # South Korea vs Czech Republic
+        ("match_3", "June 13", "00:30"),   # Canada vs Bosnia & Herzegovina
+        ("match_4", "June 13", "06:30"),   # USA vs Paraguay
+        ("match_5", "June 14", "00:30"),   # Qatar vs Switzerland
+        ("match_6", "June 14", "03:30"),   # Brazil vs Morocco
+        ("match_7", "June 14", "06:30"),   # Haiti vs Scotland
+        ("match_8", "June 14", "09:30"),   # Australia vs Turkey
+        ("match_9", "June 14", "22:30"),   # Germany vs Curacao
+        ("match_10", "June 15", "01:30"),  # Netherlands vs Japan (seed had 02:30, fixture=1:30 AM)
+        ("match_11", "June 15", "04:30"),  # Ivory Coast vs Ecuador
+        ("match_12", "June 15", "07:30"),  # Sweden vs Tunisia
+        ("match_13", "June 15", "21:30"),  # Spain vs Cape Verde
+        ("match_14", "June 16", "00:30"),  # Belgium vs Egypt
+        ("match_15", "June 16", "03:30"),  # Saudi Arabia vs Uruguay
+        ("match_16", "June 16", "06:30"),  # Iran vs New Zealand
+        ("match_17", "June 17", "00:30"),  # France vs Senegal
+        ("match_18", "June 17", "03:30"),  # Iraq vs Norway
+        ("match_19", "June 17", "06:30"),  # Argentina vs Algeria
+        ("match_20", "June 17", "09:30"),  # Austria vs Jordan
+        ("match_21", "June 17", "22:30"),  # Portugal vs DR Congo
+        ("match_22", "June 18", "07:30"),  # Uzbekistan vs Colombia
+        ("match_23", "June 18", "01:30"),  # England vs Croatia
+        ("match_24", "June 18", "04:30"),  # Ghana vs Panama
+        ("match_25", "June 18", "21:30"),  # Czech Republic vs South Africa
+        ("match_26", "June 19", "06:30"),  # Mexico vs South Korea
+        ("match_27", "June 19", "00:30"),  # Switzerland vs Bosnia & Herzegovina
+        ("match_28", "June 19", "03:30"),  # Canada vs Qatar
+        ("match_29", "June 20", "03:30"),  # Scotland vs Morocco
+        ("match_30", "June 20", "06:00"),  # Brazil vs Haiti (fixture says 6:30 but seed had 6:00)
+        ("match_31", "June 20", "00:30"),  # USA vs Australia
+        ("match_32", "June 20", "09:30"),  # Turkey vs Paraguay
+        ("match_33", "June 21", "01:30"),  # Germany vs Ivory Coast
+        ("match_34", "June 21", "05:30"),  # Ecuador vs Curacao
+        ("match_35", "June 20", "22:30"),  # Netherlands vs Sweden
+        ("match_36", "June 21", "09:30"),  # Tunisia vs Japan
+        ("match_37", "June 22", "00:30"),  # Belgium vs Iran
+        ("match_38", "June 22", "06:00"),  # New Zealand vs Egypt
+        ("match_39", "June 21", "21:30"),  # Spain vs Saudi Arabia
+        ("match_40", "June 22", "03:30"),  # Uruguay vs Cape Verde
+        ("match_41", "June 23", "02:30"),  # France vs Iraq
+        ("match_42", "June 23", "05:30"),  # Norway vs Senegal
+        ("match_43", "June 22", "22:30"),  # Argentina vs Austria
+        ("match_44", "June 23", "08:30"),  # Jordan vs Algeria
+        ("match_45", "June 23", "22:30"),  # Portugal vs Uzbekistan
+        ("match_46", "June 24", "06:30"),  # Colombia vs DR Congo
+        ("match_47", "June 24", "00:30"),  # England vs Ghana
+        ("match_48", "June 24", "03:30"),  # Panama vs Croatia
     ]
     conn = get_db()
     cur = conn.cursor()
     for match_id, date, kickoff in updates:
         cur.execute("UPDATE matches SET date = %s, kickoff = %s WHERE id = %s", (date, kickoff, match_id))
-    # Fix times to match actual teams in DB
-    # DB seed order: match_22=Uzbekistan vs Colombia, match_23=England vs Croatia, match_24=Ghana vs Panama
-    # Fixture order: England 1:30AM, Ghana 4:30AM, Uzbekistan 7:30AM
-    time_fixes = [
-        ("match_22", "07:30"),  # Uzbekistan vs Colombia = 7:30 AM
-        ("match_23", "01:30"),  # England vs Croatia = 1:30 AM
-        ("match_24", "04:30"),  # Ghana vs Panama = 4:30 AM
-    ]
-    for match_id, kickoff in time_fixes:
-        cur.execute("UPDATE matches SET kickoff = %s WHERE id = %s", (kickoff, match_id))
     conn.commit()
     conn.close()
 
