@@ -464,6 +464,27 @@ def home():
                 prev_points = points
             ranked_leaderboard.append((player, points, rank))
 
+        # Calculate rank changes (compare current rank vs rank without today's session points)
+        prev_leaderboard = sorted(
+            [(player, pts - today_scores.get(player, 0)) for player, pts in leaderboard],
+            key=lambda x: x[1], reverse=True
+        )
+        prev_ranks = {}
+        prev_rank = 0
+        prev_pts_val = None
+        for i, (player, pts) in enumerate(prev_leaderboard):
+            if pts != prev_pts_val:
+                prev_rank += 1
+                prev_pts_val = pts
+            prev_ranks[player] = prev_rank
+
+        # Add rank change to leaderboard: (player, points, rank, rank_change)
+        ranked_leaderboard_with_change = []
+        for player, points, rank in ranked_leaderboard:
+            old_rank = prev_ranks.get(player, rank)
+            change = old_rank - rank  # positive = moved up, negative = moved down
+            ranked_leaderboard_with_change.append((player, points, rank, change))
+
         # Count how many players predicted today
         today_predictors = set()
         for match in today_matches + locked_matches:
@@ -504,7 +525,7 @@ def home():
 
         return render_template(
             "home.html",
-            leaderboard=ranked_leaderboard,
+            leaderboard=ranked_leaderboard_with_change,
             today_matches=upcoming_matches,
             locked_matches=locked_matches,
             completed=completed,

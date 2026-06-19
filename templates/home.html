@@ -199,21 +199,21 @@
     <h2>🏆 Leaderboard ({{ leaderboard|length }})</h2>
     {% if leaderboard %}
     <div class="leaderboard">
-        {% for player, points, rank in leaderboard[:10] %}
+        {% for player, points, rank, change in leaderboard[:10] %}
         <div class="lb-item {% if rank == 1 %}top-1{% elif rank == 2 %}top-2{% elif rank == 3 %}top-3{% endif %}">
             <div class="lb-rank {% if rank == 1 %}r1{% elif rank == 2 %}r2{% elif rank == 3 %}r3{% else %}r-other{% endif %}">
                 {% if rank == 1 %}🥇{% elif rank == 2 %}🥈{% elif rank == 3 %}🥉{% else %}{{ rank }}{% endif %}
             </div>
-            <div class="lb-name"><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a></div>
+            <div class="lb-name"><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a>{% if change > 0 %}<span style="color:#00d4aa; font-size:0.7em; margin-left:5px;">↑{{ change }}</span>{% elif change < 0 %}<span style="color:#e74c3c; font-size:0.7em; margin-left:5px;">↓{{ change|abs }}</span>{% endif %}</div>
             <div class="lb-points">{{ points }}<span class="lb-pts-label">pts</span></div>
         </div>
         {% endfor %}
         {% if leaderboard|length > 10 %}
         <div id="lb-rest" style="display:none;">
-            {% for player, points, rank in leaderboard[10:] %}
+            {% for player, points, rank, change in leaderboard[10:] %}
             <div class="lb-item">
                 <div class="lb-rank r-other">{{ rank }}</div>
-                <div class="lb-name"><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a></div>
+                <div class="lb-name"><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a>{% if change > 0 %}<span style="color:#00d4aa; font-size:0.7em; margin-left:5px;">↑{{ change }}</span>{% elif change < 0 %}<span style="color:#e74c3c; font-size:0.7em; margin-left:5px;">↓{{ change|abs }}</span>{% endif %}</div>
                 <div class="lb-points">{{ points }}<span class="lb-pts-label">pts</span></div>
             </div>
             {% endfor %}
