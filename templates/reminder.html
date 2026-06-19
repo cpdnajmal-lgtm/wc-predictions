@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📋 WhatsApp Reminder</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f23; color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        h1 { text-align: center; margin-bottom: 15px; font-size: 1.4em; }
+        .nav { text-align: center; margin-bottom: 20px; }
+        .nav a { color: #00d4aa; text-decoration: none; margin: 0 10px; }
+        .card { background: #1a1a3e; border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid #2a2a5e; }
+        .preview { white-space: pre-wrap; font-size: 0.9em; line-height: 1.6; color: #eee; background: #0f0f23; border-radius: 8px; padding: 14px; border: 1px solid #2a2a5e; }
+        .copy-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; border-radius: 25px; font-size: 1.1em; font-weight: 700; cursor: pointer; margin-top: 12px; }
+        .copy-btn:active { transform: scale(0.98); }
+        .success { display: none; text-align: center; color: #00d4aa; font-weight: 600; margin-top: 10px; font-size: 0.9em; }
+        .stats { display: flex; gap: 10px; margin-bottom: 16px; }
+        .stat-box { flex: 1; background: #1a1a3e; border-radius: 10px; padding: 12px; text-align: center; border: 1px solid #2a2a5e; }
+        .stat-value { font-size: 1.3em; font-weight: 800; color: #00d4aa; }
+        .stat-label { font-size: 0.7em; color: #888; margin-top: 2px; }
+    </style>
+</head>
+<body>
+    <h1>📋 WhatsApp Reminder</h1>
+    <div class="nav">
+        <a href="{{ url_for('admin') }}">← Admin</a>
+        <a href="{{ url_for('home') }}">Home</a>
+    </div>
+
+    <div class="stats">
+        <div class="stat-box">
+            <div class="stat-value">{{ today_matches|length }}</div>
+            <div class="stat-label">Matches Tonight</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ predicted_count }}/{{ total_players }}</div>
+            <div class="stat-label">Predicted</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ not_predicted|length }}</div>
+            <div class="stat-label">Missing</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="preview" id="reminderText">{{ reminder_text }}</div>
+        <button class="copy-btn" onclick="copyReminder()">📋 Copy to Clipboard</button>
+        <div class="success" id="copySuccess">✅ Copied! Now paste in WhatsApp</div>
+    </div>
+
+    <script>
+    function copyReminder() {
+        var text = document.getElementById('reminderText').innerText;
+        navigator.clipboard.writeText(text).then(function() {
+            document.getElementById('copySuccess').style.display = 'block';
+            setTimeout(function() {
+                document.getElementById('copySuccess').style.display = 'none';
+            }, 3000);
+        }).catch(function() {
+            // Fallback for older browsers
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            document.getElementById('copySuccess').style.display = 'block';
+        });
+    }
+    </script>
+</body>
+</html>

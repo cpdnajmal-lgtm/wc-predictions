@@ -35,7 +35,7 @@
 </head>
 <body>
     <h1>⚙️ Admin</h1>
-    <div class="nav"><a href="{{ url_for('home') }}">← Back to Home</a></div>
+    <div class="nav"><a href="{{ url_for('home') }}">← Home</a> &nbsp;•&nbsp; <a href="{{ url_for('reminder') }}">📋 WhatsApp Reminder</a></div>
 
     {% with messages = get_flashed_messages() %}
     {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}

@@ -679,6 +679,49 @@ def _predict():
     return render_template("predict.html", matches=today_matches, players=players, player_preds=player_preds)
 
 
+@app.route("/reminder")
+def reminder():
+    """Generate a copy-paste WhatsApp reminder message."""
+    try:
+        today_matches = get_today_matches()
+        players = load_players()
+        predictions = load_predictions()
+        player_teams = load_player_teams()
+
+        # Who predicted today
+        today_predictors = set()
+        for match in today_matches:
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if pred:
+                    today_predictors.add(player)
+        not_predicted = [p for p in players if p not in today_predictors]
+
+        # Build reminder text
+        lines = ["🎯 *Predictions open!*", ""]
+        lines.append("Tonight's matches:")
+        for match in today_matches:
+            flag_a = FLAGS.get(match["team_a"], "🏳️")
+            flag_b = FLAGS.get(match["team_b"], "🏳️")
+            time_str = format_time_12h(match.get("kickoff", ""))
+            lines.append(f"{flag_a} {match['team_a']} vs {match['team_b']} {flag_b} ({time_str} IST)")
+
+        lines.append("")
+        lines.append(f"Predict now 👉 https://wc-predictions-whsi.onrender.com/predict")
+
+        if not_predicted:
+            lines.append("")
+            lines.append(f"⚠️ Not predicted yet ({len(not_predicted)}):")
+            lines.append(", ".join(not_predicted[:15]))
+            if len(not_predicted) > 15:
+                lines.append(f"...and {len(not_predicted) - 15} more")
+
+        reminder_text = "\n".join(lines)
+        return render_template("reminder.html", reminder_text=reminder_text, today_matches=today_matches, not_predicted=not_predicted, total_players=len(players), predicted_count=len(today_predictors))
+    except Exception as e:
+        return f"Reminder Error: {e}", 500
+
+
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
     """Let players set a nickname/alias that shows alongside their name."""
