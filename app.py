@@ -709,13 +709,6 @@ def reminder():
         lines.append("")
         lines.append(f"Predict now 👉 https://wc-predictions-whsi.onrender.com/predict")
 
-        if not_predicted:
-            lines.append("")
-            lines.append(f"⚠️ Not predicted yet ({len(not_predicted)}):")
-            lines.append(", ".join(not_predicted[:15]))
-            if len(not_predicted) > 15:
-                lines.append(f"...and {len(not_predicted) - 15} more")
-
         reminder_text = "\n".join(lines)
         return render_template("reminder.html", reminder_text=reminder_text, today_matches=today_matches, not_predicted=not_predicted, total_players=len(players), predicted_count=len(today_predictors))
     except Exception as e:
