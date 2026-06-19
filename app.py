@@ -1063,13 +1063,26 @@ def stats():
                 })
 
         # --- Daily session breakdown (who predicted, who didn't, per-day %) ---
-        # Group matches by session (evening + next morning)
-        sessions = {}  # date label -> list of match ids
+        # Group matches by SESSION (evening of day X + morning of day X+1 = "Session Jun X")
+        # This matches the home page logic
+        sessions = {}  # session label -> list of match ids
         for match in matches:
             date = match.get("date", "")
-            if date not in sessions:
-                sessions[date] = []
-            sessions[date].append(match["id"])
+            kickoff = match.get("kickoff", "00:00")
+            try:
+                day = int(date.replace("June ", ""))
+                hour = int(kickoff.split(":")[0])
+            except:
+                continue
+            # Evening matches (>=18:00) belong to that day's session
+            # Morning matches (<10:00) belong to previous day's session
+            if hour >= 18:
+                session_label = f"June {day}"
+            else:
+                session_label = f"June {day - 1}"
+            if session_label not in sessions:
+                sessions[session_label] = []
+            sessions[session_label].append(match["id"])
 
         daily_breakdown = []
         sorted_dates = sorted(sessions.keys(), key=lambda d: int(d.replace("June ", "")))
@@ -1088,7 +1101,7 @@ def stats():
                 else:
                     not_predicted_players.add(player)
             pct = round(len(predicted_players) * 100 / len(players)) if players else 0
-            # Only include days where at least someone predicted (hide pre-launch days)
+            # Only include sessions where at least someone predicted (hide pre-launch days)
             if len(predicted_players) > 0:
                 daily_breakdown.append({
                     "date": date,
