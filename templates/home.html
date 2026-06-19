@@ -289,6 +289,59 @@
     }
     updateCountdowns();
     setInterval(updateCountdowns, 1000);
+
+    // Confetti animation for Prediction King
+    {% if prediction_king %}
+    (function() {
+        var canvas = document.createElement('canvas');
+        canvas.id = 'confetti';
+        canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
+        document.body.appendChild(canvas);
+        var ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        var colors = ['#ffd700','#00d4aa','#e74c3c','#3498db','#ff9800','#9b59b6','#00ff88'];
+        var pieces = [];
+        for (var i = 0; i < 80; i++) {
+            pieces.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * -canvas.height,
+                w: Math.random() * 8 + 4,
+                h: Math.random() * 6 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: Math.random() * 3 + 2,
+                spin: Math.random() * 0.2 - 0.1,
+                angle: Math.random() * Math.PI * 2,
+                drift: Math.random() * 2 - 1
+            });
+        }
+        var frame = 0;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            var alive = false;
+            for (var i = 0; i < pieces.length; i++) {
+                var p = pieces[i];
+                p.y += p.speed;
+                p.x += p.drift;
+                p.angle += p.spin;
+                if (p.y < canvas.height + 20) alive = true;
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                ctx.restore();
+            }
+            frame++;
+            if (alive && frame < 180) {
+                requestAnimationFrame(draw);
+            } else {
+                canvas.remove();
+            }
+        }
+        draw();
+    })();
+    {% endif %}
     </script>
 </body>
 </html>
