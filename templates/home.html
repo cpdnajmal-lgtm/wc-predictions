@@ -290,9 +290,13 @@
     updateCountdowns();
     setInterval(updateCountdowns, 1000);
 
-    // Confetti animation for Prediction King
+    // Confetti animation for Prediction King (once per king)
     {% if prediction_king %}
     (function() {
+        var kingKey = 'confetti_seen_' + '{{ prediction_king.names|join(",") }}_{{ prediction_king.points }}';
+        if (localStorage.getItem(kingKey)) return;
+        localStorage.setItem(kingKey, '1');
+
         var canvas = document.createElement('canvas');
         canvas.id = 'confetti';
         canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;';
