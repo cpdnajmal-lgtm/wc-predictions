@@ -145,10 +145,14 @@
                     <input type="hidden" name="action" value="edit_match">
                     <input type="hidden" name="match_id" value="{{ match.id }}">
                     <div class="row">
+                        <div><label>Team A</label><input name="team_a" value="{{ match.team_a }}" style="font-size:0.85em;"></div>
+                        <div><label>Team B</label><input name="team_b" value="{{ match.team_b }}" style="font-size:0.85em;"></div>
+                    </div>
+                    <div class="row">
                         <div><label>Date</label><input name="date" value="{{ match.date }}" style="font-size:0.85em;"></div>
                         <div><label>Kickoff (24h)</label><input name="kickoff" value="{{ match.kickoff }}" placeholder="00:30" style="font-size:0.85em;"></div>
                     </div>
-                    <button type="submit" class="btn-sm" style="font-size:0.75em;">Update Time</button>
+                    <button type="submit" class="btn-sm" style="font-size:0.75em;">Update Match</button>
                 </form>
                 <form method="POST" style="margin-top:6px;" onsubmit="return confirm('Delete this match?')">
                     <input type="hidden" name="action" value="delete_match">

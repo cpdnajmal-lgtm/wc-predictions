@@ -839,10 +839,16 @@ def admin():
             match_id = request.form.get("match_id")
             date = request.form.get("date", "").strip()
             kickoff = request.form.get("kickoff", "").strip()
+            team_a = request.form.get("team_a", "").strip()
+            team_b = request.form.get("team_b", "").strip()
             if date and kickoff:
                 cur.execute("UPDATE matches SET date = %s, kickoff = %s WHERE id = %s", (date, kickoff, match_id))
-                conn.commit()
-                flash("Match time updated!")
+            if team_a:
+                cur.execute("UPDATE matches SET team_a = %s WHERE id = %s", (team_a, match_id))
+            if team_b:
+                cur.execute("UPDATE matches SET team_b = %s WHERE id = %s", (team_b, match_id))
+            conn.commit()
+            flash("Match updated!")
 
         elif action == "delete_player":
             name = request.form.get("player_name", "").strip()
@@ -1241,7 +1247,9 @@ def update_kickoff_times():
 # Initialize database on startup
 init_db()
 seed_matches()
-update_kickoff_times()
+# Note: update_kickoff_times() removed from startup to preserve admin edits.
+# Times are set correctly by seed_matches() on first run.
+# Use admin panel to fix any time mismatches.
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
