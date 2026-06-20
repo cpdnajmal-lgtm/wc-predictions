@@ -527,7 +527,7 @@ def home():
         # Calculate all historical session scores to find the record
         record_alert = None
         all_session_scores = {}  # {session_label: {player: points}}
-        for match in matches:
+        for match in all_matches:
             if not match.get("result_winner"):
                 continue
             date = match.get("date", "")
