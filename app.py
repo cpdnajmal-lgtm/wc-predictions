@@ -523,6 +523,69 @@ def home():
                 kings = [p for p, pts in today_scores.items() if pts == max_pts]
                 prediction_king = {"names": kings, "points": max_pts}
 
+        # --- Record Alert: best single-session score ever ---
+        # Calculate all historical session scores to find the record
+        record_alert = None
+        all_session_scores = {}  # {session_label: {player: points}}
+        for match in matches:
+            if not match.get("result_winner"):
+                continue
+            date = match.get("date", "")
+            kickoff = match.get("kickoff", "00:00")
+            try:
+                day = int(date.replace("June ", ""))
+                hour = int(kickoff.split(":")[0])
+            except:
+                continue
+            session_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+            if session_label not in all_session_scores:
+                all_session_scores[session_label] = {p: 0 for p in players}
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                pts = 0
+                winner_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                scorer_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip()
+                if winner_ok and scorer_ok:
+                    pts = 3
+                elif winner_ok:
+                    pts = 1
+                elif scorer_ok:
+                    pts = 1
+                all_session_scores[session_label][player] = all_session_scores[session_label].get(player, 0) + pts
+
+        # Find all-time record (best single session score)
+        all_time_record = 0
+        all_time_record_holder = ""
+        all_time_record_session = ""
+        # Get current session label
+        if now_ist.hour >= 18:
+            current_session = f"June {now_ist.day}"
+        else:
+            current_session = f"June {now_ist.day - 1}"
+
+        for session_label, scores_dict in all_session_scores.items():
+            if session_label == current_session:
+                continue  # skip current session for record comparison
+            for player, pts in scores_dict.items():
+                if pts > all_time_record:
+                    all_time_record = pts
+                    all_time_record_holder = player
+                    all_time_record_session = session_label
+
+        # Check if today's king beat the record
+        if today_scores and all_time_record > 0:
+            today_max = max(today_scores.values())
+            if today_max > all_time_record:
+                today_kings = [p for p, pts in today_scores.items() if pts == today_max]
+                record_alert = {
+                    "names": today_kings,
+                    "points": today_max,
+                    "prev_holder": all_time_record_holder,
+                    "prev_points": all_time_record,
+                }
+
         return render_template(
             "home.html",
             leaderboard=ranked_leaderboard_with_change,
@@ -538,6 +601,7 @@ def home():
             total_players=len(players),
             not_predicted=[p for p in players if p not in today_predictors],
             prediction_king=prediction_king,
+            record_alert=record_alert,
             player_teams=player_teams,
             announcements=load_announcements(),
         )
