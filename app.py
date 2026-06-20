@@ -634,6 +634,31 @@ def predict():
         return f"Predict Error: {e}", 500
 
 
+@app.route("/predict/verify", methods=["POST"])
+def verify_pin():
+    """AJAX endpoint to verify a player's PIN."""
+    try:
+        player = request.form.get("player", "").strip()
+        pin = request.form.get("pin", "").strip()
+        if not player or not pin:
+            return jsonify({"ok": False})
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT pin FROM players WHERE name = %s", (player,))
+        row = cur.fetchone()
+        conn.close()
+        if not row:
+            return jsonify({"ok": False})
+        if not row[0]:
+            # No PIN set — allow through (they'll be asked to set one)
+            return jsonify({"ok": True, "no_pin": True})
+        if pin == row[0]:
+            return jsonify({"ok": True})
+        return jsonify({"ok": False})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+
 @app.route("/predict/load", methods=["POST", "GET"])
 def load_predictions_for_player():
     """AJAX endpoint to load existing predictions for a player."""
