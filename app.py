@@ -579,11 +579,38 @@ def home():
             today_max = max(today_scores.values())
             if today_max > all_time_record:
                 today_kings = [p for p, pts in today_scores.items() if pts == today_max]
+                # Calculate accuracy for the record holder (winner predictions correct / total)
+                king_name = today_kings[0]
+                king_correct = 0
+                king_total = 0
+                # Get current session's completed matches
+                if now_ist.hour >= 18:
+                    sess_dates = [f"June {now_ist.day}", f"June {now_ist.day + 1}"]
+                else:
+                    sess_dates = [f"June {now_ist.day - 1}", f"June {now_ist.day}"]
+                for match in all_matches:
+                    if not match.get("result_winner"):
+                        continue
+                    try:
+                        day = int(match["date"].replace("June ", ""))
+                        hour = int(match.get("kickoff", "0").split(":")[0])
+                        s_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+                    except:
+                        continue
+                    if s_label != current_session:
+                        continue
+                    pred = predictions.get(king_name, {}).get(match["id"])
+                    if pred and pred.get("winner"):
+                        king_total += 1
+                        if pred["winner"].strip().lower() == match["result_winner"].strip().lower():
+                            king_correct += 1
+                king_accuracy = round(king_correct * 100 / king_total) if king_total > 0 else 0
                 record_alert = {
                     "names": today_kings,
                     "points": today_max,
                     "prev_holder": all_time_record_holder,
                     "prev_points": all_time_record,
+                    "accuracy": king_accuracy,
                 }
 
         return render_template(
