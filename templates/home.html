@@ -119,8 +119,8 @@
                 <div style="width:{{ draw_pct }}%; background:#ffd700;"></div>
                 <div style="width:{{ team_b_pct }}%; background:#e74c3c;"></div>
             </div>
-            <div onclick="togglePreds('locked-{{ loop.index }}')" style="text-align:center; color:#888; margin-top:6px; cursor:pointer; font-size:1em;">
-                <span id="locked-{{ loop.index }}-toggle">👁️ {{ total_preds }} predictions — tap to view</span>
+            <div onclick="togglePreds('locked-{{ loop.index }}')" style="text-align:center; margin-top:8px; cursor:pointer;">
+                <span id="locked-{{ loop.index }}-toggle" style="display:inline-block; background:rgba(0,212,170,0.15); border:1px solid #00d4aa; color:#00d4aa; padding:8px 18px; border-radius:20px; font-size:0.85em; font-weight:600;">👁️ {{ total_preds }} predictions — tap to view</span>
             </div>
         </div>
         <div class="predictions-grid" id="locked-{{ loop.index }}" style="display:none;">
@@ -178,8 +178,8 @@
                 <div style="width:{{ draw_pct }}%; background:#ffd700;"></div>
                 <div style="width:{{ team_b_pct }}%; background:#e74c3c;"></div>
             </div>
-            <div onclick="togglePreds('upcoming-{{ loop.index }}')" style="text-align:center; color:#888; margin-top:6px; cursor:pointer; font-size:1em;">
-                <span id="upcoming-{{ loop.index }}-toggle">👁️ {{ total_preds }} predictions — tap to view</span>
+            <div onclick="togglePreds('upcoming-{{ loop.index }}')" style="text-align:center; margin-top:8px; cursor:pointer;">
+                <span id="upcoming-{{ loop.index }}-toggle" style="display:inline-block; background:rgba(0,212,170,0.15); border:1px solid #00d4aa; color:#00d4aa; padding:8px 18px; border-radius:20px; font-size:0.85em; font-weight:600;">👁️ {{ total_preds }} predictions — tap to view</span>
             </div>
         </div>
         <div class="predictions-grid" id="upcoming-{{ loop.index }}" style="display:none;">
