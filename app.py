@@ -869,6 +869,17 @@ def profile():
     return render_template("profile.html", players=players)
 
 
+@app.route("/my-picks", methods=["GET", "POST"])
+def my_picks():
+    """Let players quickly check their tonight's predictions."""
+    if request.method == "POST":
+        player = request.form.get("player", "").strip()
+        if player:
+            return redirect(url_for("my_today", player_name=player))
+    players = load_players()
+    return render_template("my_picks.html", players=players)
+
+
 @app.route("/my/today/<player_name>")
 def my_today(player_name):
     """Show a player's predictions for tonight's session."""
