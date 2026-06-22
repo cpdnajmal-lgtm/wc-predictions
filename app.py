@@ -777,7 +777,7 @@ def _predict():
         conn.commit()
         conn.close()
         flash(f"Predictions saved for {player}! 🎯")
-        return redirect(url_for("home"))
+        return redirect(url_for("my_today", player_name=player))
 
     today_matches = get_today_matches()
     players = load_players()
@@ -867,6 +867,28 @@ def profile():
 
     players = load_players()
     return render_template("profile.html", players=players)
+
+
+@app.route("/my/today/<player_name>")
+def my_today(player_name):
+    """Show a player's predictions for tonight's session."""
+    today_matches = get_today_matches()
+    # Also include locked matches (already started)
+    all_session_matches = today_matches
+    predictions = load_predictions()
+    player_preds = predictions.get(player_name, {})
+
+    picks = []
+    for match in all_session_matches:
+        pred = player_preds.get(match["id"])
+        if pred:
+            picks.append({
+                "match": match,
+                "winner": pred.get("winner", ""),
+                "scorer": pred.get("scorer", ""),
+            })
+
+    return render_template("my_today.html", player=player_name, picks=picks)
 
 
 @app.route("/my/<player_name>")
