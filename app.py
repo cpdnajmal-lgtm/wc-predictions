@@ -1536,8 +1536,13 @@ def stats():
                 continue
             for player, data in player_data.items():
                 if data["predicted"] == total_matches_in_session and data["points"] == 0:
-                    worst_session_holders.append(player)
+                    if player not in worst_session_holders:
+                        worst_session_holders.append(player)
                     worst_session_date = session_label
+        # Only show if 3 or fewer people (otherwise it's not a notable record)
+        if len(worst_session_holders) > 3:
+            worst_session_holders = []
+            worst_session_date = ""
         records["worst_session"] = {"player": ", ".join(worst_session_holders) if worst_session_holders else "-", "value": "0 pts (all predicted)", "date": worst_session_date if worst_session_holders else ""}
 
         # 9. Longest drought (most consecutive predictions without scoring)
