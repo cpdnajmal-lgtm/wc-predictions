@@ -687,6 +687,43 @@ def health():
         return f"DB Error: {e}", 500
 
 
+@app.route("/debug/today")
+def debug_today():
+    """Debug endpoint to check why today's matches aren't showing."""
+    now_ist = datetime.now(IST)
+    matches = load_matches()
+    if now_ist.hour >= 10:
+        today_date = f"June {now_ist.day}"
+        tomorrow_date = f"June {now_ist.day + 1}"
+    else:
+        today_date = f"June {now_ist.day - 1}"
+        tomorrow_date = f"June {now_ist.day}"
+
+    candidates = []
+    for m in matches:
+        if m.get("result_winner"):
+            continue
+        if not m.get("kickoff"):
+            continue
+        try:
+            hour = int(m["kickoff"].split(":")[0])
+        except:
+            continue
+        if m.get("date") == today_date and hour >= 18:
+            candidates.append(f"{m['id']}: {m['team_a']} vs {m['team_b']} | {m['date']} {m['kickoff']} | EVENING")
+        elif m.get("date") == tomorrow_date and hour < 10:
+            candidates.append(f"{m['id']}: {m['team_a']} vs {m['team_b']} | {m['date']} {m['kickoff']} | MORNING")
+
+    info = f"Now IST: {now_ist.strftime('%Y-%m-%d %H:%M')}\n"
+    info += f"today_date: {today_date}\n"
+    info += f"tomorrow_date: {tomorrow_date}\n"
+    info += f"Total matches in DB: {len(matches)}\n"
+    info += f"Matches without result: {len([m for m in matches if not m.get('result_winner')])}\n"
+    info += f"\nTonight's candidates ({len(candidates)}):\n"
+    info += "\n".join(candidates) if candidates else "NONE FOUND"
+    return f"<pre>{info}</pre>"
+
+
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
     try:
