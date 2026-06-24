@@ -239,9 +239,9 @@
                     <div class="streak-fire">{% if streak.current >= 3 %}🔥{% elif streak.current >= 1 %}✅{% else %}💤{% endif %}</div>
                     <div class="streak-info">
                         <div class="streak-name">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</div>
-                        <div class="streak-detail">Best: {{ streak.max }} days</div>
+                        <div class="streak-detail">Best: {{ streak.max }} matches</div>
                     </div>
-                    <div class="streak-value">{{ streak.current }}d</div>
+                    <div class="streak-value">{{ streak.current }}</div>
                 </div>
                 {% endif %}
                 {% endfor %}

@@ -1263,22 +1263,22 @@ def stats():
         participation_labels = [d["date"] for d in daily_breakdown]
         participation_rates = [d["pct"] for d in daily_breakdown]
 
-        # --- Prediction streaks (consecutive days a player predicted) ---
-        # Only count days where the app was active (at least one prediction exists for that day)
-        active_dates = [date for date in sorted_dates if any(
-            predictions.get(p, {}).get(mid) for p in players for mid in sessions[date]
-        )]
+        # --- Prediction streaks (consecutive matches predicted) ---
+        # Count consecutive matches a player predicted (based on match order)
         player_streaks = {}
+        # Sort completed + pending matches by sort_order/id to get chronological order
+        all_matches_sorted = sorted(matches, key=lambda m: m.get("sort_order", 0))
         for player in players:
             current_streak = 0
             max_streak = 0
-            for date in active_dates:
-                match_ids = sessions[date]
-                predicted = any(predictions.get(player, {}).get(mid) for mid in match_ids)
-                if predicted:
+            started = False
+            for match in all_matches_sorted:
+                pred = predictions.get(player, {}).get(match["id"])
+                if pred:
+                    started = True
                     current_streak += 1
                     max_streak = max(max_streak, current_streak)
-                else:
+                elif started:
                     current_streak = 0
             player_streaks[player] = {"current": current_streak, "max": max_streak}
 
@@ -1457,7 +1457,7 @@ def stats():
                 longest_streak_holders = [player]
             elif player_streaks[player]["max"] == longest_streak and longest_streak > 0:
                 longest_streak_holders.append(player)
-        records["longest_streak"] = {"player": ", ".join(longest_streak_holders) if longest_streak_holders else "-", "value": f"{longest_streak} sessions"}
+        records["longest_streak"] = {"player": ", ".join(longest_streak_holders) if longest_streak_holders else "-", "value": f"{longest_streak} matches"}
 
         # 5. Most King of the Day wins
         king_wins = {p: 0 for p in players}
