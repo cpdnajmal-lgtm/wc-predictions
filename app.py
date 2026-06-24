@@ -1457,7 +1457,7 @@ def stats():
                 longest_streak_holders = [player]
             elif player_streaks[player]["max"] == longest_streak and longest_streak > 0:
                 longest_streak_holders.append(player)
-        records["longest_streak"] = {"player": ", ".join(longest_streak_holders) if longest_streak_holders else "-", "value": f"{longest_streak} days"}
+        records["longest_streak"] = {"player": ", ".join(longest_streak_holders) if longest_streak_holders else "-", "value": f"{longest_streak} sessions"}
 
         # 5. Most King of the Day wins
         king_wins = {p: 0 for p in players}
