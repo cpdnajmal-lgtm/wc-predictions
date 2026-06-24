@@ -1409,9 +1409,8 @@ def stats():
                     best_session_score_holders = [player]
                     best_session_score_date = session_label
                 elif data["points"] == best_session_score and data["points"] > 0:
-                    if session_label == best_session_score_date:
+                    if player not in best_session_score_holders:
                         best_session_score_holders.append(player)
-                    # If different session, keep the first one found
         records["best_session"] = {"player": ", ".join(best_session_score_holders) if best_session_score_holders else "-", "value": best_session_score, "date": best_session_score_date}
 
         # 2. Most perfect predictions in one session
@@ -1425,9 +1424,8 @@ def stats():
                     most_perfects_holders = [player]
                     most_perfects_date = session_label
                 elif data["perfects"] == most_perfects and data["perfects"] > 0:
-                    most_perfects_holders.append(player)
-        # Deduplicate
-        most_perfects_holders = list(dict.fromkeys(most_perfects_holders))
+                    if player not in most_perfects_holders:
+                        most_perfects_holders.append(player)
         records["most_perfects"] = {"player": ", ".join(most_perfects_holders) if most_perfects_holders else "-", "value": most_perfects, "date": most_perfects_date}
 
         # 3. Highest session accuracy (points/max possible, min 3 matches predicted)
@@ -1444,8 +1442,8 @@ def stats():
                         best_accuracy_holders = [player]
                         best_accuracy_date = session_label
                     elif acc == best_accuracy and acc > 0:
-                        best_accuracy_holders.append(player)
-        best_accuracy_holders = list(dict.fromkeys(best_accuracy_holders))
+                        if player not in best_accuracy_holders:
+                            best_accuracy_holders.append(player)
         records["best_accuracy"] = {"player": ", ".join(best_accuracy_holders) if best_accuracy_holders else "-", "value": f"{best_accuracy}%", "date": best_accuracy_date}
 
         # 4. Longest prediction streak
