@@ -1737,13 +1737,13 @@ def add_matchday3_group_abc():
     conn = get_db()
     cur = conn.cursor()
     new_matches = [
-        # June 25 - Group B & A matchday 3
-        ("match_49", "Switzerland", "Canada", "June 25", "06:30", 49),
-        ("match_50", "Bosnia & Herzegovina", "Qatar", "June 25", "00:30", 50),
-        ("match_51", "Morocco", "Haiti", "June 25", "03:30", 51),
-        ("match_52", "Scotland", "Brazil", "June 25", "03:30", 52),
-        ("match_53", "South Africa", "South Korea", "June 25", "06:30", 53),
-        ("match_54", "Czech Republic", "Mexico", "June 25", "06:30", 54),
+        # June 21 - Group B, C, A matchday 3 (simultaneous per group)
+        ("match_49", "Switzerland", "Canada", "June 21", "00:30", 49),
+        ("match_50", "Bosnia & Herzegovina", "Qatar", "June 21", "00:30", 50),
+        ("match_51", "Morocco", "Haiti", "June 21", "03:30", 51),
+        ("match_52", "Scotland", "Brazil", "June 21", "03:30", 52),
+        ("match_53", "South Africa", "South Korea", "June 21", "06:30", 53),
+        ("match_54", "Czech Republic", "Mexico", "June 21", "06:30", 54),
         # June 26 - Group E, F, D matchday 3
         ("match_55", "Curacao", "Ivory Coast", "June 26", "01:30", 55),
         ("match_56", "Ecuador", "Germany", "June 26", "01:30", 56),
@@ -1771,7 +1771,7 @@ def add_matchday3_group_abc():
         cur.execute("""
             INSERT INTO matches (id, team_a, team_b, date, kickoff, sort_order)
             VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (id) DO NOTHING
+            ON CONFLICT (id) DO UPDATE SET date = EXCLUDED.date, kickoff = EXCLUDED.kickoff, team_a = EXCLUDED.team_a, team_b = EXCLUDED.team_b
         """, m)
     conn.commit()
     conn.close()
