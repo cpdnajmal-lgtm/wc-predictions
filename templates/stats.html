@@ -419,6 +419,14 @@
         setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
     }
 
+    // Auto-open tab from URL hash or localStorage
+    (function() {
+        var hash = window.location.hash.replace('#', '');
+        var saved = localStorage.getItem('stats_tab');
+        if (hash) { switchTab(hash); localStorage.removeItem('stats_tab'); }
+        else if (saved) { switchTab(saved); localStorage.removeItem('stats_tab'); }
+    })();
+
     // Toggle daily details
     function toggleDay(id) {
         var el = document.getElementById(id);

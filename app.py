@@ -1400,31 +1400,39 @@ def stats():
 
         # 1. Best session score
         best_session_score = 0
-        best_session_score_holder = ""
+        best_session_score_holders = []
         best_session_score_date = ""
         for session_label, player_data in all_session_data.items():
             for player, data in player_data.items():
                 if data["points"] > best_session_score:
                     best_session_score = data["points"]
-                    best_session_score_holder = player
+                    best_session_score_holders = [player]
                     best_session_score_date = session_label
-        records["best_session"] = {"player": best_session_score_holder, "value": best_session_score, "date": best_session_score_date}
+                elif data["points"] == best_session_score and data["points"] > 0:
+                    if session_label == best_session_score_date:
+                        best_session_score_holders.append(player)
+                    # If different session, keep the first one found
+        records["best_session"] = {"player": ", ".join(best_session_score_holders) if best_session_score_holders else "-", "value": best_session_score, "date": best_session_score_date}
 
         # 2. Most perfect predictions in one session
         most_perfects = 0
-        most_perfects_holder = ""
+        most_perfects_holders = []
         most_perfects_date = ""
         for session_label, player_data in all_session_data.items():
             for player, data in player_data.items():
                 if data["perfects"] > most_perfects:
                     most_perfects = data["perfects"]
-                    most_perfects_holder = player
+                    most_perfects_holders = [player]
                     most_perfects_date = session_label
-        records["most_perfects"] = {"player": most_perfects_holder, "value": most_perfects, "date": most_perfects_date}
+                elif data["perfects"] == most_perfects and data["perfects"] > 0:
+                    most_perfects_holders.append(player)
+        # Deduplicate
+        most_perfects_holders = list(dict.fromkeys(most_perfects_holders))
+        records["most_perfects"] = {"player": ", ".join(most_perfects_holders) if most_perfects_holders else "-", "value": most_perfects, "date": most_perfects_date}
 
         # 3. Highest session accuracy (points/max possible, min 3 matches predicted)
         best_accuracy = 0
-        best_accuracy_holder = ""
+        best_accuracy_holders = []
         best_accuracy_date = ""
         for session_label, player_data in all_session_data.items():
             for player, data in player_data.items():
@@ -1433,18 +1441,23 @@ def stats():
                     acc = round(data["points"] * 100 / max_possible) if max_possible > 0 else 0
                     if acc > best_accuracy:
                         best_accuracy = acc
-                        best_accuracy_holder = player
+                        best_accuracy_holders = [player]
                         best_accuracy_date = session_label
-        records["best_accuracy"] = {"player": best_accuracy_holder, "value": f"{best_accuracy}%", "date": best_accuracy_date}
+                    elif acc == best_accuracy and acc > 0:
+                        best_accuracy_holders.append(player)
+        best_accuracy_holders = list(dict.fromkeys(best_accuracy_holders))
+        records["best_accuracy"] = {"player": ", ".join(best_accuracy_holders) if best_accuracy_holders else "-", "value": f"{best_accuracy}%", "date": best_accuracy_date}
 
         # 4. Longest prediction streak
         longest_streak = 0
-        longest_streak_holder = ""
+        longest_streak_holders = []
         for player in players:
             if player_streaks[player]["max"] > longest_streak:
                 longest_streak = player_streaks[player]["max"]
-                longest_streak_holder = player
-        records["longest_streak"] = {"player": longest_streak_holder, "value": f"{longest_streak} days"}
+                longest_streak_holders = [player]
+            elif player_streaks[player]["max"] == longest_streak and longest_streak > 0:
+                longest_streak_holders.append(player)
+        records["longest_streak"] = {"player": ", ".join(longest_streak_holders) if longest_streak_holders else "-", "value": f"{longest_streak} days"}
 
         # 5. Most King of the Day wins
         king_wins = {p: 0 for p in players}
@@ -1475,10 +1488,9 @@ def stats():
         # 7. Biggest rank jump (using leaderboard rank changes from home)
         # We'll compute per-session rank changes
         biggest_jump = 0
-        biggest_jump_holder = ""
+        biggest_jump_holders = []
         biggest_jump_date = ""
         cumulative_points = {p: 0 for p in players}
-        prev_ranks = {p: 0 for p in players}
         for session_label in sorted(all_session_data.keys(), key=lambda d: int(d.replace("June ", ""))):
             # Previous ranks
             sorted_prev = sorted(cumulative_points.items(), key=lambda x: x[1], reverse=True)
@@ -1508,31 +1520,29 @@ def stats():
                 jump = prev_r.get(player, 0) - new_r.get(player, 0)
                 if jump > biggest_jump:
                     biggest_jump = jump
-                    biggest_jump_holder = player
+                    biggest_jump_holders = [player]
                     biggest_jump_date = session_label
-        records["biggest_jump"] = {"player": biggest_jump_holder, "value": f"↑{biggest_jump} spots", "date": biggest_jump_date}
+                elif jump == biggest_jump and jump > 0:
+                    biggest_jump_holders.append(player)
+        biggest_jump_holders = list(dict.fromkeys(biggest_jump_holders))
+        records["biggest_jump"] = {"player": ", ".join(biggest_jump_holders) if biggest_jump_holders else "-", "value": f"↑{biggest_jump} spots", "date": biggest_jump_date}
 
         # 8. Worst session (0 pts while predicting all matches in session)
-        worst_session_holder = ""
+        worst_session_holders = []
         worst_session_date = ""
-        worst_found = False
         for session_label, player_data in all_session_data.items():
             total_matches_in_session = session_match_counts.get(session_label, 0)
             if total_matches_in_session < 2:
                 continue
             for player, data in player_data.items():
                 if data["predicted"] == total_matches_in_session and data["points"] == 0:
-                    worst_session_holder = player
+                    worst_session_holders.append(player)
                     worst_session_date = session_label
-                    worst_found = True
-                    break
-            if worst_found:
-                break
-        records["worst_session"] = {"player": worst_session_holder if worst_found else "-", "value": "0 pts (all predicted)", "date": worst_session_date if worst_found else ""}
+        records["worst_session"] = {"player": ", ".join(worst_session_holders) if worst_session_holders else "-", "value": "0 pts (all predicted)", "date": worst_session_date if worst_session_holders else ""}
 
         # 9. Longest drought (most consecutive predictions without scoring)
         longest_drought = 0
-        longest_drought_holder = ""
+        longest_drought_holders = []
         for player in players:
             drought = 0
             max_drought = 0
@@ -1556,8 +1566,10 @@ def stats():
                     drought = 0
             if max_drought > longest_drought:
                 longest_drought = max_drought
-                longest_drought_holder = player
-        records["longest_drought"] = {"player": longest_drought_holder, "value": f"{longest_drought} matches"}
+                longest_drought_holders = [player]
+            elif max_drought == longest_drought and longest_drought > 0:
+                longest_drought_holders.append(player)
+        records["longest_drought"] = {"player": ", ".join(longest_drought_holders) if longest_drought_holders else "-", "value": f"{longest_drought} matches"}
 
         # 10. Best draw predictor
         draw_correct = {p: 0 for p in players}
