@@ -1463,13 +1463,14 @@ def stats():
         king_wins = {p: 0 for p in players}
         for session_label, player_data in all_session_data.items():
             session_max = 0
-            session_king = ""
             for player, data in player_data.items():
                 if data["points"] > session_max and data["points"] >= 3:
                     session_max = data["points"]
-                    session_king = player
-            if session_king:
-                king_wins[session_king] = king_wins.get(session_king, 0) + 1
+            # All players with session_max get a crown for this session
+            if session_max >= 3:
+                for player, data in player_data.items():
+                    if data["points"] == session_max:
+                        king_wins[player] = king_wins.get(player, 0) + 1
         most_king_wins = max(king_wins.values()) if king_wins else 0
         most_king_holder = [p for p, w in king_wins.items() if w == most_king_wins and w > 0]
         records["most_kings"] = {"player": ", ".join(most_king_holder) if most_king_holder else "-", "value": most_king_wins}
