@@ -1775,7 +1775,7 @@ def add_matchday3_group_abc():
     cur = conn.cursor()
     new_matches = [
         # June 25 - Group B, C, A matchday 3 (simultaneous per group)
-        ("match_49", "Switzerland", "Canada", "June 25", "06:30", 49),
+        ("match_49", "Switzerland", "Canada", "June 25", "00:30", 49),
         ("match_50", "Bosnia & Herzegovina", "Qatar", "June 25", "00:30", 50),
         ("match_51", "Morocco", "Haiti", "June 25", "03:30", 51),
         ("match_52", "Scotland", "Brazil", "June 25", "03:30", 52),
