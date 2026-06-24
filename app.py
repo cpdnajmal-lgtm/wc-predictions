@@ -1733,21 +1733,39 @@ update_kickoff_times()
 
 
 def add_matchday3_group_abc():
-    """Add matchday 3 matches for Groups A, B, C (simultaneous kickoffs).
-    More matches can be added via admin as they're confirmed.
-    """
+    """Add matchday 3 matches for all groups (matches 49-72)."""
     conn = get_db()
     cur = conn.cursor()
     new_matches = [
-        # Group B matchday 3 - June 21, 00:30 IST (simultaneous)
-        ("match_49", "Switzerland", "Canada", "June 21", "00:30", 49),
-        ("match_50", "Bosnia & Herzegovina", "Qatar", "June 21", "00:30", 50),
-        # Group C matchday 3 - June 21, 03:30 IST (simultaneous)
-        ("match_51", "Morocco", "Haiti", "June 21", "03:30", 51),
-        ("match_52", "Scotland", "Brazil", "June 21", "03:30", 52),
-        # Group A matchday 3 - June 21, 06:30 IST (simultaneous)
-        ("match_53", "South Africa", "South Korea", "June 21", "06:30", 53),
-        ("match_54", "Czech Republic", "Mexico", "June 21", "06:30", 54),
+        # June 25 - Group B & A matchday 3
+        ("match_49", "Switzerland", "Canada", "June 25", "06:30", 49),
+        ("match_50", "Bosnia & Herzegovina", "Qatar", "June 25", "00:30", 50),
+        ("match_51", "Morocco", "Haiti", "June 25", "03:30", 51),
+        ("match_52", "Scotland", "Brazil", "June 25", "03:30", 52),
+        ("match_53", "South Africa", "South Korea", "June 25", "06:30", 53),
+        ("match_54", "Czech Republic", "Mexico", "June 25", "06:30", 54),
+        # June 26 - Group E, F, D matchday 3
+        ("match_55", "Curacao", "Ivory Coast", "June 26", "01:30", 55),
+        ("match_56", "Ecuador", "Germany", "June 26", "01:30", 56),
+        ("match_57", "Tunisia", "Netherlands", "June 26", "04:30", 57),
+        ("match_58", "Japan", "Sweden", "June 26", "04:30", 58),
+        ("match_59", "Turkey", "USA", "June 26", "07:30", 59),
+        ("match_60", "Paraguay", "Australia", "June 26", "07:30", 60),
+        # June 26-27 - Group I matchday 3
+        ("match_61", "Norway", "France", "June 26", "12:30", 61),
+        ("match_62", "Senegal", "Iraq", "June 27", "00:30", 62),
+        # June 27 - Group H, G matchday 3
+        ("match_63", "Cape Verde", "Saudi Arabia", "June 27", "05:30", 63),
+        ("match_64", "Uruguay", "Spain", "June 27", "05:30", 64),
+        ("match_65", "New Zealand", "Belgium", "June 27", "08:30", 65),
+        ("match_66", "Egypt", "Iran", "June 27", "08:30", 66),
+        # June 28 - Group L, K, J matchday 3
+        ("match_67", "Panama", "England", "June 28", "02:30", 67),
+        ("match_68", "Croatia", "Ghana", "June 28", "02:30", 68),
+        ("match_69", "Colombia", "Portugal", "June 28", "05:00", 69),
+        ("match_70", "DR Congo", "Uzbekistan", "June 28", "05:00", 70),
+        ("match_71", "Algeria", "Austria", "June 28", "07:30", 71),
+        ("match_72", "Jordan", "Argentina", "June 28", "07:30", 72),
     ]
     for m in new_matches:
         cur.execute("""
