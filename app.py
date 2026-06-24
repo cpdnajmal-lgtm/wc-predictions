@@ -1727,9 +1727,9 @@ def update_kickoff_times():
 # Initialize database on startup
 init_db()
 seed_matches()
-# Note: update_kickoff_times() removed from startup to preserve admin edits.
-# Times are set correctly by seed_matches() on first run.
-# Use admin panel to fix any time mismatches.
+update_kickoff_times()
+# Note: Admin edits to times will be overwritten on restart.
+# For permanent time changes, update the code in update_kickoff_times().
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
