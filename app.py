@@ -611,6 +611,41 @@ def home():
                     "accuracy": king_accuracy,
                 }
 
+        # --- Hot Takes: players who picked against the crowd and got it right ---
+        from collections import Counter as HotTakeCounter
+        hot_takes = []
+        # Check recent completed matches (last 8)
+        recent_completed = get_completed_matches()[-8:]
+        for match in recent_completed:
+            match_preds = []
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if pred and pred.get("winner"):
+                    match_preds.append(pred["winner"].strip())
+            if len(match_preds) < 5:
+                continue
+            counts = HotTakeCounter(match_preds)
+            total = len(match_preds)
+            actual_winner = match["result_winner"].strip()
+            # Find players who predicted the actual winner when 70%+ picked someone else
+            actual_count = counts.get(actual_winner, 0)
+            if actual_count == 0:
+                continue
+            majority_pct = round((total - actual_count) * 100 / total)
+            if majority_pct >= 70:
+                # Find who got it right (the contrarians)
+                for player in players:
+                    pred = predictions.get(player, {}).get(match["id"])
+                    if pred and pred.get("winner", "").strip().lower() == actual_winner.lower():
+                        hot_takes.append({
+                            "player": player,
+                            "match": match,
+                            "pick": actual_winner,
+                            "against_pct": majority_pct,
+                        })
+        # Limit to most recent 3 hot takes
+        hot_takes = hot_takes[-3:]
+
         return render_template(
             "home.html",
             leaderboard=ranked_leaderboard_with_change,
@@ -627,6 +662,7 @@ def home():
             not_predicted=[p for p in players if p not in today_predictors],
             prediction_king=prediction_king,
             record_alert=record_alert,
+            hot_takes=hot_takes,
             player_teams=player_teams,
             announcements=load_announcements(),
         )
