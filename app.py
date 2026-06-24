@@ -1731,5 +1731,35 @@ update_kickoff_times()
 # Note: Admin edits to times will be overwritten on restart.
 # For permanent time changes, update the code in update_kickoff_times().
 
+
+def add_matchday3_group_abc():
+    """Add matchday 3 matches for Groups A, B, C (simultaneous kickoffs).
+    More matches can be added via admin as they're confirmed.
+    """
+    conn = get_db()
+    cur = conn.cursor()
+    new_matches = [
+        # Group B matchday 3 - June 21, 00:30 IST (simultaneous)
+        ("match_49", "Switzerland", "Canada", "June 21", "00:30", 49),
+        ("match_50", "Bosnia & Herzegovina", "Qatar", "June 21", "00:30", 50),
+        # Group C matchday 3 - June 21, 03:30 IST (simultaneous)
+        ("match_51", "Morocco", "Haiti", "June 21", "03:30", 51),
+        ("match_52", "Scotland", "Brazil", "June 21", "03:30", 52),
+        # Group A matchday 3 - June 21, 06:30 IST (simultaneous)
+        ("match_53", "South Africa", "South Korea", "June 21", "06:30", 53),
+        ("match_54", "Czech Republic", "Mexico", "June 21", "06:30", 54),
+    ]
+    for m in new_matches:
+        cur.execute("""
+            INSERT INTO matches (id, team_a, team_b, date, kickoff, sort_order)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO NOTHING
+        """, m)
+    conn.commit()
+    conn.close()
+
+
+add_matchday3_group_abc()
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
