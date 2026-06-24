@@ -121,6 +121,7 @@
         <div class="tab-btn" onclick="switchTab('daily')">Daily</div>
         <div class="tab-btn" onclick="switchTab('players')">Players</div>
         <div class="tab-btn" onclick="switchTab('trends')">Trends</div>
+        <div class="tab-btn" onclick="switchTab('records')">🏆 Records</div>
     </div>
 
     <!-- ===== OVERVIEW TAB ===== -->
@@ -324,6 +325,85 @@
         </div>
         {% endif %}
 
+    </div>
+
+    <a href="{{ url_for('home') }}" class="back-link">← Back to Home</a>
+
+    <!-- ===== RECORDS TAB ===== -->
+    <div class="tab-content" id="tab-records">
+        <div class="card">
+            <div class="card-title">🏆 All-Time Records</div>
+
+            <div style="margin-bottom:14px; padding:12px; background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.3); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">🏆 Best Session Score</div>
+                <div style="font-size:1.1em; font-weight:700; margin-top:4px;">{{ records.best_session.player }}</div>
+                <div style="color:#ffd700; font-weight:700;">{{ records.best_session.value }} pts <span style="color:#666; font-weight:400; font-size:0.8em;">{{ records.best_session.date }}</span></div>
+            </div>
+
+            <div style="margin-bottom:14px; padding:12px; background:rgba(0,212,170,0.08); border:1px solid rgba(0,212,170,0.3); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">🎯 Most Perfect Predictions (One Session)</div>
+                <div style="font-size:1.1em; font-weight:700; margin-top:4px;">{{ records.most_perfects.player }}</div>
+                <div style="color:#00d4aa; font-weight:700;">{{ records.most_perfects.value }} perfect 🔥 <span style="color:#666; font-weight:400; font-size:0.8em;">{{ records.most_perfects.date }}</span></div>
+            </div>
+
+            <div style="margin-bottom:14px; padding:12px; background:rgba(0,212,170,0.08); border:1px solid rgba(0,212,170,0.3); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">📊 Highest Session Accuracy</div>
+                <div style="font-size:1.1em; font-weight:700; margin-top:4px;">{{ records.best_accuracy.player }}</div>
+                <div style="color:#00d4aa; font-weight:700;">{{ records.best_accuracy.value }} <span style="color:#666; font-weight:400; font-size:0.8em;">{{ records.best_accuracy.date }}</span></div>
+            </div>
+
+            <div style="margin-bottom:14px; padding:12px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.3); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">🔥 Longest Prediction Streak</div>
+                <div style="font-size:1.1em; font-weight:700; margin-top:4px;">{{ records.longest_streak.player }}</div>
+                <div style="color:#e74c3c; font-weight:700;">{{ records.longest_streak.value }}</div>
+            </div>
+
+            <div style="margin-bottom:14px; padding:12px; background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.3); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">👑 Most King of the Day Wins</div>
+                <div style="font-size:1.1em; font-weight:700; margin-top:4px;">{{ records.most_kings.player }}</div>
+                <div style="color:#ffd700; font-weight:700;">{{ records.most_kings.value }} crown{{ 's' if records.most_kings.value != 1 else '' }}</div>
+            </div>
+
+            <div style="margin-bottom:14px; padding:12px; background:rgba(0,212,170,0.08); border:1px solid rgba(0,212,170,0.3); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">🎯 Most Perfect Predictions (Overall)</div>
+                <div style="font-size:1.1em; font-weight:700; margin-top:4px;">{{ records.most_total_perfects.player }}</div>
+                <div style="color:#00d4aa; font-weight:700;">{{ records.most_total_perfects.value }} perfect predictions</div>
+            </div>
+
+            <div style="margin-bottom:14px; padding:12px; background:rgba(0,212,170,0.08); border:1px solid rgba(0,212,170,0.3); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">📈 Biggest Rank Jump in One Session</div>
+                <div style="font-size:1.1em; font-weight:700; margin-top:4px;">{{ records.biggest_jump.player }}</div>
+                <div style="color:#00d4aa; font-weight:700;">{{ records.biggest_jump.value }} <span style="color:#666; font-weight:400; font-size:0.8em;">{{ records.biggest_jump.date }}</span></div>
+            </div>
+
+            {% if records.worst_session.player != '-' %}
+            <div style="margin-bottom:14px; padding:12px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.3); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">😅 Worst Session</div>
+                <div style="font-size:1.1em; font-weight:700; margin-top:4px;">{{ records.worst_session.player }}</div>
+                <div style="color:#e74c3c; font-weight:700;">{{ records.worst_session.value }} <span style="color:#666; font-weight:400; font-size:0.8em;">{{ records.worst_session.date }}</span></div>
+            </div>
+            {% endif %}
+
+            <div style="margin-bottom:14px; padding:12px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.3); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">🧊 Longest Drought</div>
+                <div style="font-size:1.1em; font-weight:700; margin-top:4px;">{{ records.longest_drought.player }}</div>
+                <div style="color:#e74c3c; font-weight:700;">{{ records.longest_drought.value }} without scoring</div>
+            </div>
+
+            {% if records.best_draw.player != '-' %}
+            <div style="margin-bottom:14px; padding:12px; background:rgba(255,215,0,0.08); border:1px solid rgba(255,215,0,0.3); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">🎰 Best Draw Predictor</div>
+                <div style="font-size:1.1em; font-weight:700; margin-top:4px;">{{ records.best_draw.player }}</div>
+                <div style="color:#ffd700; font-weight:700;">{{ records.best_draw.value }} correct draw{{ 's' if records.best_draw.value != 1 else '' }}</div>
+            </div>
+            {% endif %}
+
+            <div style="margin-bottom:0; padding:12px; background:rgba(255,215,0,0.12); border:1px solid rgba(255,215,0,0.4); border-radius:10px;">
+                <div style="font-size:0.75em; color:#888; text-transform:uppercase; letter-spacing:0.5px;">🏅 Overall Leader</div>
+                <div style="font-size:1.2em; font-weight:800; margin-top:4px;">{{ records.overall_leader.player }}</div>
+                <div style="color:#ffd700; font-weight:700; font-size:1.1em;">{{ records.overall_leader.value }}</div>
+            </div>
+        </div>
     </div>
 
     <a href="{{ url_for('home') }}" class="back-link">← Back to Home</a>

@@ -1353,6 +1353,237 @@ def stats():
             "overall_scorer_pct": round(overall_scorer_accuracy * 100 / total_scored_preds, 1) if total_scored_preds > 0 else 0,
         }
 
+        # --- RECORDS ---
+        # Build session scores for all players across all sessions
+        all_session_data = {}  # {session_label: {player: {points, perfects, predicted_count}}}
+        for match in completed_matches:
+            date = match.get("date", "")
+            kickoff = match.get("kickoff", "00:00")
+            try:
+                day = int(date.replace("June ", ""))
+                hour = int(kickoff.split(":")[0])
+            except:
+                continue
+            session_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+            if session_label not in all_session_data:
+                all_session_data[session_label] = {p: {"points": 0, "perfects": 0, "predicted": 0, "matches": 0} for p in players}
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                all_session_data[session_label][player]["predicted"] += 1
+                all_session_data[session_label][player]["matches"] += 1
+                winner_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                scorer_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip()
+                if winner_ok and scorer_ok:
+                    all_session_data[session_label][player]["points"] += 3
+                    all_session_data[session_label][player]["perfects"] += 1
+                elif winner_ok:
+                    all_session_data[session_label][player]["points"] += 1
+                elif scorer_ok:
+                    all_session_data[session_label][player]["points"] += 1
+
+        # Also count total matches per session (for accuracy calc)
+        session_match_counts = {}
+        for match in completed_matches:
+            date = match.get("date", "")
+            kickoff = match.get("kickoff", "00:00")
+            try:
+                day = int(date.replace("June ", ""))
+                hour = int(kickoff.split(":")[0])
+            except:
+                continue
+            session_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+            session_match_counts[session_label] = session_match_counts.get(session_label, 0) + 1
+
+        records = {}
+
+        # 1. Best session score
+        best_session_score = 0
+        best_session_score_holder = ""
+        best_session_score_date = ""
+        for session_label, player_data in all_session_data.items():
+            for player, data in player_data.items():
+                if data["points"] > best_session_score:
+                    best_session_score = data["points"]
+                    best_session_score_holder = player
+                    best_session_score_date = session_label
+        records["best_session"] = {"player": best_session_score_holder, "value": best_session_score, "date": best_session_score_date}
+
+        # 2. Most perfect predictions in one session
+        most_perfects = 0
+        most_perfects_holder = ""
+        most_perfects_date = ""
+        for session_label, player_data in all_session_data.items():
+            for player, data in player_data.items():
+                if data["perfects"] > most_perfects:
+                    most_perfects = data["perfects"]
+                    most_perfects_holder = player
+                    most_perfects_date = session_label
+        records["most_perfects"] = {"player": most_perfects_holder, "value": most_perfects, "date": most_perfects_date}
+
+        # 3. Highest session accuracy (points/max possible, min 3 matches predicted)
+        best_accuracy = 0
+        best_accuracy_holder = ""
+        best_accuracy_date = ""
+        for session_label, player_data in all_session_data.items():
+            for player, data in player_data.items():
+                if data["predicted"] >= 3:
+                    max_possible = data["predicted"] * 3
+                    acc = round(data["points"] * 100 / max_possible) if max_possible > 0 else 0
+                    if acc > best_accuracy:
+                        best_accuracy = acc
+                        best_accuracy_holder = player
+                        best_accuracy_date = session_label
+        records["best_accuracy"] = {"player": best_accuracy_holder, "value": f"{best_accuracy}%", "date": best_accuracy_date}
+
+        # 4. Longest prediction streak
+        longest_streak = 0
+        longest_streak_holder = ""
+        for player in players:
+            if player_streaks[player]["max"] > longest_streak:
+                longest_streak = player_streaks[player]["max"]
+                longest_streak_holder = player
+        records["longest_streak"] = {"player": longest_streak_holder, "value": f"{longest_streak} days"}
+
+        # 5. Most King of the Day wins
+        king_wins = {p: 0 for p in players}
+        for session_label, player_data in all_session_data.items():
+            session_max = 0
+            session_king = ""
+            for player, data in player_data.items():
+                if data["points"] > session_max and data["points"] >= 3:
+                    session_max = data["points"]
+                    session_king = player
+            if session_king:
+                king_wins[session_king] = king_wins.get(session_king, 0) + 1
+        most_king_wins = max(king_wins.values()) if king_wins else 0
+        most_king_holder = [p for p, w in king_wins.items() if w == most_king_wins and w > 0]
+        records["most_kings"] = {"player": ", ".join(most_king_holder) if most_king_holder else "-", "value": most_king_wins}
+
+        # 6. Most perfect predictions overall
+        total_perfects_per_player = {}
+        for player in players:
+            total_p = 0
+            for session_label, player_data in all_session_data.items():
+                total_p += player_data.get(player, {}).get("perfects", 0)
+            total_perfects_per_player[player] = total_p
+        most_total_perfects = max(total_perfects_per_player.values()) if total_perfects_per_player else 0
+        most_total_perfects_holder = [p for p, v in total_perfects_per_player.items() if v == most_total_perfects and v > 0]
+        records["most_total_perfects"] = {"player": ", ".join(most_total_perfects_holder) if most_total_perfects_holder else "-", "value": most_total_perfects}
+
+        # 7. Biggest rank jump (using leaderboard rank changes from home)
+        # We'll compute per-session rank changes
+        biggest_jump = 0
+        biggest_jump_holder = ""
+        biggest_jump_date = ""
+        cumulative_points = {p: 0 for p in players}
+        prev_ranks = {p: 0 for p in players}
+        for session_label in sorted(all_session_data.keys(), key=lambda d: int(d.replace("June ", ""))):
+            # Previous ranks
+            sorted_prev = sorted(cumulative_points.items(), key=lambda x: x[1], reverse=True)
+            prev_r = {}
+            r = 0
+            prev_v = None
+            for i, (p, pts) in enumerate(sorted_prev):
+                if pts != prev_v:
+                    r += 1
+                    prev_v = pts
+                prev_r[p] = r
+            # Add session points
+            for player in players:
+                cumulative_points[player] += all_session_data[session_label].get(player, {}).get("points", 0)
+            # New ranks
+            sorted_new = sorted(cumulative_points.items(), key=lambda x: x[1], reverse=True)
+            new_r = {}
+            r = 0
+            prev_v = None
+            for i, (p, pts) in enumerate(sorted_new):
+                if pts != prev_v:
+                    r += 1
+                    prev_v = pts
+                new_r[p] = r
+            # Check jumps
+            for player in players:
+                jump = prev_r.get(player, 0) - new_r.get(player, 0)
+                if jump > biggest_jump:
+                    biggest_jump = jump
+                    biggest_jump_holder = player
+                    biggest_jump_date = session_label
+        records["biggest_jump"] = {"player": biggest_jump_holder, "value": f"↑{biggest_jump} spots", "date": biggest_jump_date}
+
+        # 8. Worst session (0 pts while predicting all matches in session)
+        worst_session_holder = ""
+        worst_session_date = ""
+        worst_found = False
+        for session_label, player_data in all_session_data.items():
+            total_matches_in_session = session_match_counts.get(session_label, 0)
+            if total_matches_in_session < 2:
+                continue
+            for player, data in player_data.items():
+                if data["predicted"] == total_matches_in_session and data["points"] == 0:
+                    worst_session_holder = player
+                    worst_session_date = session_label
+                    worst_found = True
+                    break
+            if worst_found:
+                break
+        records["worst_session"] = {"player": worst_session_holder if worst_found else "-", "value": "0 pts (all predicted)", "date": worst_session_date if worst_found else ""}
+
+        # 9. Longest drought (most consecutive predictions without scoring)
+        longest_drought = 0
+        longest_drought_holder = ""
+        for player in players:
+            drought = 0
+            max_drought = 0
+            for match in completed_matches:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                winner_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                scorer_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip()
+                pts = 0
+                if winner_ok and scorer_ok:
+                    pts = 3
+                elif winner_ok:
+                    pts = 1
+                elif scorer_ok:
+                    pts = 1
+                if pts == 0:
+                    drought += 1
+                    max_drought = max(max_drought, drought)
+                else:
+                    drought = 0
+            if max_drought > longest_drought:
+                longest_drought = max_drought
+                longest_drought_holder = player
+        records["longest_drought"] = {"player": longest_drought_holder, "value": f"{longest_drought} matches"}
+
+        # 10. Best draw predictor
+        draw_correct = {p: 0 for p in players}
+        for match in completed_matches:
+            if match["result_winner"].strip().lower() != "draw":
+                continue
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if pred and pred.get("winner", "").strip().lower() == "draw":
+                    draw_correct[player] += 1
+        max_draws = max(draw_correct.values()) if draw_correct else 0
+        best_draw_holders = [p for p, v in draw_correct.items() if v == max_draws and v > 0]
+        records["best_draw"] = {"player": ", ".join(best_draw_holders) if best_draw_holders else "-", "value": max_draws}
+
+        # 11. Overall leader
+        overall_leader = ""
+        overall_leader_pts = 0
+        overall_pts = {p: 0 for p in players}
+        for session_label, player_data in all_session_data.items():
+            for player, data in player_data.items():
+                overall_pts[player] += data["points"]
+        if overall_pts:
+            overall_leader_pts = max(overall_pts.values())
+            overall_leader = [p for p, v in overall_pts.items() if v == overall_leader_pts]
+        records["overall_leader"] = {"player": ", ".join(overall_leader) if overall_leader else "-", "value": f"{overall_leader_pts} pts"}
+
         return render_template(
             "stats.html",
             summary=summary,
@@ -1372,6 +1603,7 @@ def stats():
             daily_accuracy_values=daily_accuracy_values,
             daily_points_labels=daily_points_labels,
             player_daily_points=player_daily_points_filtered,
+            records=records,
         )
     except Exception as e:
         return f"Stats Error: {e}", 500
