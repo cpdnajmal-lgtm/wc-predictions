@@ -645,11 +645,23 @@ def home():
             record_alert = records_broken
 
         # --- Hot Takes: players who picked against the crowd and got it right ---
+        # Only show hot takes from current session (resets at 6 PM like king)
         from collections import Counter as HotTakeCounter
         hot_takes = []
-        # Check recent completed matches (last 8)
-        recent_completed = get_completed_matches()[-8:]
-        for match in recent_completed:
+        # Get current session matches only
+        session_completed = []
+        for match in get_completed_matches():
+            date = match.get("date", "")
+            kickoff = match.get("kickoff", "00:00")
+            try:
+                day = int(date.replace("June ", ""))
+                hour = int(kickoff.split(":")[0])
+                s_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+            except:
+                continue
+            if s_label == current_session:
+                session_completed.append(match)
+        for match in session_completed:
             match_preds = []
             for player in players:
                 pred = predictions.get(player, {}).get(match["id"])
@@ -676,8 +688,7 @@ def home():
                             "pick": actual_winner,
                             "against_pct": majority_pct,
                         })
-        # Limit to most recent 3 hot takes
-        hot_takes = hot_takes[-3:]
+        # Hot takes scoped to current session only (no limit needed)
 
         # Determine tournament phase based on active match IDs
         active_match_ids = [m["id"] for m in today_matches + locked_matches if m.get("id")]
