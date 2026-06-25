@@ -523,10 +523,10 @@ def home():
                 kings = [p for p, pts in today_scores.items() if pts == max_pts]
                 prediction_king = {"names": kings, "points": max_pts}
 
-        # --- Record Alert: best single-session score ever ---
-        # Calculate all historical session scores to find the record
+        # --- Record Alert: Check if any record was broken in current/latest session ---
         record_alert = None
-        all_session_scores = {}  # {session_label: {player: points}}
+        # Build session scores for record comparison
+        all_session_scores = {}
         for match in all_matches:
             if not match.get("result_winner"):
                 continue
@@ -555,38 +555,53 @@ def home():
                     pts = 1
                 all_session_scores[session_label][player] = all_session_scores[session_label].get(player, 0) + pts
 
-        # Find all-time record (best single session score)
-        all_time_record = 0
-        all_time_record_holder = ""
-        all_time_record_session = ""
         # Get current session label
         if now_ist.hour >= 18:
             current_session = f"June {now_ist.day}"
         else:
             current_session = f"June {now_ist.day - 1}"
 
+        # Find all-time best session score (excluding current)
+        all_time_record = 0
+        all_time_record_holder = ""
         for session_label, scores_dict in all_session_scores.items():
             if session_label == current_session:
-                continue  # skip current session for record comparison
+                continue
             for player, pts in scores_dict.items():
                 if pts > all_time_record:
                     all_time_record = pts
                     all_time_record_holder = player
-                    all_time_record_session = session_label
 
-        # Check if today's king beat the record
+        # Calculate king wins per player across all sessions
+        all_king_wins = {p: 0 for p in players}
+        for session_label, scores_dict in all_session_scores.items():
+            session_max = max(scores_dict.values()) if scores_dict else 0
+            if session_max >= 3:
+                for player, pts in scores_dict.items():
+                    if pts == session_max:
+                        all_king_wins[player] += 1
+
+        # Calculate king wins EXCLUDING current session
+        prev_king_wins = {p: 0 for p in players}
+        for session_label, scores_dict in all_session_scores.items():
+            if session_label == current_session:
+                continue
+            session_max = max(scores_dict.values()) if scores_dict else 0
+            if session_max >= 3:
+                for player, pts in scores_dict.items():
+                    if pts == session_max:
+                        prev_king_wins[player] += 1
+
+        # Check various records broken in current session
+        records_broken = []
+
+        # 1. Best session score broken?
         if today_scores and all_time_record > 0:
             today_max = max(today_scores.values())
             if today_max > all_time_record:
                 today_kings = [p for p, pts in today_scores.items() if pts == today_max]
-                # Calculate accuracy: points earned / max possible (matches × 3)
                 king_name = today_kings[0]
                 king_matches = 0
-                # Count how many completed matches in this session the king predicted
-                if now_ist.hour >= 18:
-                    sess_dates = [f"June {now_ist.day}", f"June {now_ist.day + 1}"]
-                else:
-                    sess_dates = [f"June {now_ist.day - 1}", f"June {now_ist.day}"]
                 for match in all_matches:
                     if not match.get("result_winner"):
                         continue
@@ -603,13 +618,29 @@ def home():
                         king_matches += 1
                 max_possible = king_matches * 3
                 king_accuracy = round(today_max * 100 / max_possible) if max_possible > 0 else 0
-                record_alert = {
+                records_broken.append({
+                    "type": "🏆 Best Session Score",
                     "names": today_kings,
-                    "points": today_max,
-                    "prev_holder": all_time_record_holder,
-                    "prev_points": all_time_record,
-                    "accuracy": king_accuracy,
-                }
+                    "value": f"{today_max} pts ({king_accuracy}% accuracy)",
+                    "prev": f"{all_time_record_holder}'s {all_time_record} pts",
+                })
+
+        # 2. Most king crowns broken?
+        curr_max_crowns = max(all_king_wins.values()) if all_king_wins else 0
+        prev_max_crowns = max(prev_king_wins.values()) if prev_king_wins else 0
+        if curr_max_crowns > prev_max_crowns and curr_max_crowns > 0:
+            crown_holders = [p for p, w in all_king_wins.items() if w == curr_max_crowns]
+            prev_crown_holders = [p for p, w in prev_king_wins.items() if w == prev_max_crowns]
+            records_broken.append({
+                "type": "👑 Most King Crowns",
+                "names": crown_holders,
+                "value": f"{curr_max_crowns} crowns",
+                "prev": f"Previous record: {prev_max_crowns} crowns",
+            })
+
+        # Show the most impressive record broken (first one)
+        if records_broken:
+            record_alert = records_broken[0]
 
         # --- Hot Takes: players who picked against the crowd and got it right ---
         from collections import Counter as HotTakeCounter
