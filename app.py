@@ -630,7 +630,6 @@ def home():
         prev_max_crowns = max(prev_king_wins.values()) if prev_king_wins else 0
         if curr_max_crowns > prev_max_crowns and curr_max_crowns > 0:
             crown_holders = [p for p, w in all_king_wins.items() if w == curr_max_crowns]
-            prev_crown_holders = [p for p, w in prev_king_wins.items() if w == prev_max_crowns]
             records_broken.append({
                 "type": "👑 Most King Crowns",
                 "names": crown_holders,
@@ -638,9 +637,134 @@ def home():
                 "prev": f"Previous record: {prev_max_crowns} crowns",
             })
 
-        # Show the most impressive record broken (first one)
+        # 3. Most perfect predictions in one session broken?
+        curr_max_perfects = 0
+        prev_max_perfects = 0
+        curr_perfects_holder = []
+        for session_label, scores_dict in all_session_scores.items():
+            for player in players:
+                # Count perfects in this session
+                session_perfects = 0
+                for match in all_matches:
+                    if not match.get("result_winner"):
+                        continue
+                    date = match.get("date", "")
+                    kickoff = match.get("kickoff", "00:00")
+                    try:
+                        day = int(date.replace("June ", ""))
+                        hour = int(kickoff.split(":")[0])
+                    except:
+                        continue
+                    s_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+                    if s_label != session_label:
+                        continue
+                    pred = predictions.get(player, {}).get(match["id"])
+                    if pred:
+                        w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                        s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip()
+                        if w_ok and s_ok:
+                            session_perfects += 1
+                if session_label == current_session:
+                    if session_perfects > curr_max_perfects:
+                        curr_max_perfects = session_perfects
+                        curr_perfects_holder = [player]
+                    elif session_perfects == curr_max_perfects and session_perfects > 0:
+                        curr_perfects_holder.append(player)
+                else:
+                    prev_max_perfects = max(prev_max_perfects, session_perfects)
+        if curr_max_perfects > prev_max_perfects and curr_max_perfects > 0:
+            records_broken.append({
+                "type": "🎯 Most Perfect Predictions (Session)",
+                "names": list(dict.fromkeys(curr_perfects_holder)),
+                "value": f"{curr_max_perfects} perfect in one session",
+                "prev": f"Previous record: {prev_max_perfects}",
+            })
+
+        # 4. Most total perfects overall broken?
+        total_perfects_curr = {p: 0 for p in players}
+        total_perfects_prev = {p: 0 for p in players}
+        for match in all_matches:
+            if not match.get("result_winner"):
+                continue
+            date = match.get("date", "")
+            kickoff = match.get("kickoff", "00:00")
+            try:
+                day = int(date.replace("June ", ""))
+                hour = int(kickoff.split(":")[0])
+            except:
+                continue
+            s_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if pred:
+                    w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                    s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip()
+                    if w_ok and s_ok:
+                        total_perfects_curr[player] += 1
+                        if s_label != current_session:
+                            total_perfects_prev[player] += 1
+        curr_max_total_p = max(total_perfects_curr.values()) if total_perfects_curr else 0
+        prev_max_total_p = max(total_perfects_prev.values()) if total_perfects_prev else 0
+        if curr_max_total_p > prev_max_total_p and curr_max_total_p > 0:
+            holders = [p for p, v in total_perfects_curr.items() if v == curr_max_total_p]
+            records_broken.append({
+                "type": "🎯 Most Perfect Predictions (Overall)",
+                "names": holders,
+                "value": f"{curr_max_total_p} total perfects",
+                "prev": f"Previous record: {prev_max_total_p}",
+            })
+
+        # 5. Longest prediction streak broken?
+        # Compare current streaks vs what they'd be without current session matches
+        all_matches_sorted = sorted(all_matches, key=lambda m: m.get("sort_order", 0))
+        curr_max_streak = 0
+        prev_max_streak = 0
+        curr_streak_holders = []
+        for player in players:
+            curr_s = 0
+            max_s = 0
+            prev_s = 0
+            prev_max_s = 0
+            for match in all_matches_sorted:
+                pred = predictions.get(player, {}).get(match["id"])
+                # Current (all matches)
+                if pred:
+                    curr_s += 1
+                    max_s = max(max_s, curr_s)
+                else:
+                    curr_s = 0
+                # Previous (exclude current session matches)
+                date = match.get("date", "")
+                kickoff = match.get("kickoff", "00:00")
+                try:
+                    day = int(date.replace("June ", ""))
+                    hour = int(kickoff.split(":")[0])
+                    s_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+                except:
+                    s_label = ""
+                if s_label != current_session:
+                    if pred:
+                        prev_s += 1
+                        prev_max_s = max(prev_max_s, prev_s)
+                    else:
+                        prev_s = 0
+            if max_s > curr_max_streak:
+                curr_max_streak = max_s
+                curr_streak_holders = [player]
+            elif max_s == curr_max_streak and max_s > 0:
+                curr_streak_holders.append(player)
+            prev_max_streak = max(prev_max_streak, prev_max_s)
+        if curr_max_streak > prev_max_streak and curr_max_streak > 0:
+            records_broken.append({
+                "type": "🔥 Longest Prediction Streak",
+                "names": list(dict.fromkeys(curr_streak_holders)),
+                "value": f"{curr_max_streak} consecutive matches",
+                "prev": f"Previous record: {prev_max_streak} matches",
+            })
+
+        # Show ALL records broken (not just the first one)
         if records_broken:
-            record_alert = records_broken[0]
+            record_alert = records_broken
 
         # --- Hot Takes: players who picked against the crowd and got it right ---
         from collections import Counter as HotTakeCounter
