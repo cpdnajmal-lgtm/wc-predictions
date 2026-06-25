@@ -160,7 +160,7 @@
     {% endfor %}
     {% endif %}
 
-    <h2>📅 Today's Matches</h2>
+    <h2>📅 {{ tournament_phase }} — Today's Matches</h2>
     {% if today_matches or locked_matches %}
     <a href="{{ url_for('stats') }}" style="display:block; text-align:center; background:rgba(0,212,170,0.1); border:1px solid #00d4aa; border-radius:10px; padding:8px; margin-bottom:15px; font-size:0.85em; text-decoration:none; color:inherit;">
         🎯 <strong style="color:#00d4aa;">{{ today_predicted }}/{{ total_players }}</strong> predicted today ({{ (today_predicted * 100 / total_players)|int if total_players > 0 else 0 }}%)

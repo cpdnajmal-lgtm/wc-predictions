@@ -801,6 +801,38 @@ def home():
         # Limit to most recent 3 hot takes
         hot_takes = hot_takes[-3:]
 
+        # Determine tournament phase based on active match IDs
+        active_match_ids = [m["id"] for m in today_matches + locked_matches if m.get("id")]
+        max_match_num = 0
+        for mid in active_match_ids:
+            try:
+                num = int(mid.replace("match_", ""))
+                max_match_num = max(max_match_num, num)
+            except:
+                pass
+        if max_match_num == 0:
+            # Check last completed match
+            last_completed = get_completed_matches()
+            if last_completed:
+                try:
+                    max_match_num = int(last_completed[-1]["id"].replace("match_", ""))
+                except:
+                    pass
+        if max_match_num <= 72:
+            tournament_phase = "Group Stage"
+        elif max_match_num <= 88:
+            tournament_phase = "Round of 32"
+        elif max_match_num <= 96:
+            tournament_phase = "Round of 16"
+        elif max_match_num <= 100:
+            tournament_phase = "Quarter Finals"
+        elif max_match_num <= 102:
+            tournament_phase = "Semi Finals"
+        elif max_match_num == 103:
+            tournament_phase = "3rd Place"
+        else:
+            tournament_phase = "Final"
+
         return render_template(
             "home.html",
             leaderboard=ranked_leaderboard_with_change,
@@ -819,6 +851,7 @@ def home():
             record_alert=record_alert,
             hot_takes=hot_takes,
             player_teams=player_teams,
+            tournament_phase=tournament_phase,
             announcements=load_announcements(),
         )
     except Exception as e:
