@@ -1866,7 +1866,7 @@ def add_matchday3_group_abc():
         ("match_59", "Turkey", "USA", "June 26", "07:30", 59),
         ("match_60", "Paraguay", "Australia", "June 26", "07:30", 60),
         # June 26-27 - Group I matchday 3
-        ("match_61", "Norway", "France", "June 26", "00:30", 61),
+        ("match_61", "Norway", "France", "June 27", "00:30", 61),
         ("match_62", "Senegal", "Iraq", "June 27", "00:30", 62),
         # June 27 - Group H, G matchday 3
         ("match_63", "Cape Verde", "Saudi Arabia", "June 27", "05:30", 63),
