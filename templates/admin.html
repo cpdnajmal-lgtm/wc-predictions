@@ -182,6 +182,38 @@
         </form>
     </div>
 
+    <!-- All upcoming matches (for verification/editing) -->
+    <details style="margin-top:12px;">
+        <summary style="color:#00d4aa; font-size:0.9em; cursor:pointer; font-weight:600;">📋 View All Upcoming Matches ({{ all_upcoming|length }})</summary>
+        {% for match in all_upcoming %}
+        <div class="match-item" style="margin-top:6px;">
+            <div class="match-title" style="font-size:0.85em;">{{ match.team_a }} vs {{ match.team_b }}</div>
+            <div class="match-info">{{ match.id }} • {{ match.date }} • {{ format_time(match.kickoff) }} IST ({{ match.kickoff }})</div>
+            <details style="margin-top:4px;">
+                <summary style="color:#888; font-size:0.7em; cursor:pointer;">✏️ Edit</summary>
+                <form method="POST" style="margin-top:4px;">
+                    <input type="hidden" name="action" value="edit_match">
+                    <input type="hidden" name="match_id" value="{{ match.id }}">
+                    <div class="row">
+                        <div><label>Team A</label><input name="team_a" value="{{ match.team_a }}" style="font-size:0.8em;"></div>
+                        <div><label>Team B</label><input name="team_b" value="{{ match.team_b }}" style="font-size:0.8em;"></div>
+                    </div>
+                    <div class="row">
+                        <div><label>Date</label><input name="date" value="{{ match.date }}" style="font-size:0.8em;"></div>
+                        <div><label>Kickoff</label><input name="kickoff" value="{{ match.kickoff }}" style="font-size:0.8em;"></div>
+                    </div>
+                    <button type="submit" class="btn-sm" style="font-size:0.7em; width:auto;">Save</button>
+                </form>
+                <form method="POST" style="margin-top:4px;" onsubmit="return confirm('Delete this match?')">
+                    <input type="hidden" name="action" value="delete_match">
+                    <input type="hidden" name="match_id" value="{{ match.id }}">
+                    <button type="submit" class="btn-sm" style="background:#e74c3c; color:white; font-size:0.7em; width:auto;">🗑 Delete</button>
+                </form>
+            </details>
+        </div>
+        {% endfor %}
+    </details>
+
     <!-- Players -->
     <h2>👥 Players ({{ data.players|length }})</h2>
     <div class="card">

@@ -1251,7 +1251,8 @@ def admin():
             if pred:
                 match_predictions[match["id"]][player] = pred
     announcements = load_announcements()
-    return render_template("admin.html", data={"players": players}, today_matches=get_today_matches(), pending=pending, match_predictions=match_predictions, announcements=announcements)
+    all_upcoming = [m for m in matches if not m.get("result_winner")]
+    return render_template("admin.html", data={"players": players}, today_matches=get_today_matches(), pending=pending, match_predictions=match_predictions, announcements=announcements, all_upcoming=all_upcoming)
 
 
 @app.route("/stats")
