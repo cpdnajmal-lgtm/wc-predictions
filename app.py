@@ -1141,14 +1141,15 @@ def admin():
 
         if action == "add_match":
             match_id = f"match_{int(datetime.now().timestamp())}"
+            kickoff = request.form.get("kickoff", "").strip()
             cur.execute(
-                "INSERT INTO matches (id, team_a, team_b, date, sort_order) VALUES (%s, %s, %s, %s, %s)",
+                "INSERT INTO matches (id, team_a, team_b, date, kickoff, sort_order) VALUES (%s, %s, %s, %s, %s, %s)",
                 (match_id, request.form.get("team_a", "").strip(),
                  request.form.get("team_b", "").strip(),
-                 request.form.get("date", "").strip(), 999),
+                 request.form.get("date", "").strip(), kickoff, 999),
             )
             conn.commit()
-            flash("Match added!")
+            flash(f"Match added! ({request.form.get('team_a', '')} vs {request.form.get('team_b', '')} - {request.form.get('date', '')} {kickoff})")
 
         elif action == "update_result":
             match_id = request.form.get("match_id")
