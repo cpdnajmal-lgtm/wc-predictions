@@ -100,9 +100,9 @@
 
     {% if hot_takes %}
     <div style="background:rgba(155,89,182,0.1); border:1px solid rgba(155,89,182,0.4); border-radius:12px; padding:12px; margin-bottom:20px;">
-        <div style="text-align:center; color:#9b59b6; font-weight:700; font-size:0.85em; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">🔥 Hot Takes</div>
+        <div style="text-align:center; color:#9b59b6; font-weight:700; font-size:0.85em; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">🔥 Hot Takes ({{ hot_takes|length }})</div>
         <div style="text-align:center; color:#666; font-size:0.7em; margin-bottom:10px;">Picked against 70%+ of the group and got it right!</div>
-        {% for ht in hot_takes %}
+        {% for ht in hot_takes[:3] %}
         <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; {% if not loop.last %}border-bottom:1px solid rgba(155,89,182,0.2);{% endif %}">
             <div>
                 <span style="font-weight:700; font-size:0.9em;">{% if player_teams.get(ht.player) %}{{ get_flag(player_teams[ht.player]) }} {% endif %}{{ ht.player }}</span>
@@ -114,6 +114,23 @@
             </div>
         </div>
         {% endfor %}
+        {% if hot_takes|length > 3 %}
+        <div id="hot-takes-rest" style="display:none;">
+            {% for ht in hot_takes[3:] %}
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-top:1px solid rgba(155,89,182,0.2);">
+                <div>
+                    <span style="font-weight:700; font-size:0.9em;">{% if player_teams.get(ht.player) %}{{ get_flag(player_teams[ht.player]) }} {% endif %}{{ ht.player }}</span>
+                    <div style="font-size:0.72em; color:#888;">{{ get_flag(ht.match.team_a) }} {{ ht.match.team_a }} vs {{ ht.match.team_b }} {{ get_flag(ht.match.team_b) }}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="color:#9b59b6; font-weight:700; font-size:0.85em;">{{ ht.pick }}</div>
+                    <div style="color:#666; font-size:0.7em;">{{ ht.against_pct }}% picked wrong</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div onclick="var el=document.getElementById('hot-takes-rest'); el.style.display=el.style.display==='none'?'block':'none'; this.textContent=el.style.display==='none'?'▼ Show all {{ hot_takes|length }}':'▲ Hide';" style="text-align:center; color:#9b59b6; font-size:0.8em; cursor:pointer; margin-top:8px; font-weight:600;">▼ Show all {{ hot_takes|length }}</div>
+        {% endif %}
     </div>
     {% endif %}
 
