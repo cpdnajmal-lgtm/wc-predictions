@@ -227,7 +227,7 @@
         {% if is_knockout %}<div style="text-align:center; color:#ffd700; font-size:0.6em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">⚔️ {{ tournament_phase }}</div>{% endif %}
         <div class="match-teams" {% if is_knockout %}style="font-size:1.15em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
         <div class="match-date">{{ match.date }} &nbsp;•&nbsp; <span class="kickoff-time">{{ format_time(match.kickoff) }} IST</span></div>
-        <div class="countdown" data-day="{{ match.date.replace('June ', '') }}" data-time="{{ match.kickoff }}" style="color:#e74c3c; font-size:0.75em; text-align:center; margin-top:3px; font-weight:600;"></div>
+        <div class="countdown" data-date="{{ match.date }}" data-time="{{ match.kickoff }}" style="color:#e74c3c; font-size:0.75em; text-align:center; margin-top:3px; font-weight:600;"></div>
         {% if all_predictions.get(match.id) %}
         {% set preds_list = all_predictions[match.id].values()|list %}
         {% set total_preds = preds_list|length %}
@@ -347,13 +347,23 @@
     function updateCountdowns() {
         document.querySelectorAll('.countdown').forEach(function(el) {
             try {
-                var day = parseInt(el.dataset.day);
-                var timeParts = el.dataset.time.split(':');
+                var dateStr = el.dataset.date || '';
+                var timeParts = (el.dataset.time || '').split(':');
                 var hour = parseInt(timeParts[0]);
                 var min = parseInt(timeParts[1] || 0);
-                if (isNaN(day) || isNaN(hour) || isNaN(min)) { el.textContent = ''; return; }
+                // Parse "June 29" or "July 3"
+                var month = 5; // June = 5 (0-indexed)
+                var day = 0;
+                if (dateStr.startsWith('June ')) {
+                    month = 5;
+                    day = parseInt(dateStr.replace('June ', ''));
+                } else if (dateStr.startsWith('July ')) {
+                    month = 6;
+                    day = parseInt(dateStr.replace('July ', ''));
+                }
+                if (isNaN(day) || !day || isNaN(hour) || isNaN(min)) { el.textContent = ''; return; }
                 // IST is UTC+5:30
-                var kickoff = new Date(Date.UTC(2026, 5, day, hour - 5, min - 30, 0));
+                var kickoff = new Date(Date.UTC(2026, month, day, hour - 5, min - 30, 0));
                 var now = new Date();
                 var diff = kickoff - now;
                 if (diff <= 0) {
