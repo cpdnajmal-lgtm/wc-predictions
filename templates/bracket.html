@@ -18,7 +18,7 @@
         .team.winner { color: #00d4aa; }
         .team.loser { color: #555; text-decoration: line-through; }
         .team.pending { color: #aaa; }
-        .vs { color: #555; font-size: 0.7em; font-weight: 700; padding: 0 8px; }
+        .vs { color: #888; font-size: 0.65em; font-weight: 700; padding: 0 6px; text-align: center; line-height: 1.4; min-width: 55px; }
         .score { background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); border-radius: 6px; padding: 3px 8px; font-size: 0.75em; font-weight: 700; color: #ffd700; margin-left: 8px; }
         .date-label { color: #666; font-size: 0.7em; text-align: center; margin-bottom: 6px; margin-top: 14px; }
         .eliminated-tag { font-size: 0.6em; color: #e74c3c; margin-left: 4px; }
@@ -38,7 +38,7 @@
             {{ get_flag(match.team_a) }} {{ match.team_a }}
             {% if match.result_winner == match.team_a %}<span class="advanced-tag">✓</span>{% elif match.result_winner and match.result_winner != match.team_a %}<span class="eliminated-tag">✗</span>{% endif %}
         </div>
-        <div class="vs">VS</div>
+        <div class="vs">{{ format_time(match.kickoff) }}<br>VS</div>
         <div class="team {% if match.result_winner == match.team_b %}winner{% elif match.result_winner and match.result_winner != match.team_b %}loser{% else %}pending{% endif %}">
             {{ get_flag(match.team_b) }} {{ match.team_b }}
             {% if match.result_winner == match.team_b %}<span class="advanced-tag">✓</span>{% elif match.result_winner and match.result_winner != match.team_b %}<span class="eliminated-tag">✗</span>{% endif %}
