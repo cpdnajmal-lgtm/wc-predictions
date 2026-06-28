@@ -83,13 +83,13 @@
         <div style="background:#0f0f23; border:1px solid #2a2a5e; border-radius:8px; padding:12px; margin-bottom:15px; font-size:0.8em; color:#888;">
             <strong style="color:#00d4aa;">📝 How to predict:</strong><br>
             • <strong>Winner:</strong> Pick the team you think will win (or Draw in group stage)<br>
-            • <strong>Score:</strong> Type the score after 90 minutes (e.g., "2-1", "0-0", "1-1")<br>
+            • <strong>Score:</strong> Type the final score (e.g., "2-1", "0-0", "1-1")<br>
             • Format: goals_team_a - goals_team_b (e.g., for Brazil vs Japan, "2-1" means Brazil 2, Japan 1)<br>
             {% if matches and matches[0].id and matches[0].id.replace('match_', '')|int > 72 %}
             <br><strong style="color:#ffd700;">⚽ Knockout Rules:</strong><br>
             • <strong>Winner</strong> = Team that advances (no Draw option)<br>
-            • <strong>Score</strong> = 90 min result only (before extra time/penalties)<br>
-            • If you predict 1-1 and the game goes to pens, your score is still correct!
+            • <strong>Score</strong> = Final score including extra time<br>
+            • If penalties: score = score after extra time (e.g., 1-1), winner = team that won pens
             {% endif %}
         </div>
 
@@ -113,7 +113,7 @@
                     </select>
                 </div>
                 <div>
-                    <label>Score (90 min)</label>
+                    <label>Score</label>
                     <input type="text" name="scorer_{{ match.id }}" placeholder="e.g. 2-1">
                 </div>
             </div>
