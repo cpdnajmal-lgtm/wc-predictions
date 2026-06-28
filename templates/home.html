@@ -137,8 +137,10 @@
     {% if locked_matches %}
     <h2>🔴 Live / Started</h2>
     {% for match in locked_matches %}
-    <div class="match-card" style="border-color:#e74c3c;">
-        <div class="match-teams">{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
+    {% set is_knockout = match.id.replace('match_', '')|int > 72 %}
+    <div class="match-card" style="border-color:{% if is_knockout %}#ffd700{% else %}#e74c3c{% endif %}; {% if is_knockout %}background:linear-gradient(135deg, rgba(26,26,62,0.8), rgba(255,215,0,0.03));{% endif %}">
+        {% if is_knockout %}<div style="text-align:center; color:#ffd700; font-size:0.6em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">⚔️ {{ tournament_phase }}</div>{% endif %}
+        <div class="match-teams" {% if is_knockout %}style="font-size:1.15em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
         <div class="match-date">{{ match.date }} &nbsp;•&nbsp; <span style="color:#e74c3c; font-size:0.75em; font-weight:600;">🔒 LOCKED</span></div>
         {% if all_predictions.get(match.id) %}
         {% set preds_list = all_predictions[match.id].values()|list %}
@@ -195,8 +197,10 @@
     {% endif %}
     {% if today_matches %}
     {% for match in today_matches %}
-    <div class="match-card">
-        <div class="match-teams">{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
+    {% set is_knockout = match.id.replace('match_', '')|int > 72 %}
+    <div class="match-card" {% if is_knockout %}style="border-color:#ffd700; background:linear-gradient(135deg, rgba(26,26,62,0.8), rgba(255,215,0,0.03));"{% endif %}>
+        {% if is_knockout %}<div style="text-align:center; color:#ffd700; font-size:0.6em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">⚔️ {{ tournament_phase }}</div>{% endif %}
+        <div class="match-teams" {% if is_knockout %}style="font-size:1.15em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
         <div class="match-date">{{ match.date }} &nbsp;•&nbsp; <span class="kickoff-time">{{ format_time(match.kickoff) }} IST</span></div>
         <div class="countdown" data-day="{{ match.date.replace('June ', '') }}" data-time="{{ match.kickoff }}" style="color:#e74c3c; font-size:0.75em; text-align:center; margin-top:3px; font-weight:600;"></div>
         {% if all_predictions.get(match.id) %}
