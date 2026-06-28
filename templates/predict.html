@@ -153,7 +153,7 @@
         </div>
         {% endfor %}
 
-        <button type="submit" onclick="buildScores()">💾 Save Predictions</button>
+        <button type="submit" onclick="buildScores(); return validatePredictions();">💾 Save Predictions</button>
     </form>
 
     <script>
@@ -184,6 +184,27 @@
                     scorer.value = a + '-' + b;
                 }
             });
+        }
+
+        // Validate: winner must be selected for each match
+        function validatePredictions() {
+            var valid = true;
+            document.querySelectorAll('[id^="winner_match_"]').forEach(function(el) {
+                if (el.type === 'hidden' && !el.value) {
+                    // Check if score was entered for this match
+                    var matchId = el.id.replace('winner_', '');
+                    var scoreA = document.getElementById('score_a_' + matchId);
+                    var scoreB = document.getElementById('score_b_' + matchId);
+                    if (scoreA && (scoreA.value || scoreB.value)) {
+                        valid = false;
+                    }
+                }
+            });
+            if (!valid) {
+                alert('Please select a winner for all matches before saving!');
+                return false;
+            }
+            return true;
         }
 
         var playerSelect = document.getElementById('playerSelect');
