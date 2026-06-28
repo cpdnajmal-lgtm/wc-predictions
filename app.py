@@ -1145,25 +1145,49 @@ def awards():
         # --- Calculate Awards ---
         awards_list = []
 
+        def make_award(emoji, title, desc, data_dict, value_fmt, reverse=True, min_val=0):
+            """Create award with winners + top 5 runner-ups."""
+            sorted_items = sorted(data_dict.items(), key=lambda x: x[1], reverse=reverse)
+            sorted_items = [(p, v) for p, v in sorted_items if v > min_val]
+            if not sorted_items:
+                return None
+            top_val = sorted_items[0][1]
+            winners = [p for p, v in sorted_items if v == top_val]
+            # Runner-ups (next 4 unique values after winner)
+            runners = []
+            seen_vals = {top_val}
+            for p, v in sorted_items:
+                if v in seen_vals:
+                    if p not in winners:
+                        continue
+                    continue
+                seen_vals.add(v)
+                runners.append({"name": p, "value": value_fmt(v)})
+                if len(runners) >= 4:
+                    break
+            # Add others with same runner-up values
+            final_runners = []
+            for rv in list(dict.fromkeys(r["value"] for r in runners)):
+                names = [p for p, v in sorted_items if value_fmt(v) == rv and p not in winners]
+                final_runners.append({"names": names, "value": rv})
+            return {"emoji": emoji, "title": title, "desc": desc, "winners": winners, "value": value_fmt(top_val), "runners": final_runners[:4]}
+
         # 1. Group Stage Champion (most points)
-        max_pts = max(d["points"] for d in player_data.values()) if player_data else 0
-        champions = [p for p, d in player_data.items() if d["points"] == max_pts and max_pts > 0]
-        awards_list.append({"emoji": "🥇", "title": "Group Stage Champion", "desc": "Most points overall", "winners": champions, "value": f"{max_pts} pts"})
+        pts_data = {p: d["points"] for p, d in player_data.items()}
+        award = make_award("🥇", "Group Stage Champion", "Most points overall", pts_data, lambda v: f"{v} pts")
+        if award: awards_list.append(award)
 
         # 2. Sharpshooter (best winner accuracy, min 20 preds)
-        eligible = {p: d for p, d in player_data.items() if d["total_preds"] >= 20}
-        if eligible:
-            max_acc = max(d["winner_pct"] for d in eligible.values())
-            sharpshooters = [p for p, d in eligible.items() if d["winner_pct"] == max_acc]
-            awards_list.append({"emoji": "🎯", "title": "Sharpshooter", "desc": "Best winner accuracy (min 20 predictions)", "winners": sharpshooters, "value": f"{max_acc}%"})
+        acc_data = {p: d["winner_pct"] for p, d in player_data.items() if d["total_preds"] >= 20}
+        award = make_award("🎯", "Sharpshooter", "Best winner accuracy (min 20 predictions)", acc_data, lambda v: f"{v}%")
+        if award: awards_list.append(award)
 
         # 3. Oracle (most perfect predictions)
-        max_perfect = max(d["perfect"] for d in player_data.values()) if player_data else 0
-        if max_perfect > 0:
-            oracles = [p for p, d in player_data.items() if d["perfect"] == max_perfect]
-            awards_list.append({"emoji": "🔮", "title": "Oracle", "desc": "Most perfect predictions (winner + score)", "winners": oracles, "value": f"{max_perfect} perfects"})
+        perfect_data = {p: d["perfect"] for p, d in player_data.items()}
+        award = make_award("🔮", "Oracle", "Most perfect predictions (winner + score)", perfect_data, lambda v: f"{v} perfects")
+        if award: awards_list.append(award)
 
-        # 4. King of Kings (most king wins) - reuse session logic
+        # 4. King of Kings (most king wins)
         from collections import Counter
         king_wins = {p: 0 for p in players}
         sessions = {}
@@ -1194,19 +1218,18 @@ def awards():
                         king_wins[p] += 1
         max_crowns = max(king_wins.values()) if king_wins else 0
         if max_crowns > 0:
-            kings = [p for p, w in king_wins.items() if w == max_crowns]
-            awards_list.append({"emoji": "👑", "title": "King of Kings", "desc": "Most 'King of the Day' wins", "winners": kings, "value": f"{max_crowns} crowns"})
+            award = make_award("👑", "King of Kings", "Most 'King of the Day' wins", king_wins, lambda v: f"{v} crowns")
+            if award: awards_list.append(award)
 
-        # 5. Iron Man (predicted every match)
+        # 5. Iron Man (most matches predicted)
         total_completed = len(completed)
-        iron_men = [p for p, d in player_data.items() if d["total_preds"] == total_completed and total_completed > 0]
-        if iron_men:
-            awards_list.append({"emoji": "🧱", "title": "Iron Man", "desc": "Predicted every single group stage match", "winners": iron_men, "value": f"{total_completed}/{total_completed} matches"})
+        pred_count_data = {p: d["total_preds"] for p, d in player_data.items()}
+        award = make_award("🧱", "Iron Man", "Most matches predicted", pred_count_data, lambda v: f"{v}/{total_completed}")
+        if award: awards_list.append(award)
 
-        # 6. Biggest Climber (highest points from bottom half)
+        # 6. Biggest Climber - keep simple (no runner-ups for this one)
         sorted_players = sorted(player_data.items(), key=lambda x: x[1]["points"], reverse=True)
         if len(sorted_players) > 10:
-            # Find who has the most points among bottom-half starters (first 10 matches)
             early_points = {}
             early_matches = completed[:10]
             for player in players:
@@ -1221,42 +1244,34 @@ def awards():
                         elif w_ok or s_ok:
                             ep += 1
                 early_points[player] = ep
-            # Sort by early points to find who started low
             early_sorted = sorted(early_points.items(), key=lambda x: x[1])
             bottom_half_early = [p for p, _ in early_sorted[:len(early_sorted)//2]]
-            # Among bottom half early, who ended highest?
             climbers = [(p, player_data[p]["points"]) for p in bottom_half_early if p in player_data]
             if climbers:
                 climbers.sort(key=lambda x: x[1], reverse=True)
                 best_climb = climbers[0][1]
                 top_climbers = [p for p, pts in climbers if pts == best_climb]
-                awards_list.append({"emoji": "📈", "title": "Biggest Climber", "desc": "Started in bottom half, finished strongest", "winners": top_climbers, "value": f"{best_climb} pts"})
+                awards_list.append({"emoji": "📈", "title": "Biggest Climber", "desc": "Started in bottom half, finished strongest", "winners": top_climbers, "value": f"{best_climb} pts", "runners": []})
 
         # 7. Longest Drought
-        max_dr = max(d["max_drought"] for d in player_data.values()) if player_data else 0
-        if max_dr >= 3:
-            drought_holders = [p for p, d in player_data.items() if d["max_drought"] == max_dr]
-            awards_list.append({"emoji": "💀", "title": "Longest Drought", "desc": "Most consecutive predictions without scoring", "winners": drought_holders, "value": f"{max_dr} matches"})
+        drought_data = {p: d["max_drought"] for p, d in player_data.items() if d["max_drought"] >= 3}
+        award = make_award("💀", "Longest Drought", "Most consecutive predictions without scoring", drought_data, lambda v: f"{v} matches")
+        if award: awards_list.append(award)
 
         # 8. Draw Whisperer
-        max_draws = max(d["draws_correct"] for d in player_data.values()) if player_data else 0
-        if max_draws > 0:
-            draw_masters = [p for p, d in player_data.items() if d["draws_correct"] == max_draws]
-            awards_list.append({"emoji": "🎰", "title": "Draw Whisperer", "desc": "Most correct draw predictions", "winners": draw_masters, "value": f"{max_draws} draws"})
+        draw_data = {p: d["draws_correct"] for p, d in player_data.items()}
+        award = make_award("🎰", "Draw Whisperer", "Most correct draw predictions", draw_data, lambda v: f"{v} draws")
+        if award: awards_list.append(award)
 
-        # 9. Close But No Cigar (most 1-pointers relative to 3-pointers)
-        cigar_candidates = [(p, d["one_pointers"], d["perfect"]) for p, d in player_data.items() if d["one_pointers"] > 5 and d["perfect"] <= 2]
-        if cigar_candidates:
-            cigar_candidates.sort(key=lambda x: x[1], reverse=True)
-            max_ones = cigar_candidates[0][1]
-            cigar_winners = [p for p, ones, _ in cigar_candidates if ones == max_ones]
-            awards_list.append({"emoji": "😅", "title": "Close But No Cigar", "desc": "Gets the winner but rarely the score", "winners": cigar_winners, "value": f"{max_ones} one-pointers"})
+        # 9. Close But No Cigar
+        cigar_data = {p: d["one_pointers"] for p, d in player_data.items() if d["one_pointers"] > 5 and d["perfect"] <= 2}
+        award = make_award("😅", "Close But No Cigar", "Gets the winner but rarely the score", cigar_data, lambda v: f"{v} one-pointers")
+        if award: awards_list.append(award)
 
-        # 10. Dedication Award (longest prediction streak)
-        max_str = max(d["max_streak"] for d in player_data.values()) if player_data else 0
-        if max_str > 0:
-            streak_holders = [p for p, d in player_data.items() if d["max_streak"] == max_str]
-            awards_list.append({"emoji": "🔥", "title": "Dedication", "desc": "Longest consecutive matches predicted", "winners": streak_holders, "value": f"{max_str} matches"})
+        # 10. Dedication (longest prediction streak)
+        streak_data = {p: d["max_streak"] for p, d in player_data.items()}
+        award = make_award("🔥", "Dedication", "Longest consecutive matches predicted", streak_data, lambda v: f"{v} matches")
+        if award: awards_list.append(award)
 
         return render_template("awards.html", awards=awards_list, players=players, player_teams=player_teams, total_matches=total_completed)
     except Exception as e:

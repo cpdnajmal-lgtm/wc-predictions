@@ -38,6 +38,13 @@
             {% endfor %}
         </div>
         <div class="award-value">{{ award.value }}</div>
+        {% if award.runners %}
+        <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,215,0,0.1); font-size:0.75em; color:#888;">
+            {% for runner in award.runners %}
+            <div style="margin-top:3px;">{{ runner.names|join(', ') }} — <span style="color:#aaa;">{{ runner.value }}</span></div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
     {% endfor %}
     {% else %}
