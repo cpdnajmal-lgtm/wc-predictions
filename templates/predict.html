@@ -125,7 +125,7 @@
             <div style="text-align:center; margin-bottom:4px; color:#ffd700; font-size:0.7em; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Predict Score</div>
             <div style="text-align:center;">
                 <input type="text" name="scorer_{{ match.id }}" id="scorer_{{ match.id }}" placeholder="e.g. 2-0" style="width:100px; padding:12px; text-align:center; border-radius:10px; border:2px solid #ffd700; background:rgba(255,215,0,0.05); color:#ffd700; font-size:1.4em; font-weight:700;">
-                <div id="score_hint_{{ match.id }}" style="color:#888; font-size:0.75em; margin-top:6px;">Tap a team first, then enter score</div>
+                <div id="score_hint_{{ match.id }}" style="color:#ffd700; font-size:0.85em; margin-top:8px; font-weight:600;">⚠️ Tap a team first, then enter score</div>
             </div>
             {% else %}
             <!-- Group stage style: dropdown -->
@@ -170,7 +170,12 @@
                 var hint = document.getElementById('score_hint_' + matchId);
                 var loser = isA ? teamB : teamA;
                 if (hint) {
-                    hint.innerHTML = '<span style="color:#00d4aa;">' + team + '</span> goals - ' + loser + ' goals';
+                    hint.innerHTML = '👉 <span style="color:#00d4aa; font-weight:700;">' + team + '</span> goals — ' + loser + ' goals';
+                    hint.style.background = 'rgba(0,212,170,0.1)';
+                    hint.style.padding = '8px 12px';
+                    hint.style.borderRadius = '8px';
+                    hint.style.border = '1px solid rgba(0,212,170,0.3)';
+                    hint.style.fontSize = '0.85em';
                 }
             }
         }
