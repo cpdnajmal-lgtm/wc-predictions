@@ -949,6 +949,9 @@ def _predict():
                 scorer = re.sub(r'\s*[-_:]\s*', '-', scorer)
                 scorer = re.sub(r'\s+', '-', scorer)
             if winner or scorer:
+                # Require winner to be selected (score alone is not valid)
+                if not winner:
+                    continue
                 cur.execute("""
                     INSERT INTO predictions (player, match_id, winner, scorer)
                     VALUES (%s, %s, %s, %s)
