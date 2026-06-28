@@ -123,14 +123,10 @@
                 </div>
             </div>
             <div style="text-align:center; margin-bottom:4px; color:#ffd700; font-size:0.7em; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Predict Score</div>
-            <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
-                <span style="font-size:0.85em; color:#aaa; font-weight:600;">{{ match.team_a[:3] }}</span>
-                <input type="number" id="score_a_{{ match.id }}" min="0" max="9" style="width:50px; padding:12px; text-align:center; border-radius:10px; border:2px solid #ffd700; background:rgba(255,215,0,0.05); color:#ffd700; font-size:1.4em; font-weight:700;" placeholder="0">
-                <span style="color:#ffd700; font-weight:700; font-size:1.2em;">:</span>
-                <input type="number" id="score_b_{{ match.id }}" min="0" max="9" style="width:50px; padding:12px; text-align:center; border-radius:10px; border:2px solid #ffd700; background:rgba(255,215,0,0.05); color:#ffd700; font-size:1.4em; font-weight:700;" placeholder="0">
-                <span style="font-size:0.85em; color:#aaa; font-weight:600;">{{ match.team_b[:3] }}</span>
+            <div style="text-align:center;">
+                <input type="text" name="scorer_{{ match.id }}" id="scorer_{{ match.id }}" placeholder="e.g. 2-0" style="width:100px; padding:12px; text-align:center; border-radius:10px; border:2px solid #ffd700; background:rgba(255,215,0,0.05); color:#ffd700; font-size:1.4em; font-weight:700;">
+                <div style="color:#888; font-size:0.7em; margin-top:6px;">Winner's goals first (e.g. 2-0 means your team scores 2)</div>
             </div>
-            <input type="hidden" name="scorer_{{ match.id }}" id="scorer_{{ match.id }}" value="">
             {% else %}
             <!-- Group stage style: dropdown -->
             <div class="row">
@@ -153,7 +149,7 @@
         </div>
         {% endfor %}
 
-        <button type="submit" onclick="buildScores(); return validatePredictions();">💾 Save Predictions</button>
+        <button type="submit" onclick="return validatePredictions();">💾 Save Predictions</button>
     </form>
 
     <script>
@@ -173,28 +169,18 @@
 
         // Before submit: build score strings from number inputs
         function buildScores() {
-            document.querySelectorAll('[id^="score_a_"]').forEach(function(el) {
-                var matchId = el.id.replace('score_a_', '');
-                var a = el.value || '0';
-                var bEl = document.getElementById('score_b_' + matchId);
-                var b = bEl ? (bEl.value || '0') : '0';
-                var scorer = document.getElementById('scorer_' + matchId);
-                if (scorer && (a !== '0' || b !== '0')) {
-                    scorer.value = a + '-' + b;
-                }
-            });
+            // No longer needed - using text field directly
         }
 
-        // Validate: winner must be selected for each match
+        // Validate: winner must be selected for each match that has a score
         function validatePredictions() {
             var valid = true;
             document.querySelectorAll('[id^="winner_match_"]').forEach(function(el) {
                 if (el.type === 'hidden' && !el.value) {
                     // Check if score was entered for this match
                     var matchId = el.id.replace('winner_', '');
-                    var scoreA = document.getElementById('score_a_' + matchId);
-                    var scoreB = document.getElementById('score_b_' + matchId);
-                    if (scoreA && (scoreA.value || scoreB.value)) {
+                    var scorer = document.getElementById('scorer_' + matchId);
+                    if (scorer && scorer.value) {
                         valid = false;
                     }
                 }
@@ -289,7 +275,7 @@
             .then(data => {
                 for (var matchId in data) {
                     var winnerEl = document.querySelector('[name="winner_' + matchId + '"]');
-                    var scorerEl = document.querySelector('[name="scorer_' + matchId + '"]');
+                    var scorerEl = document.getElementById('scorer_' + matchId);
                     // Handle dropdown (group stage)
                     if (winnerEl && winnerEl.tagName === 'SELECT' && data[matchId].winner) {
                         winnerEl.value = data[matchId].winner;
@@ -298,17 +284,9 @@
                     if (winnerEl && winnerEl.tagName === 'INPUT' && winnerEl.type === 'hidden' && data[matchId].winner) {
                         pickWinner(matchId, data[matchId].winner);
                     }
-                    // Handle score
-                    if (scorerEl && scorerEl.tagName === 'INPUT' && scorerEl.type === 'text' && data[matchId].scorer) {
+                    // Handle score text field
+                    if (scorerEl && data[matchId].scorer) {
                         scorerEl.value = data[matchId].scorer;
-                    }
-                    // Handle knockout number inputs
-                    if (data[matchId].scorer && data[matchId].scorer.includes('-')) {
-                        var parts = data[matchId].scorer.split('-');
-                        var scoreA = document.getElementById('score_a_' + matchId);
-                        var scoreB = document.getElementById('score_b_' + matchId);
-                        if (scoreA) scoreA.value = parts[0];
-                        if (scoreB) scoreB.value = parts[1];
                     }
                 }
             });
