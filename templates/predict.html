@@ -125,7 +125,7 @@
             <div style="text-align:center; margin-bottom:4px; color:#ffd700; font-size:0.7em; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Predict Score</div>
             <div style="text-align:center;">
                 <input type="text" name="scorer_{{ match.id }}" id="scorer_{{ match.id }}" placeholder="e.g. 2-0" style="width:100px; padding:12px; text-align:center; border-radius:10px; border:2px solid #ffd700; background:rgba(255,215,0,0.05); color:#ffd700; font-size:1.4em; font-weight:700;">
-                <div style="color:#888; font-size:0.7em; margin-top:6px;">Winner's goals first (e.g. 2-0 means your team scores 2)</div>
+                <div id="score_hint_{{ match.id }}" style="color:#888; font-size:0.75em; margin-top:6px;">Tap a team first, then enter score</div>
             </div>
             {% else %}
             <!-- Group stage style: dropdown -->
@@ -159,11 +159,19 @@
             var pickA = document.getElementById('pick_' + matchId + '_a');
             var pickB = document.getElementById('pick_' + matchId + '_b');
             if (pickA && pickB) {
-                var isA = pickA.querySelector('div:last-child').textContent.trim() === team;
+                var teamA = pickA.querySelector('div:last-child').textContent.trim();
+                var teamB = pickB.querySelector('div:last-child').textContent.trim();
+                var isA = teamA === team;
                 pickA.style.border = isA ? '2px solid #00d4aa' : '2px solid #2a2a5e';
                 pickA.style.background = isA ? 'rgba(0,212,170,0.15)' : 'rgba(26,26,62,0.6)';
                 pickB.style.border = !isA ? '2px solid #00d4aa' : '2px solid #2a2a5e';
                 pickB.style.background = !isA ? 'rgba(0,212,170,0.15)' : 'rgba(26,26,62,0.6)';
+                // Update score hint
+                var hint = document.getElementById('score_hint_' + matchId);
+                var loser = isA ? teamB : teamA;
+                if (hint) {
+                    hint.innerHTML = '<span style="color:#00d4aa;">' + team + '</span> goals - ' + loser + ' goals';
+                }
             }
         }
 
