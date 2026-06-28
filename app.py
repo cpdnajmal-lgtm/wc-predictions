@@ -50,6 +50,23 @@ def format_time_12h(time_str):
     except:
         return time_str
 
+
+def parse_match_date(date_str):
+    """Parse 'June 15' or 'July 3' into (month, day) tuple."""
+    try:
+        if date_str.startswith("June "):
+            return (6, int(date_str.replace("June ", "")))
+        elif date_str.startswith("July "):
+            return (7, int(date_str.replace("July ", "")))
+    except:
+        pass
+    return (None, None)
+
+
+def get_match_month_day(match):
+    """Get (month, day) from a match's date field."""
+    return parse_match_date(match.get("date", ""))
+
 app.jinja_env.globals.update(format_time=format_time_12h)
 
 
@@ -347,14 +364,27 @@ def get_today_matches():
     now_ist = datetime.now(IST)
     matches = load_matches()
     
+    # Build today/tomorrow date strings handling June→July transition
+    def date_str(month, day):
+        # Handle month overflow (June has 30 days)
+        if month == 6 and day > 30:
+            return f"July {day - 30}"
+        elif month == 6 and day < 1:
+            return f"May {31 + day}"  # shouldn't happen but safe
+        months = {6: "June", 7: "July"}
+        return f"{months.get(month, 'June')} {day}"
+    
+    current_month = now_ist.month
     if now_ist.hour < 10:
-        # Before 10 AM: show yesterday evening + today early morning
-        today_date = f"June {now_ist.day - 1}"
-        tomorrow_date = f"June {now_ist.day}"
+        today_date = date_str(current_month, now_ist.day - 1)
+        tomorrow_date = date_str(current_month, now_ist.day)
     else:
-        # After 10 AM: show today evening + tomorrow early morning
-        today_date = f"June {now_ist.day}"
-        tomorrow_date = f"June {now_ist.day + 1}"
+        today_date = date_str(current_month, now_ist.day)
+        # Handle June 30 → July 1
+        if current_month == 6 and now_ist.day == 30:
+            tomorrow_date = "July 1"
+        else:
+            tomorrow_date = date_str(current_month, now_ist.day + 1)
     
     result = []
     for m in matches:
@@ -395,10 +425,11 @@ def is_match_locked(match):
         return False
     now_ist = datetime.now(IST)
     try:
-        # Parse kickoff time (HH:MM) for match date
-        day = int(match["date"].replace("June ", ""))
+        month, day = parse_match_date(match["date"])
+        if not month:
+            return False
         hour, minute = map(int, match["kickoff"].split(":"))
-        kickoff_time = datetime(2026, 6, day, hour, minute, tzinfo=IST)
+        kickoff_time = datetime(2026, month, day, hour, minute, tzinfo=IST)
         return now_ist >= kickoff_time
     except:
         return False
@@ -1894,6 +1925,47 @@ def add_matchday3_group_abc():
 
 
 add_matchday3_group_abc()
+
+
+def add_round_of_32():
+    """Add Round of 32 knockout matches (matches 73-88)."""
+    conn = get_db()
+    cur = conn.cursor()
+    new_matches = [
+        # R32 - June 29
+        ("match_73", "South Africa", "Canada", "June 29", "00:30", 73),
+        ("match_74", "Brazil", "Japan", "June 29", "22:30", 74),
+        # R32 - June 30
+        ("match_75", "Germany", "Paraguay", "June 30", "02:00", 75),
+        ("match_76", "Netherlands", "Morocco", "June 30", "06:30", 76),
+        ("match_77", "Ivory Coast", "Norway", "June 30", "22:30", 77),
+        # R32 - July 1
+        ("match_78", "France", "Sweden", "July 1", "02:30", 78),
+        ("match_79", "Mexico", "Ecuador", "July 1", "06:30", 79),
+        ("match_80", "England", "DR Congo", "July 1", "21:30", 80),
+        # R32 - July 2
+        ("match_81", "Belgium", "Senegal", "July 2", "01:30", 81),
+        ("match_82", "USA", "Bosnia & Herzegovina", "July 2", "05:30", 82),
+        # R32 - July 3
+        ("match_83", "Spain", "Austria", "July 3", "00:30", 83),
+        ("match_84", "Portugal", "Croatia", "July 3", "04:30", 84),
+        ("match_85", "Switzerland", "Algeria", "July 3", "08:30", 85),
+        ("match_86", "Australia", "Egypt", "July 3", "23:30", 86),
+        # R32 - July 4
+        ("match_87", "Argentina", "Cape Verde", "July 4", "03:30", 87),
+        ("match_88", "Colombia", "Ghana", "July 4", "07:00", 88),
+    ]
+    for m in new_matches:
+        cur.execute("""
+            INSERT INTO matches (id, team_a, team_b, date, kickoff, sort_order)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET date = EXCLUDED.date, kickoff = EXCLUDED.kickoff, team_a = EXCLUDED.team_a, team_b = EXCLUDED.team_b
+        """, m)
+    conn.commit()
+    conn.close()
+
+
+add_round_of_32()
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
