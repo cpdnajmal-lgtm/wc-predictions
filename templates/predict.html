@@ -94,8 +94,12 @@
         </div>
 
         {% for match in matches %}
-        <div class="match-section">
-            <div class="match-title">{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
+        {% set is_knockout = match.id.replace('match_', '')|int > 72 %}
+        <div class="match-section" {% if is_knockout %}style="border-top:2px solid #ffd700; padding-top:20px; margin-top:20px;"{% endif %}>
+            {% if is_knockout %}
+            <div style="text-align:center; color:#ffd700; font-size:0.65em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;">⚔️ Round of 32</div>
+            {% endif %}
+            <div class="match-title" {% if is_knockout %}style="font-size:1.2em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
             {% if match.locked %}
             <div style="text-align:center; color:#e74c3c; font-size:0.85em; margin-bottom:8px;">🔒 Predictions locked (match started)</div>
             {% else %}
@@ -103,22 +107,24 @@
             {% if match.id.replace('match_', '')|int > 72 %}
             <!-- Knockout style: tap-to-pick cards -->
             <input type="hidden" name="winner_{{ match.id }}" id="winner_{{ match.id }}" value="">
-            <div style="display:flex; gap:8px; margin-bottom:12px;">
-                <div onclick="pickWinner('{{ match.id }}', '{{ match.team_a }}')" id="pick_{{ match.id }}_a" style="flex:1; padding:14px 8px; border-radius:12px; border:2px solid #2a2a5e; background:rgba(26,26,62,0.6); text-align:center; cursor:pointer; transition:all 0.2s;">
-                    <div style="font-size:1.5em;">{{ get_flag(match.team_a) }}</div>
-                    <div style="font-size:0.8em; font-weight:700; margin-top:4px;">{{ match.team_a }}</div>
+            <div style="display:flex; gap:12px; margin-bottom:14px;">
+                <div onclick="pickWinner('{{ match.id }}', '{{ match.team_a }}')" id="pick_{{ match.id }}_a" style="flex:1; padding:18px 10px; border-radius:16px; border:2px solid #2a2a5e; background:rgba(26,26,62,0.6); text-align:center; cursor:pointer; transition:all 0.2s;">
+                    <div style="font-size:2em;">{{ get_flag(match.team_a) }}</div>
+                    <div style="font-size:0.9em; font-weight:700; margin-top:6px; color:#eee;">{{ match.team_a }}</div>
                 </div>
-                <div onclick="pickWinner('{{ match.id }}', '{{ match.team_b }}')" id="pick_{{ match.id }}_b" style="flex:1; padding:14px 8px; border-radius:12px; border:2px solid #2a2a5e; background:rgba(26,26,62,0.6); text-align:center; cursor:pointer; transition:all 0.2s;">
-                    <div style="font-size:1.5em;">{{ get_flag(match.team_b) }}</div>
-                    <div style="font-size:0.8em; font-weight:700; margin-top:4px;">{{ match.team_b }}</div>
+                <div style="display:flex; align-items:center; color:#555; font-weight:700; font-size:0.8em;">VS</div>
+                <div onclick="pickWinner('{{ match.id }}', '{{ match.team_b }}')" id="pick_{{ match.id }}_b" style="flex:1; padding:18px 10px; border-radius:16px; border:2px solid #2a2a5e; background:rgba(26,26,62,0.6); text-align:center; cursor:pointer; transition:all 0.2s;">
+                    <div style="font-size:2em;">{{ get_flag(match.team_b) }}</div>
+                    <div style="font-size:0.9em; font-weight:700; margin-top:6px; color:#eee;">{{ match.team_b }}</div>
                 </div>
             </div>
-            <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
-                <span style="font-size:0.8em; color:#888;">{{ match.team_a[:3] }}</span>
-                <input type="number" id="score_a_{{ match.id }}" min="0" max="9" style="width:45px; padding:10px; text-align:center; border-radius:8px; border:1px solid #2a2a5e; background:#0f0f23; color:#eee; font-size:1.2em; font-weight:700;" placeholder="0">
-                <span style="color:#666; font-weight:700;">-</span>
-                <input type="number" id="score_b_{{ match.id }}" min="0" max="9" style="width:45px; padding:10px; text-align:center; border-radius:8px; border:1px solid #2a2a5e; background:#0f0f23; color:#eee; font-size:1.2em; font-weight:700;" placeholder="0">
-                <span style="font-size:0.8em; color:#888;">{{ match.team_b[:3] }}</span>
+            <div style="text-align:center; margin-bottom:4px; color:#ffd700; font-size:0.7em; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Predict Score</div>
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px;">
+                <span style="font-size:0.85em; color:#aaa; font-weight:600;">{{ match.team_a[:3] }}</span>
+                <input type="number" id="score_a_{{ match.id }}" min="0" max="9" style="width:50px; padding:12px; text-align:center; border-radius:10px; border:2px solid #ffd700; background:rgba(255,215,0,0.05); color:#ffd700; font-size:1.4em; font-weight:700;" placeholder="0">
+                <span style="color:#ffd700; font-weight:700; font-size:1.2em;">:</span>
+                <input type="number" id="score_b_{{ match.id }}" min="0" max="9" style="width:50px; padding:12px; text-align:center; border-radius:10px; border:2px solid #ffd700; background:rgba(255,215,0,0.05); color:#ffd700; font-size:1.4em; font-weight:700;" placeholder="0">
+                <span style="font-size:0.85em; color:#aaa; font-weight:600;">{{ match.team_b[:3] }}</span>
             </div>
             <input type="hidden" name="scorer_{{ match.id }}" id="scorer_{{ match.id }}" value="">
             {% else %}
