@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 Bracket - MIAC WC 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(180deg, #0a0a12 0%, #1a1020 40%, #0d0d1a 100%); color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        h1 { text-align: center; margin-bottom: 5px; font-size: 1.6em; background: linear-gradient(135deg, #ffd700, #b8960f); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { text-align: center; color: #ffd700; margin-bottom: 20px; font-size: 0.9em; font-weight: 700; letter-spacing: 2px; }
+        .nav { text-align: center; margin-bottom: 20px; }
+        .nav a { color: #ffd700; text-decoration: none; font-size: 0.9em; }
+        .round-title { color: #ffd700; font-size: 0.85em; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin: 20px 0 12px; text-align: center; }
+        .match-row { display: flex; align-items: center; background: rgba(15,15,30,0.8); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; border: 1px solid rgba(255,215,0,0.15); }
+        .match-row.completed { border-color: rgba(0,212,170,0.3); }
+        .team { flex: 1; display: flex; align-items: center; gap: 6px; font-size: 0.85em; font-weight: 600; }
+        .team.winner { color: #00d4aa; }
+        .team.loser { color: #555; text-decoration: line-through; }
+        .team.pending { color: #aaa; }
+        .vs { color: #555; font-size: 0.7em; font-weight: 700; padding: 0 8px; }
+        .score { background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); border-radius: 6px; padding: 3px 8px; font-size: 0.75em; font-weight: 700; color: #ffd700; margin-left: 8px; }
+        .date-label { color: #666; font-size: 0.7em; text-align: center; margin-bottom: 6px; margin-top: 14px; }
+        .eliminated-tag { font-size: 0.6em; color: #e74c3c; margin-left: 4px; }
+        .advanced-tag { font-size: 0.6em; color: #00d4aa; margin-left: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🏆 Tournament Bracket</h1>
+    <p class="subtitle">ROUND OF 32</p>
+    <div class="nav"><a href="{{ url_for('home') }}">← Home</a></div>
+
+    {% for date_group in bracket_dates %}
+    <div class="date-label">{{ date_group.date }}</div>
+    {% for match in date_group.matches %}
+    <div class="match-row {% if match.result_winner %}completed{% endif %}">
+        <div class="team {% if match.result_winner == match.team_a %}winner{% elif match.result_winner and match.result_winner != match.team_a %}loser{% else %}pending{% endif %}">
+            {{ get_flag(match.team_a) }} {{ match.team_a }}
+            {% if match.result_winner == match.team_a %}<span class="advanced-tag">✓</span>{% elif match.result_winner and match.result_winner != match.team_a %}<span class="eliminated-tag">✗</span>{% endif %}
+        </div>
+        <div class="vs">VS</div>
+        <div class="team {% if match.result_winner == match.team_b %}winner{% elif match.result_winner and match.result_winner != match.team_b %}loser{% else %}pending{% endif %}">
+            {{ get_flag(match.team_b) }} {{ match.team_b }}
+            {% if match.result_winner == match.team_b %}<span class="advanced-tag">✓</span>{% elif match.result_winner and match.result_winner != match.team_b %}<span class="eliminated-tag">✗</span>{% endif %}
+        </div>
+        {% if match.result_scorer %}
+        <div class="score">{{ match.result_scorer }}</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% endfor %}
+
+    {% if eliminated %}
+    <div style="margin-top:24px; padding:14px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.3); border-radius:12px;">
+        <div style="color:#e74c3c; font-size:0.8em; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">❌ Eliminated</div>
+        <div style="font-size:0.85em; color:#888; line-height:1.8;">
+            {% for team in eliminated %}
+            <span style="display:inline-block; margin:2px 4px;">{{ get_flag(team) }} <span style="text-decoration:line-through;">{{ team }}</span></span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if advanced %}
+    <div style="margin-top:12px; padding:14px; background:rgba(0,212,170,0.08); border:1px solid rgba(0,212,170,0.3); border-radius:12px;">
+        <div style="color:#00d4aa; font-size:0.8em; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">✅ Advanced to R16</div>
+        <div style="font-size:0.85em; color:#eee; line-height:1.8;">
+            {% for team in advanced %}
+            <span style="display:inline-block; margin:2px 4px;">{{ get_flag(team) }} {{ team }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</body>
+</html>

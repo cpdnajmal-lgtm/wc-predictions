@@ -1057,6 +1057,50 @@ def _predict():
     return render_template("predict.html", matches=today_matches, players=players, player_preds=player_preds)
 
 
+@app.route("/bracket")
+def bracket():
+    """Show tournament bracket with results and eliminated teams."""
+    try:
+        matches = load_matches()
+        # Only knockout matches (73+)
+        knockout_matches = [m for m in matches if m.get("id", "").startswith("match_")]
+        knockout_matches = [m for m in knockout_matches if int(m["id"].replace("match_", "")) > 72]
+        knockout_matches.sort(key=lambda m: m.get("sort_order", 0))
+
+        # Group by date
+        date_groups = {}
+        for match in knockout_matches:
+            date = match.get("date", "Unknown")
+            if date not in date_groups:
+                date_groups[date] = []
+            date_groups[date].append(match)
+
+        # Sort dates
+        def date_sort_key(d):
+            month, day = parse_match_date(d)
+            if month and day:
+                return month * 100 + day
+            return 9999
+        sorted_dates = sorted(date_groups.keys(), key=date_sort_key)
+        bracket_dates = [{"date": d, "matches": date_groups[d]} for d in sorted_dates]
+
+        # Eliminated and advanced teams
+        eliminated = []
+        advanced = []
+        for match in knockout_matches:
+            if match.get("result_winner"):
+                winner = match["result_winner"].strip()
+                loser = match["team_b"] if winner.lower() == match["team_a"].lower() else match["team_a"]
+                if winner not in advanced:
+                    advanced.append(winner)
+                if loser not in eliminated:
+                    eliminated.append(loser)
+
+        return render_template("bracket.html", bracket_dates=bracket_dates, eliminated=eliminated, advanced=advanced)
+    except Exception as e:
+        return f"Bracket Error: {e}", 500
+
+
 @app.route("/reminder")
 def reminder():
     """Generate a copy-paste WhatsApp reminder message."""
