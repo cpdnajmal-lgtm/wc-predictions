@@ -83,11 +83,13 @@
                         <option value="">-- Skip --</option>
                         <option value="{{ match.team_a }}">{{ match.team_a }}</option>
                         <option value="{{ match.team_b }}">{{ match.team_b }}</option>
+                        {% if match.id.replace('match_', '')|int <= 72 %}
                         <option value="Draw">Draw</option>
+                        {% endif %}
                     </select>
                 </div>
                 <div>
-                    <label>Score</label>
+                    <label>Score (90 min)</label>
                     <input name="scorer_{{ match.id }}" placeholder="e.g. 2-1">
                 </div>
             </div>
@@ -129,7 +131,9 @@
                             <option value="">-- Pick --</option>
                             <option value="{{ match.team_a }}" {% if match.result_winner == match.team_a %}selected{% endif %}>{{ match.team_a }}</option>
                             <option value="{{ match.team_b }}" {% if match.result_winner == match.team_b %}selected{% endif %}>{{ match.team_b }}</option>
+                            {% if match.id.replace('match_', '')|int <= 72 %}
                             <option value="Draw" {% if match.result_winner == "Draw" %}selected{% endif %}>Draw</option>
+                            {% endif %}
                         </select>
                     </div>
                     <div>
