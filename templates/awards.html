@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 Group Stage Awards - MIAC WC 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(180deg, #0a0a12 0%, #1a1020 40%, #0d0d1a 100%); color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        h1 { text-align: center; margin-bottom: 5px; font-size: 1.8em; background: linear-gradient(135deg, #ffd700, #ff9800); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { text-align: center; color: #ffd700; margin-bottom: 25px; font-size: 0.9em; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
+        .nav { text-align: center; margin-bottom: 20px; }
+        .nav a { color: #ffd700; text-decoration: none; font-size: 0.9em; }
+        .award-card { background: rgba(15,15,30,0.8); border-radius: 16px; padding: 18px; margin-bottom: 14px; border: 1px solid rgba(255,215,0,0.2); backdrop-filter: blur(20px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .award-card:first-child { border-color: rgba(255,215,0,0.5); background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(15,15,30,0.9)); }
+        .award-emoji { font-size: 2em; text-align: center; margin-bottom: 6px; }
+        .award-title { text-align: center; color: #ffd700; font-size: 1em; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .award-desc { text-align: center; color: #666; font-size: 0.75em; margin-top: 4px; }
+        .award-winners { text-align: center; font-size: 1.1em; font-weight: 700; margin-top: 10px; color: #eee; }
+        .award-value { text-align: center; color: #00d4aa; font-size: 0.9em; font-weight: 700; margin-top: 4px; }
+        .empty { text-align: center; color: #555; padding: 40px 20px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <h1>🏆 Group Stage Awards</h1>
+    <p class="subtitle">72 Matches • {{ total_matches }} Results</p>
+    <div class="nav"><a href="{{ url_for('home') }}">← Home</a></div>
+
+    {% if awards %}
+    {% for award in awards %}
+    <div class="award-card">
+        <div class="award-emoji">{{ award.emoji }}</div>
+        <div class="award-title">{{ award.title }}</div>
+        <div class="award-desc">{{ award.desc }}</div>
+        <div class="award-winners">
+            {% for winner in award.winners %}
+            {% if player_teams.get(winner) %}{{ get_flag(player_teams[winner]) }} {% endif %}{{ winner }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+        <div class="award-value">{{ award.value }}</div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty">
+        <div style="font-size:2em; margin-bottom:10px;">⏳</div>
+        Group stage not yet complete. Awards will appear once all results are in.
+    </div>
+    {% endif %}
+</body>
+</html>

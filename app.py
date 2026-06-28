@@ -1057,6 +1057,212 @@ def _predict():
     return render_template("predict.html", matches=today_matches, players=players, player_preds=player_preds)
 
 
+@app.route("/awards")
+def awards():
+    """Group Stage Awards - auto-calculated from match data."""
+    try:
+        matches = load_matches()
+        players = load_players()
+        predictions = load_predictions()
+        player_teams = load_player_teams()
+
+        # Only group stage matches (1-72)
+        group_matches = [m for m in matches if m.get("id", "").startswith("match_")]
+        group_matches = [m for m in group_matches if int(m["id"].replace("match_", "")) <= 72]
+        completed = [m for m in group_matches if m.get("result_winner")]
+
+        if not completed:
+            return render_template("awards.html", awards=None, players=players, player_teams=player_teams)
+
+        # Calculate per-player stats
+        player_data = {}
+        for player in players:
+            total_preds = 0
+            correct_winners = 0
+            correct_scores = 0
+            perfect = 0
+            points = 0
+            one_pointers = 0
+            hot_takes = 0
+            draws_correct = 0
+            streak = 0
+            max_streak = 0
+            drought = 0
+            max_drought = 0
+
+            for match in completed:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                total_preds += 1
+                winner_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                scorer_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+
+                match_pts = 0
+                if winner_ok and scorer_ok:
+                    match_pts = 3
+                    perfect += 1
+                elif winner_ok:
+                    match_pts = 1
+                    one_pointers += 1
+                elif scorer_ok:
+                    match_pts = 1
+                    one_pointers += 1
+
+                if winner_ok:
+                    correct_winners += 1
+                if scorer_ok:
+                    correct_scores += 1
+                if match["result_winner"].strip().lower() == "draw" and pred.get("winner", "").strip().lower() == "draw":
+                    draws_correct += 1
+
+                points += match_pts
+
+                # Prediction streak (consecutive matches predicted)
+                streak += 1
+                max_streak = max(max_streak, streak)
+
+                # Drought (consecutive 0-point predictions)
+                if match_pts == 0:
+                    drought += 1
+                    max_drought = max(max_drought, drought)
+                else:
+                    drought = 0
+
+            player_data[player] = {
+                "total_preds": total_preds,
+                "correct_winners": correct_winners,
+                "correct_scores": correct_scores,
+                "perfect": perfect,
+                "points": points,
+                "one_pointers": one_pointers,
+                "winner_pct": round(correct_winners * 100 / total_preds, 1) if total_preds > 0 else 0,
+                "max_streak": max_streak,
+                "max_drought": max_drought,
+                "draws_correct": draws_correct,
+            }
+
+        # --- Calculate Awards ---
+        awards_list = []
+
+        # 1. Group Stage Champion (most points)
+        max_pts = max(d["points"] for d in player_data.values()) if player_data else 0
+        champions = [p for p, d in player_data.items() if d["points"] == max_pts and max_pts > 0]
+        awards_list.append({"emoji": "🥇", "title": "Group Stage Champion", "desc": "Most points overall", "winners": champions, "value": f"{max_pts} pts"})
+
+        # 2. Sharpshooter (best winner accuracy, min 20 preds)
+        eligible = {p: d for p, d in player_data.items() if d["total_preds"] >= 20}
+        if eligible:
+            max_acc = max(d["winner_pct"] for d in eligible.values())
+            sharpshooters = [p for p, d in eligible.items() if d["winner_pct"] == max_acc]
+            awards_list.append({"emoji": "🎯", "title": "Sharpshooter", "desc": "Best winner accuracy (min 20 predictions)", "winners": sharpshooters, "value": f"{max_acc}%"})
+
+        # 3. Oracle (most perfect predictions)
+        max_perfect = max(d["perfect"] for d in player_data.values()) if player_data else 0
+        if max_perfect > 0:
+            oracles = [p for p, d in player_data.items() if d["perfect"] == max_perfect]
+            awards_list.append({"emoji": "🔮", "title": "Oracle", "desc": "Most perfect predictions (winner + score)", "winners": oracles, "value": f"{max_perfect} perfects"})
+
+        # 4. King of Kings (most king wins) - reuse session logic
+        from collections import Counter
+        king_wins = {p: 0 for p in players}
+        sessions = {}
+        for match in completed:
+            date = match.get("date", "")
+            kickoff = match.get("kickoff", "00:00")
+            try:
+                day = int(date.replace("June ", "").replace("July ", ""))
+                hour = int(kickoff.split(":")[0])
+            except:
+                continue
+            s_label = f"{date.split()[0]} {day}" if hour >= 18 else f"{date.split()[0]} {day - 1}"
+            if s_label not in sessions:
+                sessions[s_label] = {p: 0 for p in players}
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+                pts = 3 if (w_ok and s_ok) else (1 if w_ok or s_ok else 0)
+                sessions[s_label][player] += pts
+        for s_label, scores in sessions.items():
+            s_max = max(scores.values()) if scores else 0
+            if s_max >= 3:
+                for p, pts in scores.items():
+                    if pts == s_max:
+                        king_wins[p] += 1
+        max_crowns = max(king_wins.values()) if king_wins else 0
+        if max_crowns > 0:
+            kings = [p for p, w in king_wins.items() if w == max_crowns]
+            awards_list.append({"emoji": "👑", "title": "King of Kings", "desc": "Most 'King of the Day' wins", "winners": kings, "value": f"{max_crowns} crowns"})
+
+        # 5. Iron Man (predicted every match)
+        total_completed = len(completed)
+        iron_men = [p for p, d in player_data.items() if d["total_preds"] == total_completed and total_completed > 0]
+        if iron_men:
+            awards_list.append({"emoji": "🧱", "title": "Iron Man", "desc": "Predicted every single group stage match", "winners": iron_men, "value": f"{total_completed}/{total_completed} matches"})
+
+        # 6. Biggest Climber (highest points from bottom half)
+        sorted_players = sorted(player_data.items(), key=lambda x: x[1]["points"], reverse=True)
+        if len(sorted_players) > 10:
+            # Find who has the most points among bottom-half starters (first 10 matches)
+            early_points = {}
+            early_matches = completed[:10]
+            for player in players:
+                ep = 0
+                for match in early_matches:
+                    pred = predictions.get(player, {}).get(match["id"])
+                    if pred:
+                        w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                        s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+                        if w_ok and s_ok:
+                            ep += 3
+                        elif w_ok or s_ok:
+                            ep += 1
+                early_points[player] = ep
+            # Sort by early points to find who started low
+            early_sorted = sorted(early_points.items(), key=lambda x: x[1])
+            bottom_half_early = [p for p, _ in early_sorted[:len(early_sorted)//2]]
+            # Among bottom half early, who ended highest?
+            climbers = [(p, player_data[p]["points"]) for p in bottom_half_early if p in player_data]
+            if climbers:
+                climbers.sort(key=lambda x: x[1], reverse=True)
+                best_climb = climbers[0][1]
+                top_climbers = [p for p, pts in climbers if pts == best_climb]
+                awards_list.append({"emoji": "📈", "title": "Biggest Climber", "desc": "Started in bottom half, finished strongest", "winners": top_climbers, "value": f"{best_climb} pts"})
+
+        # 7. Longest Drought
+        max_dr = max(d["max_drought"] for d in player_data.values()) if player_data else 0
+        if max_dr >= 3:
+            drought_holders = [p for p, d in player_data.items() if d["max_drought"] == max_dr]
+            awards_list.append({"emoji": "💀", "title": "Longest Drought", "desc": "Most consecutive predictions without scoring", "winners": drought_holders, "value": f"{max_dr} matches"})
+
+        # 8. Draw Whisperer
+        max_draws = max(d["draws_correct"] for d in player_data.values()) if player_data else 0
+        if max_draws > 0:
+            draw_masters = [p for p, d in player_data.items() if d["draws_correct"] == max_draws]
+            awards_list.append({"emoji": "🎰", "title": "Draw Whisperer", "desc": "Most correct draw predictions", "winners": draw_masters, "value": f"{max_draws} draws"})
+
+        # 9. Close But No Cigar (most 1-pointers relative to 3-pointers)
+        cigar_candidates = [(p, d["one_pointers"], d["perfect"]) for p, d in player_data.items() if d["one_pointers"] > 5 and d["perfect"] <= 2]
+        if cigar_candidates:
+            cigar_candidates.sort(key=lambda x: x[1], reverse=True)
+            max_ones = cigar_candidates[0][1]
+            cigar_winners = [p for p, ones, _ in cigar_candidates if ones == max_ones]
+            awards_list.append({"emoji": "😅", "title": "Close But No Cigar", "desc": "Gets the winner but rarely the score", "winners": cigar_winners, "value": f"{max_ones} one-pointers"})
+
+        # 10. Dedication Award (longest prediction streak)
+        max_str = max(d["max_streak"] for d in player_data.values()) if player_data else 0
+        if max_str > 0:
+            streak_holders = [p for p, d in player_data.items() if d["max_streak"] == max_str]
+            awards_list.append({"emoji": "🔥", "title": "Dedication", "desc": "Longest consecutive matches predicted", "winners": streak_holders, "value": f"{max_str} matches"})
+
+        return render_template("awards.html", awards=awards_list, players=players, player_teams=player_teams, total_matches=total_completed)
+    except Exception as e:
+        return f"Awards Error: {e}", 500
+
+
 @app.route("/bracket")
 def bracket():
     """Show tournament bracket with results and eliminated teams."""
