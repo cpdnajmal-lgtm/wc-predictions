@@ -130,8 +130,44 @@ def init_db():
             match_id TEXT NOT NULL,
             winner TEXT DEFAULT '',
             scorer TEXT DEFAULT '',
+            pen_winner TEXT DEFAULT '',
+            pen_score TEXT DEFAULT '',
             PRIMARY KEY (player, match_id)
         )
+    """)
+    # Add penalty columns if not exists
+    cur.execute("""
+        DO $$
+        BEGIN
+            ALTER TABLE predictions ADD COLUMN pen_winner TEXT DEFAULT '';
+        EXCEPTION WHEN duplicate_column THEN
+            NULL;
+        END $$;
+    """)
+    cur.execute("""
+        DO $$
+        BEGIN
+            ALTER TABLE predictions ADD COLUMN pen_score TEXT DEFAULT '';
+        EXCEPTION WHEN duplicate_column THEN
+            NULL;
+        END $$;
+    """)
+    # Add penalty result columns to matches
+    cur.execute("""
+        DO $$
+        BEGIN
+            ALTER TABLE matches ADD COLUMN went_to_pens BOOLEAN DEFAULT FALSE;
+        EXCEPTION WHEN duplicate_column THEN
+            NULL;
+        END $$;
+    """)
+    cur.execute("""
+        DO $$
+        BEGIN
+            ALTER TABLE matches ADD COLUMN pen_score TEXT DEFAULT '';
+        EXCEPTION WHEN duplicate_column THEN
+            NULL;
+        END $$;
     """)
     # Announcements table
     cur.execute("""
@@ -192,6 +228,8 @@ def load_predictions():
         preds[row["player"]][row["match_id"]] = {
             "winner": row["winner"],
             "scorer": row["scorer"],
+            "pen_winner": row.get("pen_winner", ""),
+            "pen_score": row.get("pen_score", ""),
         }
     return preds
 
@@ -270,6 +308,45 @@ def seed_matches():
             )
         conn.commit()
     conn.close()
+
+
+def calculate_points(pred, match):
+    """Calculate points for a prediction against a match result.
+    Handles penalty shootout logic for knockout matches.
+    Returns points (0, 1, or 3).
+    """
+    if not pred or not match.get("result_winner"):
+        return 0
+
+    # If match went to penalties, use penalty prediction
+    if match.get("went_to_pens"):
+        pen_winner = pred.get("pen_winner", "").strip().lower()
+        pen_score = pred.get("pen_score", "").strip()
+        actual_winner = match["result_winner"].strip().lower()
+        actual_pen_score = match.get("pen_score", "").strip()
+
+        winner_ok = pen_winner == actual_winner
+        score_ok = pen_score == actual_pen_score and pen_score != ""
+
+        if winner_ok and score_ok:
+            return 3
+        elif winner_ok:
+            return 1
+        elif score_ok:
+            return 1
+        return 0
+    else:
+        # Normal result (full time / extra time)
+        winner_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+        scorer_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+
+        if winner_ok and scorer_ok:
+            return 3
+        elif winner_ok:
+            return 1
+        elif scorer_ok:
+            return 1
+        return 0
 
 
 def fuzzy_match(a, b):
@@ -953,11 +1030,14 @@ def _predict():
                 # Require winner to be selected (score alone is not valid)
                 if not winner:
                     continue
+                # Get penalty predictions for knockout matches
+                pen_winner = request.form.get(f"pen_winner_{match['id']}", "").strip()
+                pen_score = request.form.get(f"pen_score_{match['id']}", "").strip()
                 cur.execute("""
-                    INSERT INTO predictions (player, match_id, winner, scorer)
-                    VALUES (%s, %s, %s, %s)
-                    ON CONFLICT (player, match_id) DO UPDATE SET winner = %s, scorer = %s
-                """, (player, match["id"], winner, scorer, winner, scorer))
+                    INSERT INTO predictions (player, match_id, winner, scorer, pen_winner, pen_score)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (player, match_id) DO UPDATE SET winner = %s, scorer = %s, pen_winner = %s, pen_score = %s
+                """, (player, match["id"], winner, scorer, pen_winner, pen_score, winner, scorer, pen_winner, pen_score))
         conn.commit()
         conn.close()
         flash(f"Predictions saved for {player}! 🎯")
@@ -1251,10 +1331,13 @@ def admin():
                     match_id = key.replace("winner_", "")
                     winner = request.form.get(f"winner_{match_id}", "").strip()
                     scorer = request.form.get(f"scorer_{match_id}", "").strip()
+                    pens = request.form.get(f"pens_{match_id}", "no")
+                    pen_score = request.form.get(f"pen_score_{match_id}", "").strip()
                     if winner:
+                        went_to_pens = pens == "yes"
                         cur.execute(
-                            "UPDATE matches SET result_winner = %s, result_scorer = %s WHERE id = %s",
-                            (winner, scorer, match_id),
+                            "UPDATE matches SET result_winner = %s, result_scorer = %s, went_to_pens = %s, pen_score = %s WHERE id = %s",
+                            (winner, scorer, went_to_pens, pen_score, match_id),
                         )
                         updated += 1
             if updated:

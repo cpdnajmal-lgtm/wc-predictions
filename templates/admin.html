@@ -93,6 +93,21 @@
                     <input name="scorer_{{ match.id }}" placeholder="e.g. 2-1">
                 </div>
             </div>
+            {% if match.id.replace('match_', '')|int > 72 %}
+            <div class="row" style="margin-top:6px;">
+                <div>
+                    <label>Penalties?</label>
+                    <select name="pens_{{ match.id }}" style="font-size:0.85em;">
+                        <option value="no">No</option>
+                        <option value="yes">Yes (went to pens)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Pen Score</label>
+                    <input name="pen_score_{{ match.id }}" placeholder="e.g. 4-2" style="font-size:0.85em;">
+                </div>
+            </div>
+            {% endif %}
             <!-- View predictions for this match -->
             {% if match_predictions.get(match.id) %}
             <details style="margin-top:6px;">
