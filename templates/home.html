@@ -278,9 +278,21 @@
     </div>
     {% endif %}
 
-    <h2>🏆 Leaderboard ({{ leaderboard|length }})</h2>
+    <h2>🏆 Leaderboard</h2>
     {% if leaderboard %}
-    <div class="leaderboard">
+    <!-- Leaderboard tabs -->
+    <div style="display:flex; gap:6px; margin-bottom:12px;">
+        <div class="lb-tab active" onclick="switchLB('overall')">Overall</div>
+        <div class="lb-tab" onclick="switchLB('group')">Group Stage</div>
+        <div class="lb-tab" onclick="switchLB('knockout')">Knockout</div>
+    </div>
+    <style>
+        .lb-tab { flex:1; text-align:center; padding:8px; border-radius:8px; font-size:0.75em; font-weight:700; cursor:pointer; background:rgba(15,15,30,0.7); border:1px solid rgba(40,40,80,0.5); color:#888; text-transform:uppercase; letter-spacing:0.5px; }
+        .lb-tab.active { background:var(--accent); color:#0f0f23; border-color:var(--accent); }
+    </style>
+
+    <!-- Overall Leaderboard -->
+    <div class="leaderboard lb-panel" id="lb-overall">
         {% for player, points, rank, change in leaderboard[:10] %}
         <div class="lb-item {% if rank == 1 %}top-1{% elif rank == 2 %}top-2{% elif rank == 3 %}top-3{% endif %}">
             <div class="lb-rank {% if rank == 1 %}r1{% elif rank == 2 %}r2{% elif rank == 3 %}r3{% else %}r-other{% endif %}">
@@ -301,10 +313,49 @@
             {% endfor %}
         </div>
         <div style="text-align:center; margin-top:8px;">
-            <span onclick="document.getElementById('lb-rest').style.display = document.getElementById('lb-rest').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Show') ? '▲ Hide' : '▼ Show all ({{ leaderboard|length }})';" style="color:#00d4aa; font-size:0.8em; cursor:pointer;">▼ Show all ({{ leaderboard|length }})</span>
+            <span onclick="document.getElementById('lb-rest').style.display = document.getElementById('lb-rest').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent.includes('Show') ? '▲ Hide' : '▼ Show all ({{ leaderboard|length }})';" style="color:var(--accent); font-size:0.8em; cursor:pointer;">▼ Show all ({{ leaderboard|length }})</span>
         </div>
         {% endif %}
     </div>
+
+    <!-- Group Stage Leaderboard -->
+    <div class="leaderboard lb-panel" id="lb-group" style="display:none;">
+        {% for player, points in group_leaderboard[:10] %}
+        <div class="lb-item {% if loop.index == 1 %}top-1{% elif loop.index == 2 %}top-2{% elif loop.index == 3 %}top-3{% endif %}">
+            <div class="lb-rank {% if loop.index == 1 %}r1{% elif loop.index == 2 %}r2{% elif loop.index == 3 %}r3{% else %}r-other{% endif %}">
+                {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+            </div>
+            <div class="lb-name">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</div>
+            <div class="lb-points">{{ points }}<span class="lb-pts-label">pts</span></div>
+        </div>
+        {% endfor %}
+        <div style="text-align:center; color:#666; font-size:0.75em; margin-top:8px;">📊 Final group stage standings (frozen)</div>
+    </div>
+
+    <!-- Knockout Leaderboard -->
+    <div class="leaderboard lb-panel" id="lb-knockout" style="display:none;">
+        {% for player, points in knockout_leaderboard[:10] %}
+        {% if points > 0 %}
+        <div class="lb-item {% if loop.index == 1 %}top-1{% elif loop.index == 2 %}top-2{% elif loop.index == 3 %}top-3{% endif %}">
+            <div class="lb-rank {% if loop.index == 1 %}r1{% elif loop.index == 2 %}r2{% elif loop.index == 3 %}r3{% else %}r-other{% endif %}">
+                {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}
+            </div>
+            <div class="lb-name">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</div>
+            <div class="lb-points">{{ points }}<span class="lb-pts-label">pts</span></div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        <div style="text-align:center; color:#666; font-size:0.75em; margin-top:8px;">⚔️ Knockout matches only (R32+)</div>
+    </div>
+
+    <script>
+    function switchLB(tab) {
+        document.querySelectorAll('.lb-panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('lb-' + tab).style.display = 'block';
+        event.target.classList.add('active');
+    }
+    </script>
     {% else %}
     <p class="empty">No players yet. Be the first to predict! 🎯</p>
     {% endif %}

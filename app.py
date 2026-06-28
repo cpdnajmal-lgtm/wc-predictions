@@ -830,9 +830,36 @@ def home():
         else:
             tournament_phase = "Final"
 
+        # --- Group Stage vs Knockout leaderboard ---
+        group_scores = {p: 0 for p in players}
+        knockout_scores = {p: 0 for p in players}
+        for match in all_matches:
+            if not match.get("result_winner"):
+                continue
+            try:
+                match_num = int(match["id"].replace("match_", ""))
+            except:
+                continue
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                winner_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                scorer_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+                pts = 3 if (winner_ok and scorer_ok) else (1 if winner_ok or scorer_ok else 0)
+                if match_num <= 72:
+                    group_scores[player] += pts
+                else:
+                    knockout_scores[player] += pts
+
+        group_leaderboard = sorted(group_scores.items(), key=lambda x: x[1], reverse=True)
+        knockout_leaderboard = sorted(knockout_scores.items(), key=lambda x: x[1], reverse=True)
+
         return render_template(
             "home.html",
             leaderboard=ranked_leaderboard_with_change,
+            group_leaderboard=group_leaderboard,
+            knockout_leaderboard=knockout_leaderboard,
             today_matches=upcoming_matches,
             locked_matches=locked_matches,
             completed=completed,
