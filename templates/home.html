@@ -28,7 +28,8 @@
         .title-glow { display: block; height: 3px; width: 60%; margin: 6px auto 0; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: glowBar 2s ease-in-out infinite; }
         @keyframes glowBar { 0%,100% { opacity: 0.4; width: 40%; } 50% { opacity: 1; width: 70%; } }
         h2 { margin: 25px 0 12px; color: var(--accent); font-size: 1em; text-transform: uppercase; letter-spacing: 2px; }
-        .subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 0.85em; letter-spacing: 3px; text-transform: uppercase; }
+        .subtitle { text-align: center; color: var(--accent); margin-bottom: 20px; font-size: 1.1em; letter-spacing: 4px; text-transform: uppercase; font-weight: 800; animation: subtitleGlow 2s ease-in-out infinite alternate; }
+        @keyframes subtitleGlow { 0% { opacity: 0.7; text-shadow: 0 0 5px var(--accent-glow); } 100% { opacity: 1; text-shadow: 0 0 20px var(--accent-glow), 0 0 40px var(--accent-glow); } }
         .nav { display: flex; gap: 8px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
         .nav a { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #0f0f23; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: 700; font-size: 0.85em; box-shadow: 0 4px 15px var(--accent-glow); transition: transform 0.2s; }
         .nav a:hover { transform: scale(1.05); }
