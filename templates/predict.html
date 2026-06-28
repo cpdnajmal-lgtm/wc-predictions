@@ -100,6 +100,29 @@
             <div style="text-align:center; color:#e74c3c; font-size:0.85em; margin-bottom:8px;">🔒 Predictions locked (match started)</div>
             {% else %}
             <div style="text-align:center; color:#666; font-size:0.75em; margin-bottom:8px;">⏰ Kickoff: {{ format_time(match.kickoff) }} IST</div>
+            {% if match.id.replace('match_', '')|int > 72 %}
+            <!-- Knockout style: tap-to-pick cards -->
+            <input type="hidden" name="winner_{{ match.id }}" id="winner_{{ match.id }}" value="">
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <div onclick="pickWinner('{{ match.id }}', '{{ match.team_a }}')" id="pick_{{ match.id }}_a" style="flex:1; padding:14px 8px; border-radius:12px; border:2px solid #2a2a5e; background:rgba(26,26,62,0.6); text-align:center; cursor:pointer; transition:all 0.2s;">
+                    <div style="font-size:1.5em;">{{ get_flag(match.team_a) }}</div>
+                    <div style="font-size:0.8em; font-weight:700; margin-top:4px;">{{ match.team_a }}</div>
+                </div>
+                <div onclick="pickWinner('{{ match.id }}', '{{ match.team_b }}')" id="pick_{{ match.id }}_b" style="flex:1; padding:14px 8px; border-radius:12px; border:2px solid #2a2a5e; background:rgba(26,26,62,0.6); text-align:center; cursor:pointer; transition:all 0.2s;">
+                    <div style="font-size:1.5em;">{{ get_flag(match.team_b) }}</div>
+                    <div style="font-size:0.8em; font-weight:700; margin-top:4px;">{{ match.team_b }}</div>
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                <span style="font-size:0.8em; color:#888;">{{ match.team_a[:3] }}</span>
+                <input type="number" id="score_a_{{ match.id }}" min="0" max="9" style="width:45px; padding:10px; text-align:center; border-radius:8px; border:1px solid #2a2a5e; background:#0f0f23; color:#eee; font-size:1.2em; font-weight:700;" placeholder="0">
+                <span style="color:#666; font-weight:700;">-</span>
+                <input type="number" id="score_b_{{ match.id }}" min="0" max="9" style="width:45px; padding:10px; text-align:center; border-radius:8px; border:1px solid #2a2a5e; background:#0f0f23; color:#eee; font-size:1.2em; font-weight:700;" placeholder="0">
+                <span style="font-size:0.8em; color:#888;">{{ match.team_b[:3] }}</span>
+            </div>
+            <input type="hidden" name="scorer_{{ match.id }}" id="scorer_{{ match.id }}" value="">
+            {% else %}
+            <!-- Group stage style: dropdown -->
             <div class="row">
                 <div>
                     <label>Winner</label>
@@ -107,9 +130,7 @@
                         <option value="">-- Pick --</option>
                         <option value="{{ match.team_a }}">{{ match.team_a }}</option>
                         <option value="{{ match.team_b }}">{{ match.team_b }}</option>
-                        {% if match.id.replace('match_', '')|int <= 72 %}
                         <option value="Draw">Draw</option>
-                        {% endif %}
                     </select>
                 </div>
                 <div>
@@ -118,13 +139,43 @@
                 </div>
             </div>
             {% endif %}
+            {% endif %}
         </div>
         {% endfor %}
 
-        <button type="submit">💾 Save Predictions</button>
+        <button type="submit" onclick="buildScores()">💾 Save Predictions</button>
     </form>
 
     <script>
+        // Knockout: tap to pick winner
+        function pickWinner(matchId, team) {
+            document.getElementById('winner_' + matchId).value = team;
+            // Highlight selected
+            var pickA = document.getElementById('pick_' + matchId + '_a');
+            var pickB = document.getElementById('pick_' + matchId + '_b');
+            if (pickA && pickB) {
+                var isA = pickA.querySelector('div:last-child').textContent.trim() === team;
+                pickA.style.border = isA ? '2px solid #00d4aa' : '2px solid #2a2a5e';
+                pickA.style.background = isA ? 'rgba(0,212,170,0.15)' : 'rgba(26,26,62,0.6)';
+                pickB.style.border = !isA ? '2px solid #00d4aa' : '2px solid #2a2a5e';
+                pickB.style.background = !isA ? 'rgba(0,212,170,0.15)' : 'rgba(26,26,62,0.6)';
+            }
+        }
+
+        // Before submit: build score strings from number inputs
+        function buildScores() {
+            document.querySelectorAll('[id^="score_a_"]').forEach(function(el) {
+                var matchId = el.id.replace('score_a_', '');
+                var a = el.value || '0';
+                var bEl = document.getElementById('score_b_' + matchId);
+                var b = bEl ? (bEl.value || '0') : '0';
+                var scorer = document.getElementById('scorer_' + matchId);
+                if (scorer && (a !== '0' || b !== '0')) {
+                    scorer.value = a + '-' + b;
+                }
+            });
+        }
+
         var playerSelect = document.getElementById('playerSelect');
         var pinBox = document.getElementById('pinBox');
         var verifyBtn = document.getElementById('verifyBtn');
@@ -209,8 +260,26 @@
                 for (var matchId in data) {
                     var winnerEl = document.querySelector('[name="winner_' + matchId + '"]');
                     var scorerEl = document.querySelector('[name="scorer_' + matchId + '"]');
-                    if (winnerEl && data[matchId].winner) winnerEl.value = data[matchId].winner;
-                    if (scorerEl && data[matchId].scorer) scorerEl.value = data[matchId].scorer;
+                    // Handle dropdown (group stage)
+                    if (winnerEl && winnerEl.tagName === 'SELECT' && data[matchId].winner) {
+                        winnerEl.value = data[matchId].winner;
+                    }
+                    // Handle hidden input (knockout tap-to-pick)
+                    if (winnerEl && winnerEl.tagName === 'INPUT' && winnerEl.type === 'hidden' && data[matchId].winner) {
+                        pickWinner(matchId, data[matchId].winner);
+                    }
+                    // Handle score
+                    if (scorerEl && scorerEl.tagName === 'INPUT' && scorerEl.type === 'text' && data[matchId].scorer) {
+                        scorerEl.value = data[matchId].scorer;
+                    }
+                    // Handle knockout number inputs
+                    if (data[matchId].scorer && data[matchId].scorer.includes('-')) {
+                        var parts = data[matchId].scorer.split('-');
+                        var scoreA = document.getElementById('score_a_' + matchId);
+                        var scoreB = document.getElementById('score_b_' + matchId);
+                        if (scoreA) scoreA.value = parts[0];
+                        if (scoreB) scoreB.value = parts[1];
+                    }
                 }
             });
         }
