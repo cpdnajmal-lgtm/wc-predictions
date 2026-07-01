@@ -1641,14 +1641,10 @@ def admin():
 
     matches = load_matches()
     now_ist = datetime.now(IST)
-    today_day = now_ist.day
-    # Only show today's session matches in admin (not old ones)
-    # Show matches from today and tomorrow (for the current session)
-    if now_ist.hour < 10:
-        show_dates = [f"June {today_day - 1}", f"June {today_day}"]
-    else:
-        show_dates = [f"June {today_day}", f"June {today_day + 1}"]
-    pending = [m for m in matches if m.get("date") in show_dates and not m.get("result_winner")]
+    # Show ALL matches without results (not just today's session)
+    pending = [m for m in matches if not m.get("result_winner")]
+    # Sort: most recent first (by sort_order descending)
+    pending.sort(key=lambda m: m.get("sort_order", 0), reverse=True)
     players = load_players()
     predictions = load_predictions()
     # Get predictions for pending matches (for the "view predictions" feature)
