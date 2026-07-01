@@ -369,18 +369,21 @@ def calculate_leaderboard():
     today_scores = {player: 0 for player in players}
     prev_scores = {player: 0 for player in players}
     now_ist = datetime.now(IST)
+
+    # Build date strings handling June/July
+    def make_date_str(dt, day_offset=0):
+        from datetime import timedelta
+        d = dt + timedelta(days=day_offset)
+        months = {6: "June", 7: "July"}
+        return f"{months.get(d.month, 'June')} {d.day}"
+
     # Session boundary: 6 PM to 6 PM
-    # 6 PM to 11:59 PM (hour >= 18): current session = today evening + tomorrow morning
-    # 12 AM to 5:59 PM (hour < 18): current session = yesterday evening + today morning
-    # "Previous session" is the one before that (for fallback display during 6 AM-6 PM daytime)
     if now_ist.hour >= 18:
-        # Evening: session just started tonight
-        session_dates_current = [f"June {now_ist.day}", f"June {now_ist.day + 1}"]
-        session_dates_prev = [f"June {now_ist.day - 1}", f"June {now_ist.day}"]
+        session_dates_current = [make_date_str(now_ist, 0), make_date_str(now_ist, 1)]
+        session_dates_prev = [make_date_str(now_ist, -1), make_date_str(now_ist, 0)]
     else:
-        # After midnight / daytime: still in last night's session
-        session_dates_current = [f"June {now_ist.day - 1}", f"June {now_ist.day}"]
-        session_dates_prev = [f"June {now_ist.day - 2}", f"June {now_ist.day - 1}"]
+        session_dates_current = [make_date_str(now_ist, -1), make_date_str(now_ist, 0)]
+        session_dates_prev = [make_date_str(now_ist, -2), make_date_str(now_ist, -1)]
     for match in matches:
         if not match.get("result_winner"):
             continue
@@ -404,12 +407,10 @@ def calculate_leaderboard():
                     hour = int(match.get("kickoff", "0").split(":")[0])
                     match_date = match.get("date", "")
                     if now_ist.hour >= 18:
-                        # Tonight's session: today evening (>=18) + tomorrow morning (<10)
-                        if (match_date == f"June {now_ist.day}" and hour >= 18) or (match_date == f"June {now_ist.day + 1}" and hour < 10):
+                        if (match_date == make_date_str(now_ist, 0) and hour >= 18) or (match_date == make_date_str(now_ist, 1) and hour < 10):
                             today_scores[player] = today_scores.get(player, 0) + points
                     else:
-                        # After midnight: last night's session = yesterday evening (>=18) + today morning (<10)
-                        if (match_date == f"June {now_ist.day - 1}" and hour >= 18) or (match_date == f"June {now_ist.day}" and hour < 10):
+                        if (match_date == make_date_str(now_ist, -1) and hour >= 18) or (match_date == make_date_str(now_ist, 0) and hour < 10):
                             today_scores[player] = today_scores.get(player, 0) + points
                 except:
                     pass
@@ -419,10 +420,10 @@ def calculate_leaderboard():
                     hour = int(match.get("kickoff", "0").split(":")[0])
                     match_date = match.get("date", "")
                     if now_ist.hour >= 18:
-                        if (match_date == f"June {now_ist.day - 1}" and hour >= 18) or (match_date == f"June {now_ist.day}" and hour < 10):
+                        if (match_date == make_date_str(now_ist, -1) and hour >= 18) or (match_date == make_date_str(now_ist, 0) and hour < 10):
                             prev_scores[player] = prev_scores.get(player, 0) + points
                     else:
-                        if (match_date == f"June {now_ist.day - 2}" and hour >= 18) or (match_date == f"June {now_ist.day - 1}" and hour < 10):
+                        if (match_date == make_date_str(now_ist, -2) and hour >= 18) or (match_date == make_date_str(now_ist, -1) and hour < 10):
                             prev_scores[player] = prev_scores.get(player, 0) + points
                 except:
                     pass
@@ -1641,10 +1642,21 @@ def admin():
 
     matches = load_matches()
     now_ist = datetime.now(IST)
-    # Show ALL matches without results (not just today's session)
-    pending = [m for m in matches if not m.get("result_winner")]
-    # Sort: most recent first (by sort_order descending)
-    pending.sort(key=lambda m: m.get("sort_order", 0), reverse=True)
+    # Show matches without results from last 7 days only
+    pending = []
+    for m in matches:
+        if m.get("result_winner"):
+            continue
+        # Only show if match date is within reasonable range
+        month, day = parse_match_date(m.get("date", ""))
+        if month and day:
+            match_date_num = month * 100 + day
+            today_date_num = now_ist.month * 100 + now_ist.day
+            # Show if within last 7 days or future
+            if match_date_num >= today_date_num - 7:
+                pending.append(m)
+    # Sort: earliest first
+    pending.sort(key=lambda m: m.get("sort_order", 0))
     players = load_players()
     predictions = load_predictions()
     # Get predictions for pending matches (for the "view predictions" feature)
