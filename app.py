@@ -63,6 +63,39 @@ def parse_match_date(date_str):
     return (None, None)
 
 
+def make_date_label(month, day):
+    """Build 'June 15' or 'July 3' from month and day numbers."""
+    months = {6: "June", 7: "July"}
+    return f"{months.get(month, 'June')} {day}"
+
+
+def date_label_offset(dt, day_offset=0):
+    """Build date label string from a datetime with day offset, handling month transitions."""
+    d = dt + timedelta(days=day_offset)
+    return make_date_label(d.month, d.day)
+
+
+def get_session_label(date_str, kickoff_str):
+    """Get session label for a match. Evening matches (>=18) belong to that day's session.
+    Morning matches (<18) belong to previous day's session."""
+    month, day = parse_match_date(date_str)
+    if not month or not day:
+        return ""
+    try:
+        hour = int(kickoff_str.split(":")[0])
+    except:
+        return ""
+    if hour >= 18:
+        return make_date_label(month, day)
+    else:
+        # Previous day's session - handle month boundary
+        if day == 1:
+            if month == 7:
+                return "June 30"
+            return make_date_label(month, day - 1)
+        return make_date_label(month, day - 1)
+
+
 def get_match_month_day(match):
     """Get (month, day) from a match's date field."""
     return parse_match_date(match.get("date", ""))
@@ -606,11 +639,11 @@ def home():
         yesterday_predictors = set()
         all_matches = load_matches()
         if now_ist.hour < 10:
-            prev_today = f"June {now_ist.day - 2}"
-            prev_tomorrow = f"June {now_ist.day - 1}"
+            prev_today = date_label_offset(now_ist, -2)
+            prev_tomorrow = date_label_offset(now_ist, -1)
         else:
-            prev_today = f"June {now_ist.day - 1}"
-            prev_tomorrow = f"June {now_ist.day}"
+            prev_today = date_label_offset(now_ist, -1)
+            prev_tomorrow = date_label_offset(now_ist, 0)
         for m in all_matches:
             if not m.get("kickoff"):
                 continue
@@ -642,11 +675,11 @@ def home():
             date = match.get("date", "")
             kickoff = match.get("kickoff", "00:00")
             try:
-                day = int(date.replace("June ", ""))
+                month, day = parse_match_date(date)
                 hour = int(kickoff.split(":")[0])
             except:
                 continue
-            session_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+            session_label = make_date_label(month, day) if hour >= 18 else make_date_label(month, day - 1) if day > 1 else ("June 30" if month == 7 else make_date_label(month, day - 1))
             if session_label not in all_session_scores:
                 all_session_scores[session_label] = {p: 0 for p in players}
             for player in players:
@@ -666,9 +699,9 @@ def home():
 
         # Get current session label
         if now_ist.hour >= 18:
-            current_session = f"June {now_ist.day}"
+            current_session = date_label_offset(now_ist, 0)
         else:
-            current_session = f"June {now_ist.day - 1}"
+            current_session = date_label_offset(now_ist, -1)
 
         # Find all-time best session score (excluding current)
         all_time_record = 0
@@ -715,9 +748,9 @@ def home():
                     if not match.get("result_winner"):
                         continue
                     try:
-                        day = int(match["date"].replace("June ", ""))
+                        month, day = parse_match_date(match["date"])
                         hour = int(match.get("kickoff", "0").split(":")[0])
-                        s_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+                        s_label = make_date_label(month, day) if hour >= 18 else make_date_label(month, day - 1) if day > 1 else ("June 30" if month == 7 else make_date_label(month, day - 1))
                     except:
                         continue
                     if s_label != current_session:
@@ -763,9 +796,9 @@ def home():
             date = match.get("date", "")
             kickoff = match.get("kickoff", "00:00")
             try:
-                day = int(date.replace("June ", ""))
+                month, day = parse_match_date(date)
                 hour = int(kickoff.split(":")[0])
-                s_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+                s_label = make_date_label(month, day) if hour >= 18 else make_date_label(month, day - 1) if day > 1 else ("June 30" if month == 7 else make_date_label(month, day - 1))
             except:
                 continue
             if s_label == current_session:
@@ -906,11 +939,11 @@ def debug_today():
     now_ist = datetime.now(IST)
     matches = load_matches()
     if now_ist.hour >= 10:
-        today_date = f"June {now_ist.day}"
-        tomorrow_date = f"June {now_ist.day + 1}"
+        today_date = date_label_offset(now_ist, 0)
+        tomorrow_date = date_label_offset(now_ist, 1)
     else:
-        today_date = f"June {now_ist.day - 1}"
-        tomorrow_date = f"June {now_ist.day}"
+        today_date = date_label_offset(now_ist, -1)
+        tomorrow_date = date_label_offset(now_ist, 0)
 
     candidates = []
     for m in matches:
@@ -1223,7 +1256,7 @@ def awards():
             date = match.get("date", "")
             kickoff = match.get("kickoff", "00:00")
             try:
-                day = int(date.replace("June ", "").replace("July ", ""))
+                month, day = parse_match_date(date)
                 hour = int(kickoff.split(":")[0])
             except:
                 continue
@@ -1786,22 +1819,22 @@ def stats():
             date = match.get("date", "")
             kickoff = match.get("kickoff", "00:00")
             try:
-                day = int(date.replace("June ", ""))
+                month, day = parse_match_date(date)
                 hour = int(kickoff.split(":")[0])
             except:
                 continue
             # Evening matches (>=18:00) belong to that day's session
             # Morning matches (<10:00) belong to previous day's session
             if hour >= 18:
-                session_label = f"June {day}"
+                session_label = make_date_label(month, day)
             else:
-                session_label = f"June {day - 1}"
+                session_label = make_date_label(month, day - 1) if day > 1 else ("June 30" if month == 7 else make_date_label(month, day - 1))
             if session_label not in sessions:
                 sessions[session_label] = []
             sessions[session_label].append(match["id"])
 
         daily_breakdown = []
-        sorted_dates = sorted(sessions.keys(), key=lambda d: int(d.replace("June ", "")))
+        sorted_dates = sorted(sessions.keys(), key=lambda d: parse_match_date(d)[0]*100 + parse_match_date(d)[1] if parse_match_date(d)[0] else 0)
         for date in sorted_dates:
             match_ids = sessions[date]
             predicted_players = set()
@@ -1929,11 +1962,11 @@ def stats():
             date = match.get("date", "")
             kickoff = match.get("kickoff", "00:00")
             try:
-                day = int(date.replace("June ", ""))
+                month, day = parse_match_date(date)
                 hour = int(kickoff.split(":")[0])
             except:
                 continue
-            session_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+            session_label = make_date_label(month, day) if hour >= 18 else make_date_label(month, day - 1) if day > 1 else ("June 30" if month == 7 else make_date_label(month, day - 1))
             if session_label not in all_session_data:
                 all_session_data[session_label] = {p: {"points": 0, "perfects": 0, "predicted": 0, "matches": 0} for p in players}
             for player in players:
@@ -1958,11 +1991,11 @@ def stats():
             date = match.get("date", "")
             kickoff = match.get("kickoff", "00:00")
             try:
-                day = int(date.replace("June ", ""))
+                month, day = parse_match_date(date)
                 hour = int(kickoff.split(":")[0])
             except:
                 continue
-            session_label = f"June {day}" if hour >= 18 else f"June {day - 1}"
+            session_label = make_date_label(month, day) if hour >= 18 else make_date_label(month, day - 1) if day > 1 else ("June 30" if month == 7 else make_date_label(month, day - 1))
             session_match_counts[session_label] = session_match_counts.get(session_label, 0) + 1
 
         records = {}
@@ -2059,7 +2092,7 @@ def stats():
         biggest_jump_holders = []
         biggest_jump_date = ""
         cumulative_points = {p: 0 for p in players}
-        for session_label in sorted(all_session_data.keys(), key=lambda d: int(d.replace("June ", ""))):
+        for session_label in sorted(all_session_data.keys(), key=lambda d: parse_match_date(d)[0]*100 + parse_match_date(d)[1] if parse_match_date(d)[0] else 0):
             # Previous ranks
             sorted_prev = sorted(cumulative_points.items(), key=lambda x: x[1], reverse=True)
             prev_r = {}
