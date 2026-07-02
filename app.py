@@ -770,13 +770,15 @@ def home():
         # 2. Most king crowns broken?
         curr_max_crowns = max(all_king_wins.values()) if all_king_wins else 0
         prev_max_crowns = max(prev_king_wins.values()) if prev_king_wins else 0
-        if curr_max_crowns > prev_max_crowns and curr_max_crowns > 0:
-            crown_holders = [p for p, w in all_king_wins.items() if w == curr_max_crowns]
+        curr_crown_holders = [p for p, w in all_king_wins.items() if w == curr_max_crowns and curr_max_crowns > 0]
+        prev_crown_holders = [p for p, w in prev_king_wins.items() if w == prev_max_crowns and prev_max_crowns > 0]
+        # Show alert if record broken OR if new player joined the top
+        if curr_max_crowns > 0 and (curr_max_crowns > prev_max_crowns or set(curr_crown_holders) != set(prev_crown_holders)):
             records_broken.append({
                 "type": "👑 Most King Crowns",
-                "names": crown_holders,
+                "names": curr_crown_holders,
                 "value": f"{curr_max_crowns} crowns",
-                "prev": f"Previous record: {prev_max_crowns} crowns",
+                "prev": f"Previous: {prev_max_crowns} crowns" if curr_max_crowns > prev_max_crowns else f"New: {', '.join(set(curr_crown_holders) - set(prev_crown_holders))} joined!",
             })
 
         # 3-5 removed from home alerts (too frequent / not noteworthy enough)
