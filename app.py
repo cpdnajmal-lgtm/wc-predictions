@@ -781,8 +781,35 @@ def home():
                 "prev": f"Previous: {prev_max_crowns} crowns" if curr_max_crowns > prev_max_crowns else f"New: {', '.join(set(curr_crown_holders) - set(prev_crown_holders))} joined!",
             })
 
-        # 3-5 removed from home alerts (too frequent / not noteworthy enough)
-        # These records still tracked in the Records tab on stats page
+        # 3. Perfect session (100% accuracy) — shows when someone achieves it in current session
+        perfect_session_holders = []
+        for player in players:
+            if today_scores.get(player, 0) < 3:
+                continue
+            player_session_matches = 0
+            player_session_perfects = 0
+            for match in all_matches:
+                if not match.get("result_winner"):
+                    continue
+                s_label = get_session_label(match.get("date", ""), match.get("kickoff", "00:00"))
+                if s_label != current_session:
+                    continue
+                pred = predictions.get(player, {}).get(match["id"])
+                if pred:
+                    player_session_matches += 1
+                    w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                    s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+                    if w_ok and s_ok:
+                        player_session_perfects += 1
+            if player_session_matches >= 3 and player_session_perfects == player_session_matches:
+                perfect_session_holders.append(player)
+        if perfect_session_holders:
+            records_broken.append({
+                "type": "🎯 PERFECT SESSION (100%)",
+                "names": perfect_session_holders,
+                "value": f"All predictions correct! Every winner + every score!",
+                "prev": "This is as good as it gets 🔥🔥🔥",
+            })
 
         # Show ALL records broken (not just the first one)
         if records_broken:
