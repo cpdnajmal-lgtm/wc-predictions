@@ -1004,10 +1004,9 @@ def debug_today():
 
 @app.route("/predict", methods=["GET", "POST"])
 def predict():
-    try:
-        return _predict()
-    except Exception as e:
-        return f"Predict Error: {e}", 500
+    # Predictions temporarily disabled
+    flash("⏸️ Predictions are paused — maintenance in progress. Will reopen shortly!")
+    return redirect(url_for("home"))
 
 
 @app.route("/predict/verify", methods=["POST"])
