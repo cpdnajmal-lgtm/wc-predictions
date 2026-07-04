@@ -518,7 +518,12 @@ def get_today_matches():
     
     # For knockout (R16+): sessions have fewer matches per night.
     # Only keep morning matches that immediately follow the evening match (by sort_order)
+    # Also check completed evening matches to maintain session grouping
+    all_evening_today = [m for m in matches if m.get("date") == today_date and not m.get("kickoff") == '' and int(m.get("kickoff", "0").split(":")[0]) >= 18]
     evening_matches = [m for m in result if int(m["kickoff"].split(":")[0]) >= 18]
+    # Use completed evening match as anchor if no active evening match
+    if not evening_matches and all_evening_today:
+        evening_matches = all_evening_today
     if evening_matches:
         max_evening_order = max(m.get("sort_order", 0) for m in evening_matches)
         # Keep evening matches + morning matches within sort_order gap of 1
