@@ -516,6 +516,23 @@ def get_today_matches():
         elif m.get("date") == tomorrow_date and hour < 10:
             result.append(m)
     
+    # For knockout (R16+): sessions have fewer matches per night.
+    # Only keep morning matches that immediately follow the evening match (by sort_order)
+    evening_matches = [m for m in result if int(m["kickoff"].split(":")[0]) >= 18]
+    if evening_matches:
+        max_evening_order = max(m.get("sort_order", 0) for m in evening_matches)
+        # Keep evening matches + morning matches within sort_order gap of 1
+        filtered = []
+        for m in result:
+            h = int(m["kickoff"].split(":")[0])
+            if h >= 18:
+                filtered.append(m)
+            else:
+                # Only include if sort_order is within 1 of the evening match
+                if m.get("sort_order", 0) - max_evening_order <= 1:
+                    filtered.append(m)
+        result = filtered
+    
     # Sort by kickoff time (evening first, then morning)
     def sort_key(m):
         h = int(m["kickoff"].split(":")[0])
