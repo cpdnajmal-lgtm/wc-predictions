@@ -2424,18 +2424,18 @@ def add_round_of_16():
     conn = get_db()
     cur = conn.cursor()
     new_matches = [
+        # R16 - July 4
+        ("match_89", "Canada", "Morocco", "July 4", "22:30", 89),
         # R16 - July 5
-        ("match_89", "Canada", "Morocco", "July 5", "22:30", 89),
+        ("match_90", "Paraguay", "France", "July 5", "02:30", 90),
+        ("match_91", "Brazil", "Norway", "July 5", "01:30", 91),
+        ("match_92", "Mexico", "England", "July 5", "05:30", 92),
         # R16 - July 6
-        ("match_90", "Paraguay", "France", "July 6", "02:30", 90),
-        ("match_91", "Brazil", "Norway", "July 6", "01:30", 91),
-        ("match_92", "Mexico", "England", "July 6", "05:30", 92),
+        ("match_93", "Portugal", "Spain", "July 6", "00:30", 93),
+        ("match_94", "USA", "Belgium", "July 6", "05:30", 94),
+        ("match_95", "Argentina", "Egypt", "July 6", "21:30", 95),
         # R16 - July 7
-        ("match_93", "Portugal", "Spain", "July 7", "00:30", 93),
-        ("match_94", "USA", "Belgium", "July 7", "05:30", 94),
-        ("match_95", "Argentina", "Egypt", "July 7", "21:30", 95),
-        # R16 - July 8
-        ("match_96", "Switzerland", "Colombia", "July 8", "01:30", 96),
+        ("match_96", "Switzerland", "Colombia", "July 7", "01:30", 96),
     ]
     for m in new_matches:
         cur.execute("""
