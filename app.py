@@ -861,10 +861,13 @@ def home():
                         })
         # Hot takes scoped to current session only (no limit needed)
 
-        # Determine tournament phase based on active match IDs
+        # Determine tournament phase based on highest match number (active or pending)
         active_match_ids = [m["id"] for m in today_matches + locked_matches if m.get("id")]
+        # Also check all pending matches (without results) to detect upcoming phase
+        all_pending = [m for m in all_matches if not m.get("result_winner") and m.get("id", "").startswith("match_")]
+        all_relevant_ids = active_match_ids + [m["id"] for m in all_pending]
         max_match_num = 0
-        for mid in active_match_ids:
+        for mid in all_relevant_ids:
             try:
                 num = int(mid.replace("match_", ""))
                 max_match_num = max(max_match_num, num)
