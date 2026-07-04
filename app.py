@@ -2415,5 +2415,36 @@ def add_round_of_32():
 
 add_round_of_32()
 
+
+def add_round_of_16():
+    """Add Round of 16 knockout matches (matches 89-96)."""
+    conn = get_db()
+    cur = conn.cursor()
+    new_matches = [
+        # R16 - July 5
+        ("match_89", "Canada", "Morocco", "July 5", "22:30", 89),
+        # R16 - July 6
+        ("match_90", "Paraguay", "France", "July 6", "02:30", 90),
+        ("match_91", "Brazil", "Norway", "July 6", "01:30", 91),
+        ("match_92", "Mexico", "England", "July 6", "05:30", 92),
+        # R16 - July 7
+        ("match_93", "Portugal", "Spain", "July 7", "00:30", 93),
+        ("match_94", "USA", "Belgium", "July 7", "05:30", 94),
+        ("match_95", "Argentina", "Egypt", "July 7", "21:30", 95),
+        # R16 - July 8
+        ("match_96", "Switzerland", "Colombia", "July 8", "01:30", 96),
+    ]
+    for m in new_matches:
+        cur.execute("""
+            INSERT INTO matches (id, team_a, team_b, date, kickoff, sort_order)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET date = EXCLUDED.date, kickoff = EXCLUDED.kickoff, team_a = EXCLUDED.team_a, team_b = EXCLUDED.team_b
+        """, m)
+    conn.commit()
+    conn.close()
+
+
+add_round_of_16()
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
