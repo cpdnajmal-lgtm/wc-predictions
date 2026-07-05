@@ -2450,8 +2450,8 @@ def add_round_of_16():
         ("match_89", "Canada", "Morocco", "July 4", "22:30", 89),
         # R16 - July 5
         ("match_90", "Paraguay", "France", "July 5", "02:30", 90),
-        ("match_91", "Brazil", "Norway", "July 5", "01:30", 91),
-        ("match_92", "Mexico", "England", "July 5", "05:30", 92),
+        ("match_91", "Brazil", "Norway", "July 6", "01:30", 91),
+        ("match_92", "Mexico", "England", "July 6", "05:30", 92),
         # R16 - July 6
         ("match_93", "Portugal", "Spain", "July 6", "00:30", 93),
         ("match_94", "USA", "Belgium", "July 6", "05:30", 94),
