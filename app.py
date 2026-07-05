@@ -517,15 +517,10 @@ def get_today_matches():
             result.append(m)
     
     # For knockout (R16+): sessions have fewer matches per night.
-    # Only keep morning matches that immediately follow the evening match (by sort_order)
-    # Also check completed evening matches to maintain session grouping
-    all_evening_today = [m for m in matches if m.get("date") == today_date and not m.get("kickoff") == '' and int(m.get("kickoff", "0").split(":")[0]) >= 18]
-    evening_matches = [m for m in result if int(m["kickoff"].split(":")[0]) >= 18]
-    # Use completed evening match as anchor if no active evening match
-    if not evening_matches and all_evening_today:
-        evening_matches = all_evening_today
-    if evening_matches:
-        max_evening_order = max(m.get("sort_order", 0) for m in evening_matches)
+    # Only apply sort_order limiting when there's an active evening match TODAY
+    evening_matches_active = [m for m in result if int(m["kickoff"].split(":")[0]) >= 18]
+    if evening_matches_active:
+        max_evening_order = max(m.get("sort_order", 0) for m in evening_matches_active)
         # Keep evening matches + morning matches within sort_order gap of 1
         filtered = []
         for m in result:
@@ -533,7 +528,6 @@ def get_today_matches():
             if h >= 18:
                 filtered.append(m)
             else:
-                # Only include if sort_order is within 1 of the evening match
                 if m.get("sort_order", 0) - max_evening_order <= 1:
                     filtered.append(m)
         result = filtered
@@ -2451,11 +2445,11 @@ def add_round_of_16():
         ("match_91", "Brazil", "Norway", "July 6", "01:30", 91),
         ("match_92", "Mexico", "England", "July 6", "05:30", 92),
         # R16 - July 6
-        ("match_93", "Portugal", "Spain", "July 6", "00:30", 93),
-        ("match_94", "USA", "Belgium", "July 6", "05:30", 94),
-        ("match_95", "Argentina", "Egypt", "July 6", "21:30", 95),
-        # R16 - July 7
-        ("match_96", "Switzerland", "Colombia", "July 7", "01:30", 96),
+        ("match_93", "Portugal", "Spain", "July 7", "00:30", 93),
+        ("match_94", "USA", "Belgium", "July 7", "05:30", 94),
+        ("match_95", "Argentina", "Egypt", "July 7", "21:30", 95),
+        # R16 - July 8
+        ("match_96", "Switzerland", "Colombia", "July 8", "01:30", 96),
     ]
     for m in new_matches:
         cur.execute("""
