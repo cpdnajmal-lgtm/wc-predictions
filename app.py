@@ -1392,9 +1392,9 @@ def bracket():
     """Show tournament bracket with results and eliminated teams."""
     try:
         matches = load_matches()
-        # Only R16+ matches (89+), skip completed R32
+        # Only current round matches (QF = 97+)
         knockout_matches = [m for m in matches if m.get("id", "").startswith("match_")]
-        knockout_matches = [m for m in knockout_matches if int(m["id"].replace("match_", "")) > 88]
+        knockout_matches = [m for m in knockout_matches if int(m["id"].replace("match_", "")) > 96]
         knockout_matches.sort(key=lambda m: m.get("sort_order", 0))
 
         # Group by date
