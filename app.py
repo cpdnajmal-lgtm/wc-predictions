@@ -580,6 +580,13 @@ def home():
         # Show all today's matches (including locked ones) on home page
         upcoming_matches = [m for m in today_matches if not m.get("locked")]
         locked_matches = [m for m in today_matches if m.get("locked")]
+        # Find next upcoming match (for rest days when no matches tonight)
+        next_match = None
+        if not today_matches:
+            all_upcoming = [m for m in load_matches() if not m.get("result_winner") and m.get("kickoff")]
+            all_upcoming.sort(key=lambda m: m.get("sort_order", 0))
+            if all_upcoming:
+                next_match = all_upcoming[0]
         completed = get_completed_matches()[-5:]
         players = load_players()
         player_teams = load_player_teams()
@@ -945,6 +952,7 @@ def home():
             today_matches=upcoming_matches,
             locked_matches=locked_matches,
             completed=completed,
+            next_match=next_match,
             players=players,
             all_predictions=all_predictions,
             recap=recap,
