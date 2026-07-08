@@ -2465,5 +2465,28 @@ def add_round_of_16():
 
 add_round_of_16()
 
+
+def add_quarter_finals():
+    """Add Quarter Final matches (matches 97-100)."""
+    conn = get_db()
+    cur = conn.cursor()
+    new_matches = [
+        ("match_97", "France", "Morocco", "July 10", "01:30", 97),
+        ("match_98", "Spain", "Belgium", "July 11", "00:30", 98),
+        ("match_99", "Norway", "England", "July 12", "02:30", 99),
+        ("match_100", "Argentina", "Switzerland", "July 12", "06:30", 100),
+    ]
+    for m in new_matches:
+        cur.execute("""
+            INSERT INTO matches (id, team_a, team_b, date, kickoff, sort_order)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET date = EXCLUDED.date, kickoff = EXCLUDED.kickoff, team_a = EXCLUDED.team_a, team_b = EXCLUDED.team_b
+        """, m)
+    conn.commit()
+    conn.close()
+
+
+add_quarter_finals()
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
