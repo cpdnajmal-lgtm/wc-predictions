@@ -75,6 +75,88 @@
     </div>
     <p class="subtitle">{{ tournament_phase }}</p>
 
+    <!-- Countdown Banner for next match -->
+    {% if today_matches %}
+    {% set next = today_matches[0] %}
+    <div style="text-align:center; background:linear-gradient(135deg, rgba(231,76,60,0.15), rgba(231,76,60,0.05)); border:2px solid var(--accent); border-radius:14px; padding:14px; margin-bottom:16px; animation: pulse 2s infinite;">
+        <div style="color:var(--accent); font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:2px;">⚡ Next Match</div>
+        <div style="color:#eee; font-size:1.1em; font-weight:700; margin-top:4px;">{{ get_flag(next.team_a) }} {{ next.team_a }} <span style="color:var(--accent);">VS</span> {{ next.team_b }} {{ get_flag(next.team_b) }}</div>
+        <div class="countdown" data-date="{{ next.date }}" data-time="{{ next.kickoff }}" style="color:var(--accent); font-size:1.2em; font-weight:800; margin-top:6px;"></div>
+    </div>
+    {% elif next_match %}
+    <div style="text-align:center; background:linear-gradient(135deg, rgba(231,76,60,0.15), rgba(231,76,60,0.05)); border:2px solid var(--accent); border-radius:14px; padding:14px; margin-bottom:16px;">
+        <div style="color:var(--accent); font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:2px;">⚡ Next Match</div>
+        <div style="color:#eee; font-size:1.1em; font-weight:700; margin-top:4px;">{{ get_flag(next_match.team_a) }} {{ next_match.team_a }} <span style="color:var(--accent);">VS</span> {{ next_match.team_b }} {{ get_flag(next_match.team_b) }}</div>
+        <div style="color:#888; font-size:0.85em; margin-top:4px;">{{ next_match.date }} • {{ format_time(next_match.kickoff) }} IST</div>
+    </div>
+    {% endif %}
+
+    <!-- QF Bracket Tree -->
+    {% if tournament_phase == "Quarter Finals" %}
+    <div style="background:rgba(15,15,30,0.9); border:1px solid var(--card-border); border-radius:16px; padding:16px; margin-bottom:18px; overflow-x:auto;">
+        <div style="text-align:center; color:var(--accent); font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;">🏆 Road to the Final</div>
+        <table style="width:100%; border-collapse:collapse; font-size:0.75em; text-align:center;">
+            <tr style="color:#666; font-size:0.85em;">
+                <td style="width:30%;">Quarter Final</td>
+                <td style="width:25%;">Semi Final</td>
+                <td style="width:15%;">Final</td>
+                <td style="width:25%;">Semi Final</td>
+                <td style="width:30%;">Quarter Final</td>
+            </tr>
+            <tr><td colspan="5" style="height:8px;"></td></tr>
+            <!-- Left SF1 -->
+            <tr>
+                <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
+                    <div>🇫🇷 France</div>
+                    <div style="color:#555; font-size:0.8em;">vs</div>
+                    <div>🇲🇦 Morocco</div>
+                </td>
+                <td rowspan="2" style="padding:4px;">
+                    <div style="border:1px solid var(--card-border); border-radius:8px; padding:8px; background:rgba(15,15,30,0.8);">
+                        <div style="color:#888; font-size:0.8em;">SF1</div>
+                        <div style="color:#eee; font-weight:700; margin-top:2px;">?</div>
+                        <div style="color:#555; font-size:0.8em;">vs</div>
+                        <div style="color:#eee; font-weight:700;">?</div>
+                    </div>
+                </td>
+                <td rowspan="4" style="padding:4px;">
+                    <div style="border:2px solid var(--accent); border-radius:10px; padding:10px; background:rgba(231,76,60,0.08);">
+                        <div style="font-size:1.5em;">🏆</div>
+                        <div style="color:var(--accent); font-weight:700; font-size:0.9em; margin-top:2px;">FINAL</div>
+                        <div style="color:#888; font-size:0.8em;">Jul 19</div>
+                    </div>
+                </td>
+                <td rowspan="2" style="padding:4px;">
+                    <div style="border:1px solid var(--card-border); border-radius:8px; padding:8px; background:rgba(15,15,30,0.8);">
+                        <div style="color:#888; font-size:0.8em;">SF2</div>
+                        <div style="color:#eee; font-weight:700; margin-top:2px;">?</div>
+                        <div style="color:#555; font-size:0.8em;">vs</div>
+                        <div style="color:#eee; font-weight:700;">?</div>
+                    </div>
+                </td>
+                <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
+                    <div>🇳🇴 Norway</div>
+                    <div style="color:#555; font-size:0.8em;">vs</div>
+                    <div>🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</div>
+                </td>
+            </tr>
+            <!-- Left SF1 bottom -->
+            <tr>
+                <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
+                    <div>🇪🇸 Spain</div>
+                    <div style="color:#555; font-size:0.8em;">vs</div>
+                    <div>🇧🇪 Belgium</div>
+                </td>
+                <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
+                    <div>🇦🇷 Argentina</div>
+                    <div style="color:#555; font-size:0.8em;">vs</div>
+                    <div>🇨🇭 Switzerland</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% endif %}
+
     {% with messages = get_flashed_messages() %}
     {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
     {% endwith %}
