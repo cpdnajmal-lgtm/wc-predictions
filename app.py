@@ -584,6 +584,8 @@ def home():
         next_match = None
         if not today_matches:
             all_upcoming = [m for m in load_matches() if not m.get("result_winner") and m.get("kickoff")]
+            # Only show matches from current phase onwards (skip old unresulted matches)
+            all_upcoming = [m for m in all_upcoming if int(m.get("id", "match_0").replace("match_", "")) > 72]
             all_upcoming.sort(key=lambda m: m.get("sort_order", 0))
             if all_upcoming:
                 next_match = all_upcoming[0]
