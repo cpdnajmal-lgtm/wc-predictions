@@ -11,7 +11,7 @@
         {% elif tournament_phase == "Round of 16" %}
         :root { --accent: #ff6b35; --accent-dark: #cc5529; --accent-glow: rgba(255,107,53,0.3); --accent-bg: rgba(255,107,53,0.05); --bg-grad: linear-gradient(180deg, #0a0a12 0%, #1a1210 40%, #0d0d1a 100%); --card-border: rgba(255,107,53,0.2); }
         {% elif tournament_phase == "Quarter Finals" %}
-        :root { --accent: #e74c3c; --accent-dark: #c0392b; --accent-glow: rgba(231,76,60,0.3); --accent-bg: rgba(231,76,60,0.05); --bg-grad: linear-gradient(180deg, #0a0508 0%, #1a0a10 40%, #0d0508 100%); --card-border: rgba(231,76,60,0.2); }
+        :root { --accent: #e74c3c; --accent-dark: #c0392b; --accent-glow: rgba(231,76,60,0.4); --accent-bg: rgba(231,76,60,0.08); --bg-grad: linear-gradient(180deg, #050208 0%, #1a0508 30%, #120310 60%, #050208 100%); --card-border: rgba(231,76,60,0.35); }
         {% elif tournament_phase == "Semi Finals" %}
         :root { --accent: #9b59b6; --accent-dark: #7d3c98; --accent-glow: rgba(155,89,182,0.3); --accent-bg: rgba(155,89,182,0.05); --bg-grad: linear-gradient(180deg, #0a0510 0%, #150a1a 40%, #0a0510 100%); --card-border: rgba(155,89,182,0.2); }
         {% elif tournament_phase == "Final" or tournament_phase == "3rd Place" %}
@@ -165,9 +165,9 @@
     <h2>🔴 Live / Started</h2>
     {% for match in locked_matches %}
     {% set is_knockout = match.id.replace('match_', '')|int > 72 %}
-    <div class="match-card" style="border-color:{% if is_knockout %}#ffd700{% else %}#e74c3c{% endif %}; {% if is_knockout %}background:linear-gradient(135deg, rgba(26,26,62,0.8), rgba(255,215,0,0.03));{% endif %}">
-        {% if is_knockout %}<div style="text-align:center; color:#ffd700; font-size:0.6em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">⚔️ {{ tournament_phase }}</div>{% endif %}
-        <div class="match-teams" {% if is_knockout %}style="font-size:1.15em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
+    <div class="match-card" style="border-color:{% if is_knockout %}var(--accent){% else %}#e74c3c{% endif %}; {% if is_knockout %}border-width:2px; background:linear-gradient(135deg, rgba(15,15,30,0.9), var(--accent-bg)); padding:24px;{% endif %}">
+        {% if is_knockout %}<div style="text-align:center; color:var(--accent); font-size:0.65em; font-weight:700; text-transform:uppercase; letter-spacing:3px; margin-bottom:6px;">⚔️ {{ tournament_phase }}</div>{% endif %}
+        <div class="match-teams" {% if is_knockout %}style="font-size:1.3em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} <span style="color:var(--accent); font-size:0.7em;">VS</span> {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
         <div class="match-date">{{ match.date }} &nbsp;•&nbsp; <span style="color:#e74c3c; font-size:0.75em; font-weight:600;">🔒 LOCKED</span></div>
         {% if all_predictions.get(match.id) %}
         {% set preds_list = all_predictions[match.id].values()|list %}
@@ -225,9 +225,9 @@
     {% if today_matches %}
     {% for match in today_matches %}
     {% set is_knockout = match.id.replace('match_', '')|int > 72 %}
-    <div class="match-card" {% if is_knockout %}style="border-color:#ffd700; background:linear-gradient(135deg, rgba(26,26,62,0.8), rgba(255,215,0,0.03));"{% endif %}>
-        {% if is_knockout %}<div style="text-align:center; color:#ffd700; font-size:0.6em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;">⚔️ {{ tournament_phase }}</div>{% endif %}
-        <div class="match-teams" {% if is_knockout %}style="font-size:1.15em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
+    <div class="match-card" {% if is_knockout %}style="border-color:var(--accent); border-width:2px; background:linear-gradient(135deg, rgba(15,15,30,0.9), var(--accent-bg)); padding:24px;"{% endif %}>
+        {% if is_knockout %}<div style="text-align:center; color:var(--accent); font-size:0.65em; font-weight:700; text-transform:uppercase; letter-spacing:3px; margin-bottom:6px;">⚔️ {{ tournament_phase }}</div>{% endif %}
+        <div class="match-teams" {% if is_knockout %}style="font-size:1.3em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} <span style="color:var(--accent); font-size:0.7em;">VS</span> {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
         <div class="match-date">{{ match.date }} &nbsp;•&nbsp; <span class="kickoff-time">{{ format_time(match.kickoff) }} IST</span></div>
         <div class="countdown" data-date="{{ match.date }}" data-time="{{ match.kickoff }}" style="color:#e74c3c; font-size:0.75em; text-align:center; margin-top:3px; font-weight:600;"></div>
         {% if all_predictions.get(match.id) %}
