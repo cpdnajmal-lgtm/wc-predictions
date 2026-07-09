@@ -75,15 +75,8 @@
     </div>
     <p class="subtitle">{{ tournament_phase }}</p>
 
-    <!-- Countdown Banner for next match -->
-    {% if today_matches %}
-    {% set next = today_matches[0] %}
-    <div style="text-align:center; background:linear-gradient(135deg, rgba(231,76,60,0.15), rgba(231,76,60,0.05)); border:2px solid var(--accent); border-radius:14px; padding:14px; margin-bottom:16px; animation: pulse 2s infinite;">
-        <div style="color:var(--accent); font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:2px;">⚡ Next Match</div>
-        <div style="color:#eee; font-size:1.1em; font-weight:700; margin-top:4px;">{{ get_flag(next.team_a) }} {{ next.team_a }} <span style="color:var(--accent);">VS</span> {{ next.team_b }} {{ get_flag(next.team_b) }}</div>
-        <div class="countdown" data-date="{{ next.date }}" data-time="{{ next.kickoff }}" style="color:var(--accent); font-size:1.2em; font-weight:800; margin-top:6px;"></div>
-    </div>
-    {% elif next_match %}
+    <!-- Countdown Banner - only show on rest days (when no today_matches) -->
+    {% if not today_matches and next_match %}
     <div style="text-align:center; background:linear-gradient(135deg, rgba(231,76,60,0.15), rgba(231,76,60,0.05)); border:2px solid var(--accent); border-radius:14px; padding:14px; margin-bottom:16px;">
         <div style="color:var(--accent); font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:2px;">⚡ Next Match</div>
         <div style="color:#eee; font-size:1.1em; font-weight:700; margin-top:4px;">{{ get_flag(next_match.team_a) }} {{ next_match.team_a }} <span style="color:var(--accent);">VS</span> {{ next_match.team_b }} {{ get_flag(next_match.team_b) }}</div>
