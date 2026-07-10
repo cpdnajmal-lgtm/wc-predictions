@@ -921,6 +921,12 @@ def home():
         else:
             tournament_phase = "Final"
 
+        # Get QF results for bracket display
+        qf_results = {}
+        for m in all_matches:
+            if m.get("id") in ["match_97", "match_98", "match_99", "match_100"] and m.get("result_winner"):
+                qf_results[m["id"]] = m["result_winner"]
+
         # --- Group Stage vs Knockout leaderboard ---
         group_scores = {p: 0 for p in players}
         knockout_scores = {p: 0 for p in players}
@@ -968,6 +974,7 @@ def home():
             hot_takes=hot_takes,
             player_teams=player_teams,
             tournament_phase=tournament_phase,
+            qf_results=qf_results,
             announcements=load_announcements(),
         )
     except Exception as e:

@@ -85,7 +85,7 @@
     {% endif %}
 
     <!-- QF Bracket Tree -->
-    {% if tournament_phase == "Quarter Finals" %}
+    {% if tournament_phase == "Quarter Finals" or tournament_phase == "Semi Finals" or tournament_phase == "Final" %}
     <div style="background:rgba(15,15,30,0.9); border:1px solid var(--card-border); border-radius:16px; padding:16px; margin-bottom:18px; overflow-x:auto;">
         <div style="text-align:center; color:var(--accent); font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;">🏆 Road to the Final</div>
         <table style="width:100%; border-collapse:collapse; font-size:0.75em; text-align:center;">
@@ -100,16 +100,20 @@
             <!-- Left SF1 -->
             <tr>
                 <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
+                    {% if qf_results.get('match_97') %}
+                    <div style="color:#00d4aa; font-weight:700;">{{ get_flag(qf_results['match_97']) }} {{ qf_results['match_97'] }} ✓</div>
+                    {% else %}
                     <div>🇫🇷 France</div>
                     <div style="color:#555; font-size:0.8em;">vs</div>
                     <div>🇲🇦 Morocco</div>
+                    {% endif %}
                 </td>
                 <td rowspan="2" style="padding:4px;">
                     <div style="border:1px solid var(--card-border); border-radius:8px; padding:8px; background:rgba(15,15,30,0.8);">
                         <div style="color:#888; font-size:0.8em;">SF1</div>
-                        <div style="color:#eee; font-weight:700; margin-top:2px;">?</div>
+                        <div style="color:{% if qf_results.get('match_97') %}#00d4aa{% else %}#eee{% endif %}; font-weight:700; margin-top:2px;">{{ qf_results.get('match_97', '?') }}</div>
                         <div style="color:#555; font-size:0.8em;">vs</div>
-                        <div style="color:#eee; font-weight:700;">?</div>
+                        <div style="color:{% if qf_results.get('match_98') %}#00d4aa{% else %}#eee{% endif %}; font-weight:700;">{{ qf_results.get('match_98', '?') }}</div>
                     </div>
                 </td>
                 <td rowspan="4" style="padding:4px;">
@@ -122,28 +126,40 @@
                 <td rowspan="2" style="padding:4px;">
                     <div style="border:1px solid var(--card-border); border-radius:8px; padding:8px; background:rgba(15,15,30,0.8);">
                         <div style="color:#888; font-size:0.8em;">SF2</div>
-                        <div style="color:#eee; font-weight:700; margin-top:2px;">?</div>
+                        <div style="color:{% if qf_results.get('match_99') %}#00d4aa{% else %}#eee{% endif %}; font-weight:700; margin-top:2px;">{{ qf_results.get('match_99', '?') }}</div>
                         <div style="color:#555; font-size:0.8em;">vs</div>
-                        <div style="color:#eee; font-weight:700;">?</div>
+                        <div style="color:{% if qf_results.get('match_100') %}#00d4aa{% else %}#eee{% endif %}; font-weight:700;">{{ qf_results.get('match_100', '?') }}</div>
                     </div>
                 </td>
                 <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
+                    {% if qf_results.get('match_99') %}
+                    <div style="color:#00d4aa; font-weight:700;">{{ get_flag(qf_results['match_99']) }} {{ qf_results['match_99'] }} ✓</div>
+                    {% else %}
                     <div>🇳🇴 Norway</div>
                     <div style="color:#555; font-size:0.8em;">vs</div>
                     <div>🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</div>
+                    {% endif %}
                 </td>
             </tr>
             <!-- Left SF1 bottom -->
             <tr>
                 <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
+                    {% if qf_results.get('match_98') %}
+                    <div style="color:#00d4aa; font-weight:700;">{{ get_flag(qf_results['match_98']) }} {{ qf_results['match_98'] }} ✓</div>
+                    {% else %}
                     <div>🇪🇸 Spain</div>
                     <div style="color:#555; font-size:0.8em;">vs</div>
                     <div>🇧🇪 Belgium</div>
+                    {% endif %}
                 </td>
                 <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
+                    {% if qf_results.get('match_100') %}
+                    <div style="color:#00d4aa; font-weight:700;">{{ get_flag(qf_results['match_100']) }} {{ qf_results['match_100'] }} ✓</div>
+                    {% else %}
                     <div>🇦🇷 Argentina</div>
                     <div style="color:#555; font-size:0.8em;">vs</div>
                     <div>🇨🇭 Switzerland</div>
+                    {% endif %}
                 </td>
             </tr>
         </table>
