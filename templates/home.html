@@ -158,18 +158,18 @@
 
     <!-- Champion Picks Widget -->
     {% if champion_picks_data %}
-    <div style="background:rgba(15,15,30,0.8); border:1px solid rgba(255,215,0,0.3); border-radius:12px; padding:12px; margin-bottom:14px;">
+    <a href="{{ url_for('champion') }}" style="display:block; text-decoration:none; background:rgba(15,15,30,0.8); border:1px solid rgba(255,215,0,0.3); border-radius:12px; padding:14px; margin-bottom:14px; cursor:pointer;">
         <div style="text-align:center; color:#ffd700; font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;">🏆 Champion Predictions</div>
         <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
             {% for team, data in champion_picks_data.items() %}
-            <div style="text-align:center; padding:6px 10px; border-radius:8px; border:1px solid {% if data.alive %}rgba(0,212,170,0.3){% else %}rgba(231,76,60,0.3){% endif %}; background:{% if data.alive %}rgba(0,212,170,0.05){% else %}rgba(231,76,60,0.05){% endif %}; {% if not data.alive %}opacity:0.5; text-decoration:line-through;{% endif %}">
-                <div style="font-size:1.2em;">{{ get_flag(team) }}</div>
-                <div style="font-size:0.7em; font-weight:700; color:{% if data.alive %}#00d4aa{% else %}#e74c3c{% endif %};">{{ data.count }}</div>
+            <div style="text-align:center; padding:8px 12px; border-radius:8px; border:1px solid {% if data.alive %}rgba(0,212,170,0.3){% else %}rgba(231,76,60,0.3){% endif %}; background:{% if data.alive %}rgba(0,212,170,0.05){% else %}rgba(231,76,60,0.05){% endif %}; {% if not data.alive %}opacity:0.5; text-decoration:line-through;{% endif %}">
+                <div style="font-size:1.4em;">{{ get_flag(team) }}</div>
+                <div style="font-size:0.75em; font-weight:700; color:{% if data.alive %}#00d4aa{% else %}#e74c3c{% endif %}; margin-top:2px;">{{ data.count }}</div>
             </div>
             {% endfor %}
         </div>
-        <div style="text-align:center; margin-top:6px;"><a href="{{ url_for('champion') }}" style="color:#ffd700; font-size:0.7em; text-decoration:none;">Pick yours →</a></div>
-    </div>
+        <div style="text-align:center; margin-top:8px; color:#ffd700; font-size:0.8em; font-weight:600;">Tap to predict your champion →</div>
+    </a>
     {% endif %}
 
     <!-- Race Banner -->
