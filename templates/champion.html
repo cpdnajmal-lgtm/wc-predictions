@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 Predict Champion - MIAC WC 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(180deg, #0a0510 0%, #150a1a 40%, #0a0510 100%); color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        h1 { text-align: center; margin-bottom: 5px; font-size: 1.8em; background: linear-gradient(135deg, #ffd700, #ff9800); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { text-align: center; color: #9b59b6; margin-bottom: 20px; font-size: 0.9em; font-weight: 700; letter-spacing: 2px; }
+        .nav { text-align: center; margin-bottom: 20px; }
+        .nav a { color: #9b59b6; text-decoration: none; font-size: 0.9em; }
+        .flash { background: linear-gradient(135deg, #9b59b6, #7d3c98); color: #fff; padding: 12px 15px; border-radius: 10px; margin-bottom: 15px; font-weight: 600; text-align: center; }
+        .card { background: rgba(15,15,30,0.8); border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid rgba(155,89,182,0.3); backdrop-filter: blur(20px); }
+        .info-box { background: rgba(155,89,182,0.1); border: 1px solid rgba(155,89,182,0.3); border-radius: 10px; padding: 12px; margin-bottom: 16px; font-size: 0.82em; color: #aaa; text-align: center; }
+        .info-box strong { color: #ffd700; }
+        label { display: block; color: #9b59b6; font-weight: 600; margin-bottom: 6px; font-size: 0.85em; }
+        select, input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid rgba(155,89,182,0.3); background: rgba(15,15,30,0.9); color: #eee; font-size: 1em; margin-bottom: 12px; }
+        .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .team-card { padding: 16px; border-radius: 12px; border: 2px solid rgba(155,89,182,0.2); background: rgba(15,15,30,0.7); text-align: center; cursor: pointer; transition: all 0.2s; }
+        .team-card:hover { border-color: #9b59b6; }
+        .team-card.selected { border-color: #ffd700; background: rgba(255,215,0,0.1); }
+        .team-card .flag { font-size: 2em; }
+        .team-card .name { font-weight: 700; margin-top: 6px; font-size: 0.9em; }
+        button { width: 100%; padding: 14px; border: none; border-radius: 25px; background: linear-gradient(135deg, #ffd700, #ff9800); color: #0f0f23; font-size: 1.1em; font-weight: 700; cursor: pointer; }
+        .locked-msg { text-align: center; color: #e74c3c; font-weight: 700; padding: 20px; font-size: 0.9em; }
+        .picks-section { margin-top: 20px; }
+        .picks-title { color: #9b59b6; font-size: 0.85em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .pick-bar { display: flex; align-items: center; margin-bottom: 6px; }
+        .pick-team { width: 100px; font-size: 0.85em; font-weight: 600; }
+        .pick-track { flex: 1; height: 24px; background: rgba(15,15,30,0.8); border-radius: 12px; overflow: hidden; margin: 0 8px; }
+        .pick-fill { height: 100%; border-radius: 12px; display: flex; align-items: center; padding-left: 8px; font-size: 0.75em; font-weight: 700; color: #0f0f23; }
+        .pick-count { font-size: 0.8em; color: #888; width: 30px; text-align: right; }
+    </style>
+</head>
+<body>
+    <h1>🏆 Predict the Champion</h1>
+    <p class="subtitle">WHO WINS THE WORLD CUP?</p>
+    <div class="nav"><a href="{{ url_for('home') }}">← Home</a></div>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}{% for msg in messages %}<div class="flash">{{ msg }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="info-box">
+        Pick the team you think wins the Final.<br>
+        <strong>+10 pts</strong> if they win the Final<br>
+        <strong>+5 pts</strong> if they reach the Final but lose<br>
+        🔒 Locks before first Semi Final (Jul 15, 12:30 AM)
+    </div>
+
+    {% if locked %}
+    <div class="locked-msg">🔒 Predictions locked! Semi Finals have started.</div>
+    {% else %}
+    <div class="card">
+        <form method="POST" id="championForm">
+            <label>Your Name</label>
+            <select name="player" required>
+                <option value="">-- Select --</option>
+                {% for player in players %}
+                <option value="{{ player }}">{{ player }}</option>
+                {% endfor %}
+            </select>
+
+            <label>Your PIN</label>
+            <input type="password" name="pin" maxlength="4" placeholder="4-digit PIN" required inputmode="numeric">
+
+            <label>Your Champion Pick</label>
+            <input type="hidden" name="team" id="teamInput" required>
+            <div class="team-grid">
+                {% for team in teams %}
+                <div class="team-card" onclick="pickTeam('{{ team }}', this)">
+                    <div class="flag">{{ flags.get(team, '🏳️') }}</div>
+                    <div class="name">{{ team }}</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit">🏆 Lock My Pick</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Show all picks -->
+    {% if picks %}
+    <div class="picks-section">
+        <div class="picks-title">📊 Group Predictions ({{ picks|length }} picks)</div>
+        {% for team in teams %}
+        {% set count = team_counts.get(team, 0) %}
+        {% set pct = (count * 100 / picks|length)|int if picks|length > 0 else 0 %}
+        <div class="pick-bar">
+            <div class="pick-team">{{ flags.get(team, '') }} {{ team }}</div>
+            <div class="pick-track">
+                <div class="pick-fill" style="width:{{ pct }}%; background:linear-gradient(90deg, #9b59b6, #ffd700);">
+                    {% if pct > 15 %}{{ count }}{% endif %}
+                </div>
+            </div>
+            <div class="pick-count">{{ pct }}%</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <script>
+    function pickTeam(team, el) {
+        document.getElementById('teamInput').value = team;
+        document.querySelectorAll('.team-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+    </script>
+</body>
+</html>

@@ -211,6 +211,14 @@ def init_db():
             active BOOLEAN DEFAULT TRUE
         )
     """)
+    # Champion predictions table
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS champion_picks (
+            player TEXT PRIMARY KEY,
+            team TEXT NOT NULL,
+            picked_at TIMESTAMP DEFAULT NOW()
+        )
+    """)
     conn.commit()
     # Add kickoff column if not exists (for existing databases)
     try:
@@ -1410,6 +1418,65 @@ def awards():
         return f"Awards Error: {e}", 500
 
 
+@app.route("/champion", methods=["GET", "POST"])
+def champion():
+    """Predict the World Cup Champion."""
+    from datetime import datetime
+    now_ist = datetime.now(IST)
+    # Lock before first SF: July 15, 00:30 IST
+    locked = now_ist >= datetime(2026, 7, 15, 0, 30, tzinfo=IST)
+
+    if request.method == "POST" and not locked:
+        player = request.form.get("player", "").strip()
+        pin = request.form.get("pin", "").strip()
+        team = request.form.get("team", "").strip()
+
+        if not player or not pin or not team:
+            flash("Please fill all fields")
+            return redirect(url_for("champion"))
+
+        # Verify PIN
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT pin FROM players WHERE name = %s", (player,))
+        row = cur.fetchone()
+        if not row:
+            conn.close()
+            flash("Player not found")
+            return redirect(url_for("champion"))
+        if row[0] and pin != row[0]:
+            conn.close()
+            flash("Wrong PIN!")
+            return redirect(url_for("champion"))
+
+        # Save pick
+        cur.execute("""
+            INSERT INTO champion_picks (player, team) VALUES (%s, %s)
+            ON CONFLICT (player) DO UPDATE SET team = %s, picked_at = NOW()
+        """, (player, team, team))
+        conn.commit()
+        conn.close()
+        flash(f"🏆 {player} picks {FLAGS.get(team, '')} {team} to win it all!")
+        return redirect(url_for("champion"))
+
+    players = load_players()
+    teams = ["France", "Spain", "England", "Argentina"]
+
+    # Load existing picks
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT player, team FROM champion_picks")
+    picks = {row[0]: row[1] for row in cur.fetchall()}
+    conn.close()
+
+    # Count picks per team
+    team_counts = {}
+    for t in picks.values():
+        team_counts[t] = team_counts.get(t, 0) + 1
+
+    return render_template("champion.html", players=players, teams=teams, picks=picks, team_counts=team_counts, locked=locked, flags=FLAGS)
+
+
 @app.route("/bracket")
 def bracket():
     """Show tournament bracket with results and eliminated teams."""
@@ -2101,13 +2168,13 @@ def stats():
                         most_perfects_holders.append(player)
         records["most_perfects"] = {"player": ", ".join(most_perfects_holders) if most_perfects_holders else "-", "value": most_perfects, "date": most_perfects_date}
 
-        # 3. Highest session accuracy (points/max possible, min 3 matches predicted)
+        # 3. Highest session accuracy (points/max possible)
         best_accuracy = 0
         best_accuracy_holders = []
         best_accuracy_date = ""
         for session_label, player_data in all_session_data.items():
             for player, data in player_data.items():
-                if data["predicted"] >= 3:
+                if data["predicted"] >= 1:
                     max_possible = data["predicted"] * 3
                     acc = round(data["points"] * 100 / max_possible) if max_possible > 0 else 0
                     if acc > best_accuracy:
