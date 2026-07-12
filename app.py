@@ -1002,7 +1002,11 @@ def home():
             max_catchup = remaining * 3
             gap = top_pts - fifth_pts
             if gap <= max_catchup and remaining > 0:
-                race_info = {"gap": gap, "remaining": remaining, "max_pts": max_catchup, "top5": leaderboard[:5]}
+                # Build "who can still win" data for top 5
+                top5_race = []
+                for player, points, rank, change in leaderboard[:5]:
+                    top5_race.append({"name": player, "points": points, "max": points + max_catchup})
+                race_info = {"gap": gap, "remaining": remaining, "max_pts": max_catchup, "top5": top5_race}
 
         return render_template(
             "home.html",
