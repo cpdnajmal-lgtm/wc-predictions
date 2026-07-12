@@ -156,6 +156,31 @@
         Winner correct = <span>1 pt</span> &nbsp;•&nbsp; Score correct = <span>1 pt</span> &nbsp;•&nbsp; Both correct = <span>3 pts 🔥</span>
     </div>
 
+    <!-- Champion Picks Widget -->
+    {% if champion_picks_data %}
+    <div style="background:rgba(15,15,30,0.8); border:1px solid rgba(255,215,0,0.3); border-radius:12px; padding:12px; margin-bottom:14px;">
+        <div style="text-align:center; color:#ffd700; font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;">🏆 Champion Predictions</div>
+        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+            {% for team, data in champion_picks_data.items() %}
+            <div style="text-align:center; padding:6px 10px; border-radius:8px; border:1px solid {% if data.alive %}rgba(0,212,170,0.3){% else %}rgba(231,76,60,0.3){% endif %}; background:{% if data.alive %}rgba(0,212,170,0.05){% else %}rgba(231,76,60,0.05){% endif %}; {% if not data.alive %}opacity:0.5; text-decoration:line-through;{% endif %}">
+                <div style="font-size:1.2em;">{{ get_flag(team) }}</div>
+                <div style="font-size:0.7em; font-weight:700; color:{% if data.alive %}#00d4aa{% else %}#e74c3c{% endif %};">{{ data.count }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="text-align:center; margin-top:6px;"><a href="{{ url_for('champion') }}" style="color:#ffd700; font-size:0.7em; text-decoration:none;">Pick yours →</a></div>
+    </div>
+    {% endif %}
+
+    <!-- Race Banner -->
+    {% if race_info %}
+    <div style="background:rgba(155,89,182,0.1); border:1px solid rgba(155,89,182,0.3); border-radius:12px; padding:12px; margin-bottom:14px; text-align:center;">
+        <div style="color:#9b59b6; font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:1px;">🔥 Race is ON!</div>
+        <div style="color:#eee; font-size:0.85em; margin-top:4px;">Top 5 within <strong style="color:#ffd700;">{{ race_info.gap }} pts</strong> — {{ race_info.remaining }} matches left ({{ race_info.max_pts }} pts possible)</div>
+        <div style="color:#888; font-size:0.75em; margin-top:4px;">Anyone in the top 5 can still win! Every prediction matters 🎯</div>
+    </div>
+    {% endif %}
+
     {% if announcements %}
     {% for ann in announcements %}
     <div style="text-align:center; background:rgba(255,215,0,0.1); border:1px solid rgba(255,215,0,0.3); border-radius:10px; padding:10px; margin-bottom:12px; font-size:0.85em; color:#ffd700;">

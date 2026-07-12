@@ -965,6 +965,44 @@ def home():
         group_leaderboard = sorted(group_scores.items(), key=lambda x: x[1], reverse=True)
         knockout_leaderboard = sorted(knockout_scores.items(), key=lambda x: x[1], reverse=True)
 
+        # --- Champion picks for home page widget ---
+        champion_picks_data = {}
+        try:
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("SELECT player, team FROM champion_picks")
+            all_champ_picks = cur.fetchall()
+            conn.close()
+            champ_teams = ["France", "Spain", "England", "Argentina"]
+            for t in champ_teams:
+                count = sum(1 for _, team in all_champ_picks if team == t)
+                champion_picks_data[t] = {"count": count, "alive": True}
+            # Check if any SF result eliminates a team
+            for m in all_matches:
+                if m.get("id") in ["match_101", "match_102"] and m.get("result_winner"):
+                    winner = m["result_winner"].strip()
+                    # Mark losers as dead
+                    if m["id"] == "match_101":  # France vs Spain
+                        loser = "Spain" if winner == "France" else "France"
+                    else:  # England vs Argentina
+                        loser = "Argentina" if winner == "England" else "England"
+                    if loser in champion_picks_data:
+                        champion_picks_data[loser]["alive"] = False
+        except:
+            pass
+
+        # --- Race banner: can anyone still win? ---
+        race_info = None
+        if leaderboard and len(leaderboard) >= 5:
+            top_pts = leaderboard[0][1]
+            fifth_pts = leaderboard[4][1] if len(leaderboard) > 4 else leaderboard[-1][1]
+            # Count remaining matches without results
+            remaining = sum(1 for m in all_matches if not m.get("result_winner") and int(m.get("id", "match_0").replace("match_", "")) > 72)
+            max_catchup = remaining * 3
+            gap = top_pts - fifth_pts
+            if gap <= max_catchup and remaining > 0:
+                race_info = {"gap": gap, "remaining": remaining, "max_pts": max_catchup, "top5": leaderboard[:5]}
+
         return render_template(
             "home.html",
             leaderboard=ranked_leaderboard_with_change,
@@ -989,6 +1027,8 @@ def home():
             tournament_phase=tournament_phase,
             qf_results=qf_results,
             sf_results=sf_results,
+            champion_picks_data=champion_picks_data,
+            race_info=race_info,
             announcements=load_announcements(),
         )
     except Exception as e:
