@@ -994,15 +994,15 @@ def home():
 
         # --- Race banner: who can still win? ---
         race_info = None
-        if leaderboard and len(leaderboard) >= 2:
-            top_pts = leaderboard[0][1]
+        if ranked_leaderboard_with_change and len(ranked_leaderboard_with_change) >= 2:
+            top_pts = ranked_leaderboard_with_change[0][1]
             # Count remaining matches without results (include 3rd place + Final even if TBD)
             remaining = sum(1 for m in all_matches if not m.get("result_winner") and int(m.get("id", "match_0").replace("match_", "")) > 100)
             max_catchup = remaining * 3
             if remaining > 0:
                 # Show top players who can mathematically still win
                 top5_race = []
-                for player, points, rank, change in leaderboard[:7]:
+                for player, points, rank, change in ranked_leaderboard_with_change[:7]:
                     if top_pts - points <= max_catchup:
                         top5_race.append({"name": player, "points": points, "max": points + max_catchup})
                 if len(top5_race) >= 2:
