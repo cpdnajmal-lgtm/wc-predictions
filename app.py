@@ -897,7 +897,8 @@ def home():
         # Determine tournament phase based on highest match number (active or pending)
         active_match_ids = [m["id"] for m in today_matches + locked_matches if m.get("id")]
         # Also check all pending matches (without results) to detect upcoming phase
-        all_pending = [m for m in all_matches if not m.get("result_winner") and m.get("id", "").startswith("match_")]
+        # Exclude TBD matches (teams not yet confirmed)
+        all_pending = [m for m in all_matches if not m.get("result_winner") and m.get("id", "").startswith("match_") and m.get("team_a", "") != "TBD"]
         all_relevant_ids = active_match_ids + [m["id"] for m in all_pending]
         max_match_num = 0
         for mid in all_relevant_ids:
@@ -996,8 +997,8 @@ def home():
         if leaderboard and len(leaderboard) >= 5:
             top_pts = leaderboard[0][1]
             fifth_pts = leaderboard[4][1] if len(leaderboard) > 4 else leaderboard[-1][1]
-            # Count remaining matches without results
-            remaining = sum(1 for m in all_matches if not m.get("result_winner") and int(m.get("id", "match_0").replace("match_", "")) > 72)
+            # Count remaining matches without results (exclude TBD matches)
+            remaining = sum(1 for m in all_matches if not m.get("result_winner") and int(m.get("id", "match_0").replace("match_", "")) > 72 and m.get("team_a", "") != "TBD")
             max_catchup = remaining * 3
             gap = top_pts - fifth_pts
             if gap <= max_catchup and remaining > 0:

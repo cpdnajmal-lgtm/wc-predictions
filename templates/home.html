@@ -80,7 +80,8 @@
     <div style="text-align:center; background:linear-gradient(135deg, rgba(231,76,60,0.15), rgba(231,76,60,0.05)); border:2px solid var(--accent); border-radius:14px; padding:14px; margin-bottom:16px;">
         <div style="color:var(--accent); font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:2px;">⚡ Next Match</div>
         <div style="color:#eee; font-size:1.1em; font-weight:700; margin-top:4px;">{{ get_flag(next_match.team_a) }} {{ next_match.team_a }} <span style="color:var(--accent);">VS</span> {{ next_match.team_b }} {{ get_flag(next_match.team_b) }}</div>
-        <div style="color:#888; font-size:0.85em; margin-top:4px;">{{ next_match.date }} • {{ format_time(next_match.kickoff) }} IST</div>
+        <div class="countdown" data-date="{{ next_match.date }}" data-time="{{ next_match.kickoff }}" style="color:var(--accent); font-size:1.1em; font-weight:800; margin-top:6px;"></div>
+        <div style="color:#666; font-size:0.75em; margin-top:4px;">{{ next_match.date }} • {{ format_time(next_match.kickoff) }} IST</div>
     </div>
     {% endif %}
 
