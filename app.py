@@ -992,21 +992,22 @@ def home():
         except:
             pass
 
-        # --- Race banner: can anyone still win? ---
+        # --- Race banner: who can still win? ---
         race_info = None
-        if leaderboard and len(leaderboard) >= 5:
+        if leaderboard and len(leaderboard) >= 2:
             top_pts = leaderboard[0][1]
-            fifth_pts = leaderboard[4][1] if len(leaderboard) > 4 else leaderboard[-1][1]
             # Count remaining matches without results (exclude TBD matches)
             remaining = sum(1 for m in all_matches if not m.get("result_winner") and int(m.get("id", "match_0").replace("match_", "")) > 72 and m.get("team_a", "") != "TBD")
             max_catchup = remaining * 3
-            gap = top_pts - fifth_pts
-            if gap <= max_catchup and remaining > 0:
-                # Build "who can still win" data for top 5
+            if remaining > 0:
+                # Show top players who can mathematically still win
                 top5_race = []
-                for player, points, rank, change in leaderboard[:5]:
-                    top5_race.append({"name": player, "points": points, "max": points + max_catchup})
-                race_info = {"gap": gap, "remaining": remaining, "max_pts": max_catchup, "top5": top5_race}
+                for player, points, rank, change in leaderboard[:7]:
+                    if top_pts - points <= max_catchup:
+                        top5_race.append({"name": player, "points": points, "max": points + max_catchup})
+                if len(top5_race) >= 2:
+                    gap = top5_race[0]["points"] - top5_race[-1]["points"]
+                    race_info = {"gap": gap, "remaining": remaining, "max_pts": max_catchup, "top5": top5_race[:5]}
 
         return render_template(
             "home.html",
