@@ -926,6 +926,11 @@ def home():
         for m in all_matches:
             if m.get("id") in ["match_97", "match_98", "match_99", "match_100"] and m.get("result_winner"):
                 qf_results[m["id"]] = m["result_winner"]
+        # Get SF results for bracket display
+        sf_results = {}
+        for m in all_matches:
+            if m.get("id") in ["match_101", "match_102"] and m.get("result_winner"):
+                sf_results[m["id"]] = m["result_winner"]
 
         # --- Group Stage vs Knockout leaderboard ---
         group_scores = {p: 0 for p in players}
@@ -975,6 +980,7 @@ def home():
             player_teams=player_teams,
             tournament_phase=tournament_phase,
             qf_results=qf_results,
+            sf_results=sf_results,
             announcements=load_announcements(),
         )
     except Exception as e:
@@ -1409,9 +1415,9 @@ def bracket():
     """Show tournament bracket with results and eliminated teams."""
     try:
         matches = load_matches()
-        # Only current round matches (QF = 97+)
+        # Only current round matches (SF = 101+)
         knockout_matches = [m for m in matches if m.get("id", "").startswith("match_")]
-        knockout_matches = [m for m in knockout_matches if int(m["id"].replace("match_", "")) > 96]
+        knockout_matches = [m for m in knockout_matches if int(m["id"].replace("match_", "")) > 100]
         knockout_matches.sort(key=lambda m: m.get("sort_order", 0))
 
         # Group by date
@@ -2504,6 +2510,32 @@ def add_quarter_finals():
 
 
 add_quarter_finals()
+
+
+def add_semi_finals():
+    """Add Semi Final + 3rd Place + Final matches (matches 101-104)."""
+    conn = get_db()
+    cur = conn.cursor()
+    new_matches = [
+        # Semi Finals
+        ("match_101", "France", "Spain", "July 15", "00:30", 101),
+        ("match_102", "England", "Argentina", "July 16", "00:30", 102),
+        # 3rd Place
+        ("match_103", "TBD", "TBD", "July 19", "00:30", 103),
+        # Final
+        ("match_104", "TBD", "TBD", "July 20", "00:30", 104),
+    ]
+    for m in new_matches:
+        cur.execute("""
+            INSERT INTO matches (id, team_a, team_b, date, kickoff, sort_order)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET date = EXCLUDED.date, kickoff = EXCLUDED.kickoff, team_a = EXCLUDED.team_a, team_b = EXCLUDED.team_b
+        """, m)
+    conn.commit()
+    conn.close()
+
+
+add_semi_finals()
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

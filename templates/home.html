@@ -85,80 +85,49 @@
     {% endif %}
 
     <!-- QF Bracket Tree -->
-    {% if tournament_phase == "Quarter Finals" or tournament_phase == "Semi Finals" or tournament_phase == "Final" %}
+    {% if tournament_phase == "Quarter Finals" or tournament_phase == "Semi Finals" or tournament_phase == "Final" or tournament_phase == "3rd Place" %}
     <div style="background:rgba(15,15,30,0.9); border:1px solid var(--card-border); border-radius:16px; padding:16px; margin-bottom:18px; overflow-x:auto;">
         <div style="text-align:center; color:var(--accent); font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;">🏆 Road to the Final</div>
         <table style="width:100%; border-collapse:collapse; font-size:0.75em; text-align:center;">
             <tr style="color:#666; font-size:0.85em;">
-                <td style="width:30%;">Quarter Final</td>
-                <td style="width:25%;">Semi Final</td>
-                <td style="width:15%;">Final</td>
-                <td style="width:25%;">Semi Final</td>
-                <td style="width:30%;">Quarter Final</td>
+                <td style="width:35%;">Semi Final</td>
+                <td style="width:30%;">Final (Jul 20)</td>
+                <td style="width:35%;">Semi Final</td>
             </tr>
-            <tr><td colspan="5" style="height:8px;"></td></tr>
-            <!-- Left SF1 -->
+            <tr><td colspan="3" style="height:8px;"></td></tr>
             <tr>
-                <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
-                    {% if qf_results.get('match_97') %}
-                    <div style="color:#00d4aa; font-weight:700;">{{ get_flag(qf_results['match_97']) }} {{ qf_results['match_97'] }} ✓</div>
-                    {% else %}
-                    <div>🇫🇷 France</div>
-                    <div style="color:#555; font-size:0.8em;">vs</div>
-                    <div>🇲🇦 Morocco</div>
+                <td style="padding:6px; background:rgba(155,89,182,0.1); border:1px solid rgba(155,89,182,0.3); border-radius:8px;">
+                    <div style="color:var(--accent); font-size:0.8em; font-weight:700; margin-bottom:4px;">SF1 • Jul 15</div>
+                    <div style="font-size:1.1em; font-weight:700;">🇫🇷 France</div>
+                    <div style="color:var(--accent); font-size:0.8em; margin:3px 0;">VS</div>
+                    <div style="font-size:1.1em; font-weight:700;">🇪🇸 Spain</div>
+                    {% if sf_results.get('match_101') %}
+                    <div style="color:#00d4aa; font-weight:700; margin-top:4px; font-size:0.85em;">✓ {{ sf_results['match_101'] }}</div>
                     {% endif %}
                 </td>
-                <td rowspan="2" style="padding:4px;">
-                    <div style="border:1px solid var(--card-border); border-radius:8px; padding:8px; background:rgba(15,15,30,0.8);">
-                        <div style="color:#888; font-size:0.8em;">SF1</div>
-                        <div style="color:{% if qf_results.get('match_97') %}#00d4aa{% else %}#eee{% endif %}; font-weight:700; margin-top:2px;">{{ qf_results.get('match_97', '?') }}</div>
-                        <div style="color:#555; font-size:0.8em;">vs</div>
-                        <div style="color:{% if qf_results.get('match_98') %}#00d4aa{% else %}#eee{% endif %}; font-weight:700;">{{ qf_results.get('match_98', '?') }}</div>
+                <td style="padding:6px;">
+                    <div style="border:2px solid var(--accent); border-radius:12px; padding:12px; background:rgba(155,89,182,0.08);">
+                        <div style="font-size:2em;">🏆</div>
+                        <div style="color:var(--accent); font-weight:800; font-size:1em; margin-top:4px;">FINAL</div>
+                        <div style="color:#888; font-size:0.8em; margin-top:2px;">Jul 20 • 12:30 AM</div>
+                        {% if sf_results.get('match_101') and sf_results.get('match_102') %}
+                        <div style="margin-top:6px; color:#eee; font-weight:700; font-size:0.9em;">{{ sf_results['match_101'] }} vs {{ sf_results['match_102'] }}</div>
+                        {% elif sf_results.get('match_101') %}
+                        <div style="margin-top:6px; color:#eee; font-size:0.85em;">{{ sf_results['match_101'] }} vs ?</div>
+                        {% elif sf_results.get('match_102') %}
+                        <div style="margin-top:6px; color:#eee; font-size:0.85em;">? vs {{ sf_results['match_102'] }}</div>
+                        {% else %}
+                        <div style="margin-top:6px; color:#666; font-size:0.85em;">SF1 winner vs SF2 winner</div>
+                        {% endif %}
                     </div>
                 </td>
-                <td rowspan="4" style="padding:4px;">
-                    <div style="border:2px solid var(--accent); border-radius:10px; padding:10px; background:rgba(231,76,60,0.08);">
-                        <div style="font-size:1.5em;">🏆</div>
-                        <div style="color:var(--accent); font-weight:700; font-size:0.9em; margin-top:2px;">FINAL</div>
-                        <div style="color:#888; font-size:0.8em;">Jul 19</div>
-                    </div>
-                </td>
-                <td rowspan="2" style="padding:4px;">
-                    <div style="border:1px solid var(--card-border); border-radius:8px; padding:8px; background:rgba(15,15,30,0.8);">
-                        <div style="color:#888; font-size:0.8em;">SF2</div>
-                        <div style="color:{% if qf_results.get('match_99') %}#00d4aa{% else %}#eee{% endif %}; font-weight:700; margin-top:2px;">{{ qf_results.get('match_99', '?') }}</div>
-                        <div style="color:#555; font-size:0.8em;">vs</div>
-                        <div style="color:{% if qf_results.get('match_100') %}#00d4aa{% else %}#eee{% endif %}; font-weight:700;">{{ qf_results.get('match_100', '?') }}</div>
-                    </div>
-                </td>
-                <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
-                    {% if qf_results.get('match_99') %}
-                    <div style="color:#00d4aa; font-weight:700;">{{ get_flag(qf_results['match_99']) }} {{ qf_results['match_99'] }} ✓</div>
-                    {% else %}
-                    <div>🇳🇴 Norway</div>
-                    <div style="color:#555; font-size:0.8em;">vs</div>
-                    <div>🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</div>
-                    {% endif %}
-                </td>
-            </tr>
-            <!-- Left SF1 bottom -->
-            <tr>
-                <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
-                    {% if qf_results.get('match_98') %}
-                    <div style="color:#00d4aa; font-weight:700;">{{ get_flag(qf_results['match_98']) }} {{ qf_results['match_98'] }} ✓</div>
-                    {% else %}
-                    <div>🇪🇸 Spain</div>
-                    <div style="color:#555; font-size:0.8em;">vs</div>
-                    <div>🇧🇪 Belgium</div>
-                    {% endif %}
-                </td>
-                <td style="padding:4px; background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.2); border-radius:6px;">
-                    {% if qf_results.get('match_100') %}
-                    <div style="color:#00d4aa; font-weight:700;">{{ get_flag(qf_results['match_100']) }} {{ qf_results['match_100'] }} ✓</div>
-                    {% else %}
-                    <div>🇦🇷 Argentina</div>
-                    <div style="color:#555; font-size:0.8em;">vs</div>
-                    <div>🇨🇭 Switzerland</div>
+                <td style="padding:6px; background:rgba(155,89,182,0.1); border:1px solid rgba(155,89,182,0.3); border-radius:8px;">
+                    <div style="color:var(--accent); font-size:0.8em; font-weight:700; margin-bottom:4px;">SF2 • Jul 16</div>
+                    <div style="font-size:1.1em; font-weight:700;">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England</div>
+                    <div style="color:var(--accent); font-size:0.8em; margin:3px 0;">VS</div>
+                    <div style="font-size:1.1em; font-weight:700;">🇦🇷 Argentina</div>
+                    {% if sf_results.get('match_102') %}
+                    <div style="color:#00d4aa; font-weight:700; margin-top:4px; font-size:0.85em;">✓ {{ sf_results['match_102'] }}</div>
                     {% endif %}
                 </td>
             </tr>
