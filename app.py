@@ -996,8 +996,8 @@ def home():
         race_info = None
         if leaderboard and len(leaderboard) >= 2:
             top_pts = leaderboard[0][1]
-            # Count remaining matches without results (exclude TBD matches)
-            remaining = sum(1 for m in all_matches if not m.get("result_winner") and int(m.get("id", "match_0").replace("match_", "")) > 72 and m.get("team_a", "") != "TBD")
+            # Count remaining matches without results (include 3rd place + Final even if TBD)
+            remaining = sum(1 for m in all_matches if not m.get("result_winner") and int(m.get("id", "match_0").replace("match_", "")) > 100)
             max_catchup = remaining * 3
             if remaining > 0:
                 # Show top players who can mathematically still win
