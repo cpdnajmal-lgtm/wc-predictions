@@ -98,6 +98,11 @@
             </div>
             <div class="pick-count">{{ pct }}%</div>
         </div>
+        {% if locked %}
+        <div style="padding:2px 0 8px 100px; font-size:0.72em; color:#888;">
+            {% for player, pick in picks.items() if pick == team %}{{ player }}{% if not loop.last %}, {% endif %}{% endfor %}
+        </div>
+        {% endif %}
         {% endfor %}
     </div>
     {% endif %}
