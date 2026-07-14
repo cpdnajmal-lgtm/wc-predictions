@@ -85,7 +85,7 @@
     <!-- Show all picks -->
     {% if picks %}
     <div class="picks-section">
-        <div class="picks-title">📊 Group Predictions ({{ picks|length }} picks)</div>
+        <div class="picks-title">🏆 Champion Picks ({{ picks|length }} predictions)</div>
         {% for team in teams %}
         {% set count = team_counts.get(team, 0) %}
         {% set pct = (count * 100 / picks|length)|int if picks|length > 0 else 0 %}
