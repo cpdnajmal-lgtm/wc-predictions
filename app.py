@@ -773,7 +773,7 @@ def home():
         # 1. Best session score broken?
         if today_scores and all_time_record > 0:
             today_max = max(today_scores.values())
-            if today_max > all_time_record:
+            if today_max > all_time_record and today_max > 3:
                 today_kings = [p for p, pts in today_scores.items() if pts == today_max]
                 king_name = today_kings[0]
                 king_matches = 0
@@ -2634,9 +2634,9 @@ def add_semi_finals():
         ("match_101", "France", "Spain", "July 15", "00:30", 101),
         ("match_102", "England", "Argentina", "July 16", "00:30", 102),
         # 3rd Place
-        ("match_103", "TBD", "TBD", "July 19", "00:30", 103),
+        ("match_103", "France", "England", "July 19", "00:30", 103),
         # Final
-        ("match_104", "TBD", "TBD", "July 20", "00:30", 104),
+        ("match_104", "Argentina", "Spain", "July 20", "00:30", 104),
     ]
     for m in new_matches:
         cur.execute("""
