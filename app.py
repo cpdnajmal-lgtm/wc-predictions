@@ -834,7 +834,7 @@ def home():
                     s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
                     if w_ok and s_ok:
                         player_session_perfects += 1
-            if player_session_matches >= 1 and player_session_perfects == player_session_matches:
+            if player_session_matches >= 2 and player_session_perfects == player_session_matches:
                 perfect_session_holders.append(player)
         if perfect_session_holders:
             records_broken.append({
