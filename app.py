@@ -1000,14 +1000,32 @@ def home():
             remaining = sum(1 for m in all_matches if not m.get("result_winner") and int(m.get("id", "match_0").replace("match_", "")) > 100)
             max_catchup = remaining * 3
             if remaining > 0:
-                # Show top players who can mathematically still win
+                # Load champion picks for bonus calculation
+                champ_picks = {}
+                try:
+                    conn = get_db()
+                    cur = conn.cursor()
+                    cur.execute("SELECT player, team FROM champion_picks")
+                    champ_picks = {row[0]: row[1] for row in cur.fetchall()}
+                    conn.close()
+                except:
+                    pass
+                # Show top players who can mathematically still win (including champion bonus)
                 top5_race = []
-                for player, points, rank, change in ranked_leaderboard_with_change[:7]:
-                    if top_pts - points <= max_catchup:
-                        top5_race.append({"name": player, "points": points, "max": points + max_catchup})
+                for player, points, rank, change in ranked_leaderboard_with_change[:10]:
+                    # Max champion bonus: +10 if picked a finalist, +5 if picked finalist who loses
+                    champ_bonus = 0
+                    player_pick = champ_picks.get(player, "")
+                    if player_pick in ["Argentina", "Spain"]:  # Finalists
+                        champ_bonus = 10  # Best case: their pick wins
+                    elif player_pick:
+                        champ_bonus = 0  # Their pick is eliminated
+                    max_total = points + max_catchup + champ_bonus
+                    if top_pts - points <= max_catchup + champ_bonus:
+                        top5_race.append({"name": player, "points": points, "max": max_total, "champ_pick": player_pick, "champ_bonus": champ_bonus})
                 if len(top5_race) >= 2:
                     gap = top5_race[0]["points"] - top5_race[-1]["points"]
-                    race_info = {"gap": gap, "remaining": remaining, "max_pts": max_catchup, "top5": top5_race[:5]}
+                    race_info = {"gap": gap, "remaining": remaining, "max_pts": max_catchup, "top5": top5_race[:7]}
 
         return render_template(
             "home.html",
