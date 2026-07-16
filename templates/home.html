@@ -137,23 +137,28 @@
     {% elif tournament_phase == "Final" or tournament_phase == "3rd Place" %}
     <!-- Grand Final Display -->
     <div style="background:linear-gradient(135deg, rgba(255,215,0,0.08), rgba(15,15,30,0.95)); border:2px solid #ffd700; border-radius:20px; padding:24px; margin-bottom:18px; text-align:center; box-shadow:0 0 40px rgba(255,215,0,0.15); animation: finalGlow 3s ease-in-out infinite alternate;">
-        <div style="font-size:2.5em; margin-bottom:4px;">🏆</div>
+        <div style="font-size:2.5em; margin-bottom:4px; animation: trophySpin 4s ease-in-out infinite;">🏆</div>
         <div style="color:#ffd700; font-size:0.75em; font-weight:800; text-transform:uppercase; letter-spacing:4px;">The World Cup Final</div>
         <div style="margin-top:16px; display:flex; align-items:center; justify-content:center; gap:12px;">
-            <div style="text-align:center;">
-                <div style="font-size:2.5em;">🇦🇷</div>
+            <div style="text-align:center; animation: flagFloat 2.5s ease-in-out infinite;">
+                <div style="font-size:3em;">🇦🇷</div>
                 <div style="color:#eee; font-size:1.2em; font-weight:800; margin-top:4px;">Argentina</div>
             </div>
-            <div style="color:#ffd700; font-size:1.5em; font-weight:800; padding:0 8px;">VS</div>
-            <div style="text-align:center;">
-                <div style="font-size:2.5em;">🇪🇸</div>
+            <div style="color:#ffd700; font-size:1.8em; font-weight:800; padding:0 8px; animation: vsPulse 1.5s ease-in-out infinite;">VS</div>
+            <div style="text-align:center; animation: flagFloat 2.5s ease-in-out infinite 0.3s;">
+                <div style="font-size:3em;">🇪🇸</div>
                 <div style="color:#eee; font-size:1.2em; font-weight:800; margin-top:4px;">Spain</div>
             </div>
         </div>
         <div style="color:#888; font-size:0.85em; margin-top:12px;">July 20 • 12:30 AM IST • MetLife Stadium</div>
-        <div class="countdown" data-date="July 20" data-time="00:30" style="color:#ffd700; font-size:1.1em; font-weight:800; margin-top:8px;"></div>
+        <div class="countdown" data-date="July 20" data-time="00:30" style="color:#ffd700; font-size:1.2em; font-weight:800; margin-top:8px;"></div>
     </div>
-    <style>@keyframes finalGlow { 0% { box-shadow:0 0 20px rgba(255,215,0,0.1); } 100% { box-shadow:0 0 50px rgba(255,215,0,0.25); } }</style>
+    <style>
+    @keyframes finalGlow { 0% { box-shadow:0 0 20px rgba(255,215,0,0.1); } 100% { box-shadow:0 0 60px rgba(255,215,0,0.3); } }
+    @keyframes trophySpin { 0%,100% { transform: scale(1) rotate(0deg); } 25% { transform: scale(1.1) rotate(-5deg); } 75% { transform: scale(1.1) rotate(5deg); } }
+    @keyframes flagFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    @keyframes vsPulse { 0%,100% { transform: scale(1); opacity:1; } 50% { transform: scale(1.2); opacity:0.8; } }
+    </style>
     {% endif %}
 
     {% with messages = get_flashed_messages() %}
