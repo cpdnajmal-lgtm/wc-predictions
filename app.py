@@ -2238,7 +2238,7 @@ def stats():
         best_accuracy_date = ""
         for session_label, player_data in all_session_data.items():
             for player, data in player_data.items():
-                if data["predicted"] >= 1:
+                if data["predicted"] >= 2:
                     max_possible = data["predicted"] * 3
                     acc = round(data["points"] * 100 / max_possible) if max_possible > 0 else 0
                     if acc > best_accuracy:
