@@ -218,7 +218,7 @@
             </div>
             {% endfor %}
         </div>
-        <div style="text-align:center; margin-top:8px; color:#ffd700; font-size:0.8em; font-weight:600;">Tap to predict your champion →</div>
+        <div style="text-align:center; margin-top:8px; color:#ffd700; font-size:0.8em; font-weight:600;">🔒 Predictions locked</div>
     </a>
     {% endif %}
 
@@ -310,7 +310,7 @@
     {% for match in locked_matches %}
     {% set is_knockout = match.id.replace('match_', '')|int > 72 %}
     <div class="match-card" style="border-color:{% if is_knockout %}var(--accent){% else %}#e74c3c{% endif %}; {% if is_knockout %}border-width:2px; background:linear-gradient(135deg, rgba(15,15,30,0.9), var(--accent-bg)); padding:24px;{% endif %}">
-        {% if is_knockout %}<div style="text-align:center; color:var(--accent); font-size:0.65em; font-weight:700; text-transform:uppercase; letter-spacing:3px; margin-bottom:6px;">⚔️ {{ tournament_phase }}</div>{% endif %}
+        {% if is_knockout %}<div style="text-align:center; color:var(--accent); font-size:0.65em; font-weight:700; text-transform:uppercase; letter-spacing:3px; margin-bottom:6px;">⚔️ {% if match.id.replace('match_', '')|int > 103 %}Final{% elif match.id.replace('match_', '')|int == 103 %}3rd Place{% elif match.id.replace('match_', '')|int > 100 %}Semi Final{% elif match.id.replace('match_', '')|int > 96 %}Quarter Final{% elif match.id.replace('match_', '')|int > 88 %}Round of 16{% else %}Round of 32{% endif %}</div>{% endif %}
         <div class="match-teams" {% if is_knockout %}style="font-size:1.3em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} <span style="color:var(--accent); font-size:0.7em;">VS</span> {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
         <div class="match-date">{{ match.date }} &nbsp;•&nbsp; <span style="color:#e74c3c; font-size:0.75em; font-weight:600;">🔒 LOCKED</span></div>
         {% if all_predictions.get(match.id) %}
@@ -370,7 +370,7 @@
     {% for match in today_matches %}
     {% set is_knockout = match.id.replace('match_', '')|int > 72 %}
     <div class="match-card" {% if is_knockout %}style="border-color:var(--accent); border-width:2px; background:linear-gradient(135deg, rgba(15,15,30,0.9), var(--accent-bg)); padding:24px;"{% endif %}>
-        {% if is_knockout %}<div style="text-align:center; color:var(--accent); font-size:0.65em; font-weight:700; text-transform:uppercase; letter-spacing:3px; margin-bottom:6px;">⚔️ {{ tournament_phase }}</div>{% endif %}
+        {% if is_knockout %}<div style="text-align:center; color:var(--accent); font-size:0.65em; font-weight:700; text-transform:uppercase; letter-spacing:3px; margin-bottom:6px;">⚔️ {% if match.id.replace('match_', '')|int > 103 %}Final{% elif match.id.replace('match_', '')|int == 103 %}3rd Place{% elif match.id.replace('match_', '')|int > 100 %}Semi Final{% elif match.id.replace('match_', '')|int > 96 %}Quarter Final{% elif match.id.replace('match_', '')|int > 88 %}Round of 16{% else %}Round of 32{% endif %}</div>{% endif %}
         <div class="match-teams" {% if is_knockout %}style="font-size:1.3em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} <span style="color:var(--accent); font-size:0.7em;">VS</span> {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
         <div class="match-date">{{ match.date }} &nbsp;•&nbsp; <span class="kickoff-time">{{ format_time(match.kickoff) }} IST</span></div>
         <div class="countdown" data-date="{{ match.date }}" data-time="{{ match.kickoff }}" style="color:#e74c3c; font-size:0.75em; text-align:center; margin-top:3px; font-weight:600;"></div>

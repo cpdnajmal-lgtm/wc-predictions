@@ -101,7 +101,7 @@
         {% set is_knockout = match.id.replace('match_', '')|int > 72 %}
         <div class="match-section" {% if is_knockout %}style="border-top:2px solid #ffd700; padding-top:20px; margin-top:20px;"{% endif %}>
             {% if is_knockout %}
-            <div style="text-align:center; color:#ffd700; font-size:0.65em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;">⚔️ Round of 32</div>
+            <div style="text-align:center; color:#ffd700; font-size:0.65em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;">⚔️ {% if match.id.replace('match_', '')|int > 103 %}Final{% elif match.id.replace('match_', '')|int == 103 %}3rd Place{% elif match.id.replace('match_', '')|int > 100 %}Semi Final{% elif match.id.replace('match_', '')|int > 96 %}Quarter Final{% elif match.id.replace('match_', '')|int > 88 %}Round of 16{% else %}Round of 32{% endif %}</div>
             {% endif %}
             <div class="match-title" {% if is_knockout %}style="font-size:1.2em;"{% endif %}>{{ get_flag(match.team_a) }} {{ match.team_a }} vs {{ match.team_b }} {{ get_flag(match.team_b) }}</div>
             {% if match.locked %}
