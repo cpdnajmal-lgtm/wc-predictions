@@ -2652,7 +2652,7 @@ def add_semi_finals():
         ("match_101", "France", "Spain", "July 15", "00:30", 101),
         ("match_102", "England", "Argentina", "July 16", "00:30", 102),
         # 3rd Place
-        ("match_103", "France", "England", "July 19", "00:30", 103),
+        ("match_103", "France", "England", "July 19", "02:30", 103),
         # Final
         ("match_104", "Argentina", "Spain", "July 20", "00:30", 104),
     ]
