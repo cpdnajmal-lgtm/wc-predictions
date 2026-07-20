@@ -1482,6 +1482,124 @@ def awards():
         return f"Awards Error: {e}", 500
 
 
+@app.route("/winner")
+def winner():
+    """Tournament Champion celebration page."""
+    try:
+        matches = load_matches()
+        players = load_players()
+        predictions = load_predictions()
+        player_teams = load_player_teams()
+
+        # Check if final has result
+        final_match = None
+        for m in matches:
+            if m.get("id") == "match_104":
+                final_match = m
+                break
+
+        if not final_match or not final_match.get("result_winner"):
+            return render_template("winner.html", champion=None, top3=[])
+
+        # Calculate total points for all players (including champion bonus)
+        completed = [m for m in matches if m.get("result_winner")]
+        player_points = {p: 0 for p in players}
+        player_perfects = {p: 0 for p in players}
+        player_correct_winners = {p: 0 for p in players}
+        player_predicted_count = {p: 0 for p in players}
+
+        for match in completed:
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                player_predicted_count[player] += 1
+                winner_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                scorer_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+                if winner_ok and scorer_ok:
+                    player_points[player] += 3
+                    player_perfects[player] += 1
+                elif winner_ok:
+                    player_points[player] += 1
+                    player_correct_winners[player] += 1
+                elif scorer_ok:
+                    player_points[player] += 1
+                if winner_ok:
+                    player_correct_winners[player] += 1
+
+        # Apply champion bonus
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT player, team FROM champion_picks")
+        champ_picks = {row[0]: row[1] for row in cur.fetchall()}
+        conn.close()
+
+        wc_winner = final_match["result_winner"].strip()  # Spain
+        # Finalist = the other team in the final
+        finalist = final_match["team_b"] if wc_winner.lower() == final_match["team_a"].lower() else final_match["team_a"]
+
+        player_champ_bonus = {}
+        for player in players:
+            pick = champ_picks.get(player, "")
+            bonus = 0
+            if pick.lower() == wc_winner.lower():
+                bonus = 10
+            elif pick.lower() == finalist.strip().lower():
+                bonus = 5
+            player_champ_bonus[player] = bonus
+            player_points[player] += bonus
+
+        # Calculate king wins
+        king_wins = {p: 0 for p in players}
+        sessions = {}
+        for match in completed:
+            date = match.get("date", "")
+            kickoff = match.get("kickoff", "00:00")
+            s_label = get_session_label(date, kickoff)
+            if s_label not in sessions:
+                sessions[s_label] = {p: 0 for p in players}
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+                pts = 3 if (w_ok and s_ok) else (1 if w_ok or s_ok else 0)
+                sessions[s_label][player] += pts
+        for s_label, scores in sessions.items():
+            s_max = max(scores.values()) if scores else 0
+            if s_max >= 3:
+                for p, pts in scores.items():
+                    if pts == s_max:
+                        king_wins[p] += 1
+
+        # Sort and find champion
+        sorted_players = sorted(player_points.items(), key=lambda x: x[1], reverse=True)
+        top3 = [{"name": p, "pts": pts} for p, pts in sorted_players[:3]]
+
+        champ_name = sorted_players[0][0]
+        champ_pts = sorted_players[0][1]
+        champ_predicted = player_predicted_count.get(champ_name, 0)
+        champ_perfects = player_perfects.get(champ_name, 0)
+        champ_winners = player_correct_winners.get(champ_name, 0)
+        champ_pct = round(champ_winners * 100 / champ_predicted) if champ_predicted > 0 else 0
+
+        champion = {
+            "name": champ_name,
+            "total_pts": champ_pts,
+            "matches_predicted": champ_predicted,
+            "perfects": champ_perfects,
+            "winner_pct": champ_pct,
+            "king_wins": king_wins.get(champ_name, 0),
+            "champ_pick": champ_picks.get(champ_name, ""),
+            "champ_bonus": player_champ_bonus.get(champ_name, 0),
+        }
+
+        return render_template("winner.html", champion=champion, top3=top3)
+    except Exception as e:
+        return f"Winner Error: {e}", 500
+
+
 @app.route("/champion", methods=["GET", "POST"])
 def champion():
     """Predict the World Cup Champion."""

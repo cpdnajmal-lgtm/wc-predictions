@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 MIAC WC 2026 Champion</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(180deg, #0a0a0a 0%, #1a1205 30%, #0d0a05 60%, #0a0a0a 100%); color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; text-align: center; overflow-x: hidden; }
+        .trophy { font-size: 4em; animation: trophyBounce 2s ease-in-out infinite; margin-top: 20px; }
+        @keyframes trophyBounce { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.05); } }
+        .title { color: #ffd700; font-size: 0.8em; font-weight: 800; text-transform: uppercase; letter-spacing: 5px; margin-top: 10px; }
+        .subtitle { color: #888; font-size: 0.75em; letter-spacing: 3px; margin-top: 4px; }
+        .divider { width: 60%; height: 2px; background: linear-gradient(90deg, transparent, #ffd700, transparent); margin: 20px auto; animation: shimmerBar 2s linear infinite; background-size: 200% 100%; }
+        @keyframes shimmerBar { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .champion-name { font-size: 2em; font-weight: 800; color: #fff; margin-top: 10px; text-shadow: 0 0 20px rgba(255,215,0,0.5); animation: nameGlow 2s ease-in-out infinite alternate; }
+        @keyframes nameGlow { 0% { text-shadow: 0 0 10px rgba(255,215,0,0.3); } 100% { text-shadow: 0 0 30px rgba(255,215,0,0.7); } }
+        .champion-pts { color: #ffd700; font-size: 1.5em; font-weight: 700; margin-top: 8px; }
+        .champion-badge { display: inline-block; background: linear-gradient(135deg, #ffd700, #ff9800); color: #0a0a0a; padding: 6px 20px; border-radius: 20px; font-size: 0.75em; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-top: 10px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; text-align: center; }
+        .stat-box { background: rgba(15,15,30,0.8); border: 1px solid rgba(255,215,0,0.2); border-radius: 12px; padding: 12px; }
+        .stat-value { color: #ffd700; font-size: 1.3em; font-weight: 800; }
+        .stat-label { color: #888; font-size: 0.65em; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+        .podium { margin-top: 24px; }
+        .podium-title { color: #ffd700; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+        .podium-item { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px; margin-bottom: 6px; border-radius: 10px; }
+        .podium-item.gold { background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05)); border: 1px solid rgba(255,215,0,0.4); }
+        .podium-item.silver { background: rgba(192,192,192,0.08); border: 1px solid rgba(192,192,192,0.3); }
+        .podium-item.bronze { background: rgba(205,127,50,0.08); border: 1px solid rgba(205,127,50,0.3); }
+        .podium-rank { font-size: 1.2em; }
+        .podium-name { font-weight: 700; font-size: 0.9em; }
+        .podium-pts { color: #ffd700; font-weight: 700; font-size: 0.9em; }
+        .champ-pick { margin-top: 16px; background: rgba(15,15,30,0.8); border: 1px solid rgba(255,215,0,0.2); border-radius: 12px; padding: 14px; }
+        .champ-pick-title { color: #888; font-size: 0.7em; text-transform: uppercase; letter-spacing: 1px; }
+        .champ-pick-team { color: #ffd700; font-size: 1.1em; font-weight: 700; margin-top: 4px; }
+        .back-link { display: block; color: #ffd700; text-decoration: none; font-size: 0.85em; margin-top: 24px; padding: 12px; }
+        .confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body>
+    <canvas id="confetti" class="confetti-canvas"></canvas>
+
+    <div class="trophy">🏆</div>
+    <div class="title">MIAC WC 2026</div>
+    <div class="subtitle">Prediction Champion</div>
+    <div class="divider"></div>
+
+    {% if champion %}
+    <div class="champion-name">{{ champion.name }}</div>
+    <div class="champion-pts">{{ champion.total_pts }} pts</div>
+    <div class="champion-badge">🏆 Champion</div>
+
+    {% if champion.champ_pick %}
+    <div class="champ-pick">
+        <div class="champ-pick-title">Champion Pick</div>
+        <div class="champ-pick-team">{{ get_flag(champion.champ_pick) }} {{ champion.champ_pick }} {% if champion.champ_bonus > 0 %}(+{{ champion.champ_bonus }} bonus){% endif %}</div>
+    </div>
+    {% endif %}
+
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-value">{{ champion.matches_predicted }}</div>
+            <div class="stat-label">Matches Predicted</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ champion.perfects }}</div>
+            <div class="stat-label">Perfect Predictions</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ champion.winner_pct }}%</div>
+            <div class="stat-label">Winner Accuracy</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ champion.king_wins }}</div>
+            <div class="stat-label">King of the Day</div>
+        </div>
+    </div>
+
+    <div class="podium">
+        <div class="podium-title">Final Standings</div>
+        {% for p in top3 %}
+        <div class="podium-item {% if loop.index == 1 %}gold{% elif loop.index == 2 %}silver{% else %}bronze{% endif %}">
+            <div class="podium-rank">{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% else %}🥉{% endif %}</div>
+            <div class="podium-name">{{ p.name }}</div>
+            <div class="podium-pts">{{ p.pts }} pts</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="margin-top:40px; color:#888;">
+        <div style="font-size:2em; margin-bottom:10px;">⏳</div>
+        <div>Final result not yet entered.</div>
+        <div style="margin-top:8px;">Champion will be revealed soon...</div>
+    </div>
+    {% endif %}
+
+    <a href="{{ url_for('home') }}" class="back-link">← Back to Home</a>
+
+    {% if champion %}
+    <script>
+    // Confetti celebration
+    (function() {
+        var canvas = document.getElementById('confetti');
+        var ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        var colors = ['#ffd700','#ff9800','#fff','#00d4aa','#e74c3c','#9b59b6'];
+        var pieces = [];
+        for (var i = 0; i < 150; i++) {
+            pieces.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * -canvas.height * 2,
+                w: Math.random() * 10 + 4,
+                h: Math.random() * 6 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                speed: Math.random() * 3 + 1.5,
+                spin: Math.random() * 0.2 - 0.1,
+                angle: Math.random() * Math.PI * 2,
+                drift: Math.random() * 2 - 1
+            });
+        }
+        var frame = 0;
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (var i = 0; i < pieces.length; i++) {
+                var p = pieces[i];
+                p.y += p.speed;
+                p.x += p.drift;
+                p.angle += p.spin;
+                if (p.y > canvas.height + 20) { p.y = -20; p.x = Math.random() * canvas.width; }
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+                ctx.restore();
+            }
+            frame++;
+            if (frame < 600) requestAnimationFrame(draw);
+            else canvas.remove();
+        }
+        draw();
+    })();
+    </script>
+    {% endif %}
+</body>
+</html>
