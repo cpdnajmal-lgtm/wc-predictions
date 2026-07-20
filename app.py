@@ -473,6 +473,32 @@ def calculate_leaderboard():
     # 6 AM - 6 PM: daytime, show the session that just ended (today_scores = last night)
     # In both cases we show today_scores. prev_scores is only used as fallback if today has 0.
     final_today = today_scores
+
+    # --- Champion bonus: +10 if picked WC winner, +5 if picked finalist ---
+    # Only apply if the final (match_104) has a result
+    final_match = None
+    for match in matches:
+        if match.get("id") == "match_104" and match.get("result_winner"):
+            final_match = match
+            break
+    if final_match:
+        try:
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("SELECT player, team FROM champion_picks")
+            champ_picks = {row[0]: row[1] for row in cur.fetchall()}
+            conn.close()
+            wc_winner = final_match["result_winner"].strip()
+            finalist = final_match["team_b"] if wc_winner.lower() == final_match["team_a"].lower() else final_match["team_a"]
+            for player in players:
+                pick = champ_picks.get(player, "")
+                if pick.lower() == wc_winner.lower():
+                    scores[player] = scores.get(player, 0) + 10
+                elif pick.lower() == finalist.strip().lower():
+                    scores[player] = scores.get(player, 0) + 5
+        except:
+            pass
+
     return sorted(scores.items(), key=lambda x: x[-1], reverse=True), final_today
 
 
@@ -928,7 +954,9 @@ def home():
         elif max_match_num == 103:
             tournament_phase = "3rd Place"
         else:
-            tournament_phase = "Final"
+            # Check if final has a result — if so, tournament is complete
+            final_has_result = any(m.get("id") == "match_104" and m.get("result_winner") for m in all_matches)
+            tournament_phase = "Tournament Complete 🏆" if final_has_result else "Final"
 
         # Get QF results for bracket display
         qf_results = {}

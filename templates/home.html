@@ -191,14 +191,12 @@
     {% endwith %}
 
     <div class="nav" style="flex-wrap:wrap;">
-        <a href="{{ url_for('predict') }}">🎯 Predict</a>
+        <a href="{{ url_for('winner') }}" style="background:linear-gradient(135deg, #ffd700, #ff8c00); color:#0f0f23; font-size:0.85em; padding:10px 20px; font-weight:700;">🏆 Winner</a>
         <a href="{{ url_for('my_picks') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📋 My Picks</a>
         <a href="{{ url_for('bracket') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">⚔️ Fixtures</a>
         <a href="{{ url_for('awards') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">🏆 Awards</a>
         <a href="{{ url_for('stats') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📊 Stats</a>
-        <a href="{{ url_for('stats') }}#records" onclick="localStorage.setItem('stats_tab','records')" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">🏆 Records</a>
-        <a href="{{ url_for('set_fav_team') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">🏳️ Team</a>
-        <a href="{{ url_for('profile') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">✏️ Name</a>
+        <a href="{{ url_for('stats') }}#records" onclick="localStorage.setItem('stats_tab','records')" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📈 Records</a>
         <a href="{{ url_for('admin') }}" class="admin-btn">⚙️</a>
     </div>
 
@@ -208,7 +206,7 @@
 
     <!-- Champion Picks Widget -->
     {% if champion_picks_data %}
-    <a href="{{ url_for('champion') }}" style="display:block; text-decoration:none; background:rgba(15,15,30,0.8); border:1px solid rgba(255,215,0,0.3); border-radius:12px; padding:14px; margin-bottom:14px; cursor:pointer;">
+    <div style="display:block; background:rgba(15,15,30,0.8); border:1px solid rgba(255,215,0,0.3); border-radius:12px; padding:14px; margin-bottom:14px;">
         <div style="text-align:center; color:#ffd700; font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;">🏆 Champion Predictions</div>
         <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
             {% for team, data in champion_picks_data.items() %}
@@ -218,8 +216,8 @@
             </div>
             {% endfor %}
         </div>
-        <div style="text-align:center; margin-top:8px; color:#ffd700; font-size:0.8em; font-weight:600;">🔒 Predictions locked</div>
-    </a>
+        <div style="text-align:center; margin-top:8px; color:#ffd700; font-size:0.8em; font-weight:600;">🇪🇸 Spain wins the World Cup!</div>
+    </div>
     {% endif %}
 
     <!-- Race Banner -->
@@ -409,8 +407,6 @@
         {% else %}
         <div style="color:#444; text-align:center; margin-top:8px; font-size:0.8em;">No predictions yet</div>
         {% endif %}
-        <div style="text-align:center; margin-top:10px;">
-            <a href="{{ url_for('predict') }}" style="color:#00d4aa; font-size:0.8em; text-decoration:none;">✏️ Edit My Prediction</a>
         </div>
     </div>
     {% endfor %}
