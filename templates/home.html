@@ -192,11 +192,12 @@
 
     <div class="nav" style="flex-wrap:wrap;">
         <a href="{{ url_for('winner') }}" style="background:linear-gradient(135deg, #ffd700, #ff8c00); color:#0f0f23; font-size:0.85em; padding:10px 20px; font-weight:700;">🏆 Winner</a>
+        <a href="{{ url_for('final_awards') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">🎖️ Awards</a>
         <a href="{{ url_for('my_picks') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📋 My Picks</a>
         <a href="{{ url_for('bracket') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">⚔️ Fixtures</a>
-        <a href="{{ url_for('awards') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">🏆 Awards</a>
         <a href="{{ url_for('stats') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📊 Stats</a>
         <a href="{{ url_for('stats') }}#records" onclick="localStorage.setItem('stats_tab','records')" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📈 Records</a>
+        <a href="{{ url_for('recap_message') }}" style="background:rgba(37,211,102,0.2); color:#25D366; font-size:0.8em; padding:10px 14px; border:1px solid rgba(37,211,102,0.4);">📤 Recap</a>
         <a href="{{ url_for('admin') }}" class="admin-btn">⚙️</a>
     </div>
 
@@ -445,7 +446,7 @@
             <div class="lb-rank {% if rank == 1 %}r1{% elif rank == 2 %}r2{% elif rank == 3 %}r3{% else %}r-other{% endif %}">
                 {% if rank == 1 %}🥇{% elif rank == 2 %}🥈{% elif rank == 3 %}🥉{% else %}{{ rank }}{% endif %}
             </div>
-            <div class="lb-name"><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a>{% if change > 0 %}<span style="color:#00d4aa; font-size:0.7em; margin-left:5px;">↑{{ change }}</span>{% elif change < 0 %}<span style="color:#e74c3c; font-size:0.7em; margin-left:5px;">↓{{ change|abs }}</span>{% endif %}</div>
+            <div class="lb-name"><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a>{% if change > 0 %}<span style="color:#00d4aa; font-size:0.7em; margin-left:5px;">↑{{ change }}</span>{% elif change < 0 %}<span style="color:#e74c3c; font-size:0.7em; margin-left:5px;">↓{{ change|abs }}</span>{% endif %}{% if champ_bonus_map.get(player) %}<span style="color:#ffd700; font-size:0.6em; margin-left:4px; background:rgba(255,215,0,0.15); padding:1px 5px; border-radius:8px;">+{{ champ_bonus_map[player] }}🏆</span>{% endif %}</div>
             <div class="lb-points">{{ points }}<span class="lb-pts-label">pts</span></div>
         </div>
         {% endfor %}
@@ -454,7 +455,7 @@
             {% for player, points, rank, change in leaderboard[10:] %}
             <div class="lb-item">
                 <div class="lb-rank r-other">{{ rank }}</div>
-                <div class="lb-name"><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a>{% if change > 0 %}<span style="color:#00d4aa; font-size:0.7em; margin-left:5px;">↑{{ change }}</span>{% elif change < 0 %}<span style="color:#e74c3c; font-size:0.7em; margin-left:5px;">↓{{ change|abs }}</span>{% endif %}</div>
+                <div class="lb-name"><a href="/my/{{ player }}" style="color:inherit; text-decoration:none;">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</a>{% if change > 0 %}<span style="color:#00d4aa; font-size:0.7em; margin-left:5px;">↑{{ change }}</span>{% elif change < 0 %}<span style="color:#e74c3c; font-size:0.7em; margin-left:5px;">↓{{ change|abs }}</span>{% endif %}{% if champ_bonus_map.get(player) %}<span style="color:#ffd700; font-size:0.6em; margin-left:4px; background:rgba(255,215,0,0.15); padding:1px 5px; border-radius:8px;">+{{ champ_bonus_map[player] }}🏆</span>{% endif %}</div>
                 <div class="lb-points">{{ points }}<span class="lb-pts-label">pts</span></div>
             </div>
             {% endfor %}

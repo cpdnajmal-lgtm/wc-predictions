@@ -1020,6 +1020,21 @@ def home():
         except:
             pass
 
+        # --- Champion bonus map for leaderboard badges ---
+        champ_bonus_map = {}
+        try:
+            final_m = next((m for m in all_matches if m.get("id") == "match_104" and m.get("result_winner")), None)
+            if final_m and all_champ_picks:
+                wc_w = final_m["result_winner"].strip()
+                fin_team = final_m["team_b"] if wc_w.lower() == final_m["team_a"].lower() else final_m["team_a"]
+                for player, team in all_champ_picks:
+                    if team.lower() == wc_w.lower():
+                        champ_bonus_map[player] = 10
+                    elif team.lower() == fin_team.strip().lower():
+                        champ_bonus_map[player] = 5
+        except:
+            pass
+
         # --- Race banner: who can still win? ---
         race_info = None
         if ranked_leaderboard_with_change and len(ranked_leaderboard_with_change) >= 2:
@@ -1080,6 +1095,7 @@ def home():
             qf_results=qf_results,
             sf_results=sf_results,
             champion_picks_data=champion_picks_data,
+            champ_bonus_map=champ_bonus_map,
             race_info=race_info,
             announcements=load_announcements(),
         )
@@ -1508,6 +1524,342 @@ def awards():
         return render_template("awards.html", awards=awards_list, players=players, player_teams=player_teams, total_matches=total_completed)
     except Exception as e:
         return f"Awards Error: {e}", 500
+
+
+@app.route("/final-awards")
+def final_awards():
+    """Final Tournament Awards - full tournament stats across all 104 matches."""
+    try:
+        matches = load_matches()
+        players = load_players()
+        predictions = load_predictions()
+        player_teams = load_player_teams()
+
+        all_matches = [m for m in matches if m.get("result_winner")]
+        group_matches = [m for m in all_matches if int(m["id"].replace("match_", "")) <= 72]
+        knockout_matches = [m for m in all_matches if int(m["id"].replace("match_", "")) > 72]
+
+        if len(all_matches) < 80:
+            return render_template("final_awards.html", awards=None, players=players, player_teams=player_teams, total_matches=0)
+
+        # Calculate per-player stats (full tournament)
+        player_data = {}
+        for player in players:
+            total_preds = 0
+            correct_winners = 0
+            perfect = 0
+            points = 0
+            group_pts = 0
+            ko_pts = 0
+
+            for match in all_matches:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                total_preds += 1
+                match_num = int(match["id"].replace("match_", ""))
+                winner_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                scorer_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+
+                match_pts = 3 if (winner_ok and scorer_ok) else (1 if winner_ok or scorer_ok else 0)
+                points += match_pts
+                if winner_ok:
+                    correct_winners += 1
+                if winner_ok and scorer_ok:
+                    perfect += 1
+                if match_num <= 72:
+                    group_pts += match_pts
+                else:
+                    ko_pts += match_pts
+
+            player_data[player] = {
+                "total_preds": total_preds,
+                "correct_winners": correct_winners,
+                "perfect": perfect,
+                "points": points,
+                "group_pts": group_pts,
+                "ko_pts": ko_pts,
+                "winner_pct": round(correct_winners * 100 / total_preds, 1) if total_preds > 0 else 0,
+            }
+
+        # Champion bonus
+        champ_picks = {}
+        wc_winner = ""
+        finalist = ""
+        try:
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("SELECT player, team FROM champion_picks")
+            champ_picks = {row[0]: row[1] for row in cur.fetchall()}
+            conn.close()
+            final_match = next((m for m in all_matches if m.get("id") == "match_104"), None)
+            if final_match:
+                wc_winner = final_match["result_winner"].strip()
+                finalist = final_match["team_b"] if wc_winner.lower() == final_match["team_a"].lower() else final_match["team_a"]
+        except:
+            pass
+
+        # Add champion bonus to total points
+        for player in players:
+            pick = champ_picks.get(player, "")
+            if pick.lower() == wc_winner.lower():
+                player_data[player]["points"] += 10
+                player_data[player]["champ_bonus"] = 10
+            elif pick.lower() == finalist.strip().lower():
+                player_data[player]["points"] += 5
+                player_data[player]["champ_bonus"] = 5
+            else:
+                player_data[player]["champ_bonus"] = 0
+
+        # King wins (full tournament)
+        king_wins = {p: 0 for p in players}
+        sessions = {}
+        for match in all_matches:
+            date = match.get("date", "")
+            kickoff = match.get("kickoff", "00:00")
+            s_label = get_session_label(date, kickoff)
+            if not s_label:
+                continue
+            if s_label not in sessions:
+                sessions[s_label] = {p: 0 for p in players}
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+                pts = 3 if (w_ok and s_ok) else (1 if w_ok or s_ok else 0)
+                sessions[s_label][player] += pts
+        for s_label, scores in sessions.items():
+            s_max = max(scores.values()) if scores else 0
+            if s_max >= 3:
+                for p, pts in scores.items():
+                    if pts == s_max:
+                        king_wins[p] += 1
+
+        # Hot takes (picks against 70%+ crowd that were correct)
+        from collections import Counter as HotCounter
+        hot_take_wins = {p: 0 for p in players}
+        for match in all_matches:
+            match_preds = []
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if pred and pred.get("winner"):
+                    match_preds.append((player, pred["winner"].strip()))
+            if len(match_preds) < 5:
+                continue
+            counts = HotCounter([w for _, w in match_preds])
+            total = len(match_preds)
+            actual_winner = match["result_winner"].strip()
+            actual_count = counts.get(actual_winner, 0)
+            if actual_count == 0:
+                continue
+            majority_pct = round((total - actual_count) * 100 / total)
+            if majority_pct >= 70:
+                for player, pick in match_preds:
+                    if pick.lower() == actual_winner.lower():
+                        hot_take_wins[player] += 1
+
+        # --- Build Awards ---
+        awards_list = []
+
+        def make_award(emoji, title, desc, data_dict, value_fmt, reverse=True, min_val=0):
+            sorted_items = sorted(data_dict.items(), key=lambda x: x[1], reverse=reverse)
+            sorted_items = [(p, v) for p, v in sorted_items if v > min_val]
+            if not sorted_items:
+                return None
+            top_val = sorted_items[0][1]
+            winners = [p for p, v in sorted_items if v == top_val]
+            runners = []
+            seen_vals = {top_val}
+            for p, v in sorted_items:
+                if v in seen_vals:
+                    continue
+                seen_vals.add(v)
+                names = [pp for pp, vv in sorted_items if vv == v]
+                runners.append({"names": names, "value": value_fmt(v)})
+                if len(runners) >= 3:
+                    break
+            return {"emoji": emoji, "title": title, "desc": desc, "winners": winners, "value": value_fmt(top_val), "runners": runners}
+
+        # 1. Prediction Champion (overall winner including champion bonus)
+        pts_data = {p: d["points"] for p, d in player_data.items()}
+        award = make_award("🏆", "Prediction Champion", "Most total points (including champion bonus)", pts_data, lambda v: f"{v} pts")
+        if award:
+            awards_list.append(award)
+
+        # 2. Best Group Stage
+        gs_data = {p: d["group_pts"] for p, d in player_data.items()}
+        award = make_award("⚽", "Group Stage King", "Best performer in 72 group matches", gs_data, lambda v: f"{v} pts")
+        if award:
+            awards_list.append(award)
+
+        # 3. Best Knockout Stage
+        ko_data = {p: d["ko_pts"] for p, d in player_data.items()}
+        award = make_award("⚔️", "Knockout Specialist", "Best performer in knockout rounds", ko_data, lambda v: f"{v} pts")
+        if award:
+            awards_list.append(award)
+
+        # 4. Most Perfect Predictions
+        perfect_data = {p: d["perfect"] for p, d in player_data.items()}
+        award = make_award("🔮", "Oracle", "Most perfect predictions (winner + score)", perfect_data, lambda v: f"{v} perfects")
+        if award:
+            awards_list.append(award)
+
+        # 5. Most King Crowns
+        award = make_award("👑", "King of Kings", "Most 'King of the Day' crowns", king_wins, lambda v: f"{v} crowns")
+        if award:
+            awards_list.append(award)
+
+        # 6. Best Upset Caller
+        award = make_award("🔥", "Upset Master", "Most correct picks against 70%+ crowd", hot_take_wins, lambda v: f"{v} upsets called")
+        if award:
+            awards_list.append(award)
+
+        # 7. Most Consistent (highest accuracy, min 50 preds)
+        acc_data = {p: d["winner_pct"] for p, d in player_data.items() if d["total_preds"] >= 50}
+        award = make_award("🎯", "Most Consistent", "Best winner accuracy (min 50 predictions)", acc_data, lambda v: f"{v}%")
+        if award:
+            awards_list.append(award)
+
+        # 8. Biggest Climber (started bottom half in group stage, finished top half overall)
+        gs_sorted = sorted([(p, d["group_pts"]) for p, d in player_data.items()], key=lambda x: x[1])
+        bottom_half_gs = [p for p, _ in gs_sorted[:len(gs_sorted)//2]]
+        overall_sorted = sorted([(p, d["points"]) for p, d in player_data.items()], key=lambda x: x[1], reverse=True)
+        overall_ranks = {p: i+1 for i, (p, _) in enumerate(overall_sorted)}
+        gs_ranks = {p: i+1 for i, (p, _) in enumerate(reversed(gs_sorted))}
+        climb_data = {p: gs_ranks.get(p, 50) - overall_ranks.get(p, 50) for p in bottom_half_gs if overall_ranks.get(p, 50) <= len(players)//2}
+        if climb_data:
+            award = make_award("📈", "Biggest Climber", "Biggest rank improvement from group stage to final", climb_data, lambda v: f"+{v} positions")
+            if award:
+                awards_list.append(award)
+
+        # 9. Iron Man (most matches predicted)
+        pred_count_data = {p: d["total_preds"] for p, d in player_data.items()}
+        award = make_award("🧱", "Iron Man", f"Most matches predicted out of {len(all_matches)}", pred_count_data, lambda v: f"{v}/{len(all_matches)}")
+        if award:
+            awards_list.append(award)
+
+        # 10. Champion Picker
+        if wc_winner:
+            champ_pickers = [p for p, t in champ_picks.items() if t.lower() == wc_winner.lower()]
+            if champ_pickers:
+                awards_list.append({
+                    "emoji": "🏆🇪🇸",
+                    "title": "Prophet",
+                    "desc": f"Correctly predicted {wc_winner} as World Cup champion",
+                    "winners": champ_pickers,
+                    "value": "+10 bonus points",
+                    "runners": [],
+                })
+
+        return render_template("final_awards.html", awards=awards_list, players=players, player_teams=player_teams, total_matches=len(all_matches), wc_winner=wc_winner)
+    except Exception as e:
+        return f"Final Awards Error: {e}", 500
+
+
+@app.route("/recap")
+def recap_message():
+    """Generate WhatsApp recap message for the final champion."""
+    try:
+        matches = load_matches()
+        players = load_players()
+        predictions = load_predictions()
+
+        all_completed = [m for m in matches if m.get("result_winner")]
+        final_match = next((m for m in all_completed if m.get("id") == "match_104"), None)
+
+        if not final_match:
+            return render_template("recap.html", message=None, error="Final result not entered yet")
+
+        # Calculate full leaderboard with champion bonus
+        player_points = {p: 0 for p in players}
+        player_perfects = {p: 0 for p in players}
+        player_correct = {p: 0 for p in players}
+        player_preds = {p: 0 for p in players}
+
+        for match in all_completed:
+            for player in players:
+                pred = predictions.get(player, {}).get(match["id"])
+                if not pred:
+                    continue
+                player_preds[player] += 1
+                w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+                pts = 3 if (w_ok and s_ok) else (1 if w_ok or s_ok else 0)
+                player_points[player] += pts
+                if w_ok:
+                    player_correct[player] += 1
+                if w_ok and s_ok:
+                    player_perfects[player] += 1
+
+        # Champion bonus
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT player, team FROM champion_picks")
+        champ_picks = {row[0]: row[1] for row in cur.fetchall()}
+        conn.close()
+
+        wc_winner = final_match["result_winner"].strip()
+        finalist = final_match["team_b"] if wc_winner.lower() == final_match["team_a"].lower() else final_match["team_a"]
+
+        for player in players:
+            pick = champ_picks.get(player, "")
+            if pick.lower() == wc_winner.lower():
+                player_points[player] += 10
+            elif pick.lower() == finalist.strip().lower():
+                player_points[player] += 5
+
+        # Sort and get top 10
+        sorted_players = sorted(player_points.items(), key=lambda x: x[1], reverse=True)
+        top10 = sorted_players[:10]
+
+        # Champion stats
+        champ_name = top10[0][0]
+        champ_pts = top10[0][1]
+        champ_accuracy = round(player_correct[champ_name] * 100 / player_preds[champ_name]) if player_preds[champ_name] > 0 else 0
+        champ_perfects_count = player_perfects[champ_name]
+        champ_pick = champ_picks.get(champ_name, "")
+
+        # Build WhatsApp message
+        msg_lines = [
+            "🏆⚽ *MIAC World Cup 2026 Prediction Champion* ⚽🏆",
+            "",
+            f"👑 *{champ_name}* 👑",
+            f"📊 {champ_pts} points | {champ_accuracy}% accuracy | {champ_perfects_count} perfect predictions",
+            f"🏆 Champion pick: {champ_pick}",
+            "",
+            "━━━━━━━━━━━━━━━━━",
+            "🏅 *Final Standings*",
+            "━━━━━━━━━━━━━━━━━",
+        ]
+
+        medals = ["🥇", "🥈", "🥉"]
+        for i, (player, pts) in enumerate(top10):
+            prefix = medals[i] if i < 3 else f"{i+1}."
+            bonus_tag = ""
+            pick = champ_picks.get(player, "")
+            if pick.lower() == wc_winner.lower():
+                bonus_tag = " (+10🏆)"
+            elif pick.lower() == finalist.strip().lower():
+                bonus_tag = " (+5🏆)"
+            msg_lines.append(f"{prefix} {player} — *{pts}*{bonus_tag}")
+
+        msg_lines.extend([
+            "",
+            "━━━━━━━━━━━━━━━━━",
+            f"📈 {len(all_completed)} matches | {len(players)} players",
+            f"⚽ World Cup Champion: {wc_winner} 🇪🇸",
+            "",
+            "Thanks for playing! 🙌",
+            "",
+            "🔗 https://wc-predictions-whsi.onrender.com/winner",
+        ])
+
+        message = "\n".join(msg_lines)
+        return render_template("recap.html", message=message, error=None)
+    except Exception as e:
+        return render_template("recap.html", message=None, error=str(e))
 
 
 @app.route("/winner")

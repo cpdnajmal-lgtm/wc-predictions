@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📤 WhatsApp Recap - MIAC WC 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(180deg, #0a0a12 0%, #1a1020 40%, #0d0d1a 100%); color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        h1 { text-align: center; margin-bottom: 5px; font-size: 1.6em; color: #25D366; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 20px; font-size: 0.85em; }
+        .nav { text-align: center; margin-bottom: 20px; }
+        .nav a { color: #ffd700; text-decoration: none; font-size: 0.9em; background: rgba(255,215,0,0.1); padding: 8px 16px; border-radius: 20px; border: 1px solid rgba(255,215,0,0.3); }
+        .message-box { background: rgba(15,15,30,0.8); border: 1px solid rgba(37,211,102,0.3); border-radius: 16px; padding: 20px; margin-bottom: 16px; white-space: pre-wrap; font-size: 0.85em; line-height: 1.6; color: #eee; }
+        .copy-btn { display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, #25D366, #128C7E); color: white; border: none; border-radius: 12px; font-size: 1.1em; font-weight: 700; cursor: pointer; text-align: center; margin-top: 16px; box-shadow: 0 4px 15px rgba(37,211,102,0.3); }
+        .copy-btn:active { transform: scale(0.98); }
+        .copy-btn.copied { background: linear-gradient(135deg, #ffd700, #ff9800); }
+        .error { text-align: center; color: #e74c3c; padding: 40px 20px; background: rgba(231,76,60,0.1); border-radius: 12px; border: 1px solid rgba(231,76,60,0.3); }
+    </style>
+</head>
+<body>
+    <h1>📤 WhatsApp Recap</h1>
+    <p class="subtitle">One-tap copy for the group</p>
+    <div class="nav"><a href="{{ url_for('home') }}">← Home</a></div>
+
+    {% if message %}
+    <div class="message-box" id="msg">{{ message }}</div>
+    <button class="copy-btn" id="copyBtn" onclick="copyMessage()">📋 Copy to Clipboard</button>
+    {% elif error %}
+    <div class="error">
+        <div style="font-size:1.5em; margin-bottom:8px;">⏳</div>
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <script>
+    function copyMessage() {
+        var msg = document.getElementById('msg').textContent;
+        navigator.clipboard.writeText(msg).then(function() {
+            var btn = document.getElementById('copyBtn');
+            btn.textContent = '✅ Copied!';
+            btn.classList.add('copied');
+            setTimeout(function() {
+                btn.textContent = '📋 Copy to Clipboard';
+                btn.classList.remove('copied');
+            }, 2000);
+        });
+    }
+    </script>
+</body>
+</html>
