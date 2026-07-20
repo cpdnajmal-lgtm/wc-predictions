@@ -1532,9 +1532,29 @@ def awards():
         return f"Awards Error: {e}", 500
 
 
+def is_final_result_entered():
+    """Check if match_104 (Final) has a result."""
+    try:
+        matches = load_matches()
+        final = next((m for m in matches if m.get("id") == "match_104"), None)
+        return final and bool(final.get("result_winner"))
+    except:
+        return False
+
+
+LOCKED_PAGE = """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Coming Soon</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(180deg,#0a0a12,#1a1020,#0d0d1a);color:#eee;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center}
+.card{background:rgba(15,15,30,0.9);border:1px solid rgba(255,215,0,0.3);border-radius:16px;padding:40px 30px;max-width:400px}
+.emoji{font-size:3em;margin-bottom:12px}.title{color:#ffd700;font-size:1.2em;font-weight:800;margin-bottom:8px}.desc{color:#888;font-size:0.9em;line-height:1.5}
+a{color:#00d4aa;text-decoration:none;display:inline-block;margin-top:16px;font-size:0.85em}</style></head>
+<body><div class="card"><div class="emoji">🔒</div><div class="title">Coming Soon!</div><div class="desc">This will unlock once the Final result is entered.<br>Stay tuned...</div><a href="/">← Home</a></div></body></html>"""
+
+
 @app.route("/final-awards")
 def final_awards():
     """Final Tournament Awards - full tournament stats across all 104 matches."""
+    if not is_final_result_entered():
+        return LOCKED_PAGE
     try:
         matches = load_matches()
         players = load_players()
@@ -1767,6 +1787,8 @@ def final_awards():
 @app.route("/recap")
 def recap_message():
     """Generate WhatsApp recap message for the final champion."""
+    if not is_final_result_entered():
+        return LOCKED_PAGE
     try:
         matches = load_matches()
         players = load_players()
@@ -2201,6 +2223,8 @@ def my_today(player_name):
 @app.route("/my-stats")
 def my_stats():
     """Player selector for report card."""
+    if not is_final_result_entered():
+        return LOCKED_PAGE
     players = load_players()
     selected = request.args.get("player", "").strip()
     if selected and selected in players:
@@ -2210,6 +2234,8 @@ def my_stats():
 
 @app.route("/my/<player_name>")
 def my_predictions(player_name):
+    if not is_final_result_entered():
+        return LOCKED_PAGE
     matches = load_matches()
     players = load_players()
     predictions = load_predictions()
@@ -2385,6 +2411,8 @@ def my_predictions(player_name):
 @app.route("/h2h")
 def head_to_head():
     """Head-to-head comparison between two players."""
+    if not is_final_result_entered():
+        return LOCKED_PAGE
     players = load_players()
     p1 = request.args.get("p1", "").strip()
     p2 = request.args.get("p2", "").strip()
