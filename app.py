@@ -921,42 +921,44 @@ def home():
         # Hot takes scoped to current session only (no limit needed)
 
         # Determine tournament phase based on highest match number (active or pending)
-        active_match_ids = [m["id"] for m in today_matches + locked_matches if m.get("id")]
-        # Also check all pending matches (without results) to detect upcoming phase
-        # Exclude TBD matches (teams not yet confirmed)
-        all_pending = [m for m in all_matches if not m.get("result_winner") and m.get("id", "").startswith("match_") and m.get("team_a", "") != "TBD"]
-        all_relevant_ids = active_match_ids + [m["id"] for m in all_pending]
-        max_match_num = 0
-        for mid in all_relevant_ids:
-            try:
-                num = int(mid.replace("match_", ""))
-                max_match_num = max(max_match_num, num)
-            except:
-                pass
-        if max_match_num == 0:
-            # Check last completed match
-            last_completed = get_completed_matches()
-            if last_completed:
+        # First check: if final result exists, tournament is complete
+        if any(m.get("id") == "match_104" and m.get("result_winner") for m in all_matches):
+            tournament_phase = "Tournament Complete 🏆"
+        else:
+            active_match_ids = [m["id"] for m in today_matches + locked_matches if m.get("id")]
+            # Also check all pending matches (without results) to detect upcoming phase
+            # Exclude TBD matches (teams not yet confirmed)
+            all_pending = [m for m in all_matches if not m.get("result_winner") and m.get("id", "").startswith("match_") and m.get("team_a", "") != "TBD"]
+            all_relevant_ids = active_match_ids + [m["id"] for m in all_pending]
+            max_match_num = 0
+            for mid in all_relevant_ids:
                 try:
-                    max_match_num = int(last_completed[-1]["id"].replace("match_", ""))
+                    num = int(mid.replace("match_", ""))
+                    max_match_num = max(max_match_num, num)
                 except:
                     pass
-        if max_match_num <= 72:
-            tournament_phase = "Group Stage"
-        elif max_match_num <= 88:
-            tournament_phase = "Round of 32"
-        elif max_match_num <= 96:
-            tournament_phase = "Round of 16"
-        elif max_match_num <= 100:
-            tournament_phase = "Quarter Finals"
-        elif max_match_num <= 102:
-            tournament_phase = "Semi Finals"
-        elif max_match_num == 103:
-            tournament_phase = "3rd Place"
-        else:
-            # Check if final has a result — if so, tournament is complete
-            final_has_result = any(m.get("id") == "match_104" and m.get("result_winner") for m in all_matches)
-            tournament_phase = "Tournament Complete 🏆" if final_has_result else "Final"
+            if max_match_num == 0:
+                # Check last completed match
+                last_completed = get_completed_matches()
+                if last_completed:
+                    try:
+                        max_match_num = int(last_completed[-1]["id"].replace("match_", ""))
+                    except:
+                        pass
+            if max_match_num <= 72:
+                tournament_phase = "Group Stage"
+            elif max_match_num <= 88:
+                tournament_phase = "Round of 32"
+            elif max_match_num <= 96:
+                tournament_phase = "Round of 16"
+            elif max_match_num <= 100:
+                tournament_phase = "Quarter Finals"
+            elif max_match_num <= 102:
+                tournament_phase = "Semi Finals"
+            elif max_match_num == 103:
+                tournament_phase = "3rd Place"
+            else:
+                tournament_phase = "Final"
 
         # Get QF results for bracket display
         qf_results = {}
