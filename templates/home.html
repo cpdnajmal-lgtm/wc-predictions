@@ -442,10 +442,14 @@
         <div style="color:#eee; font-size:0.95em; font-weight:700;">Next: {{ get_flag(next_match.team_a) }} {{ next_match.team_a }} vs {{ next_match.team_b }} {{ get_flag(next_match.team_b) }}</div>
         <div style="color:var(--accent); font-size:0.85em; margin-top:5px;">{{ next_match.date }} • {{ format_time(next_match.kickoff) }} IST</div>
         <div style="color:#555; font-size:0.8em; margin-top:5px;">Predictions open the day before at 10 AM</div>
+        {% elif tournament_phase == "Tournament Complete 🏆" %}
+        <div style="font-size:2em; margin-bottom:8px;">🏆</div>
+        <div style="color:#ffd700; font-size:1em; font-weight:800;">All 104 Matches Complete!</div>
+        <div style="color:#888; font-size:0.85em; margin-top:6px;">Check the <a href="{{ url_for('winner') }}" style="color:#ffd700;">Winner</a> and <a href="{{ url_for('final_awards') }}" style="color:#ffd700;">Awards</a> pages</div>
         {% else %}
-        <div style="font-size:1.5em; margin-bottom:8px;">⏰</div>
-        <div style="color:#888; font-size:0.9em;">Predictions open at <strong style="color:var(--accent);">10 AM IST</strong></div>
-        <div style="color:#555; font-size:0.8em; margin-top:5px;">Tonight's matches will appear soon!</div>
+        <div style="font-size:1.5em; margin-bottom:8px;">⏳</div>
+        <div style="color:#ffd700; font-size:0.95em; font-weight:700;">Final result will be updated at 10 AM IST</div>
+        <div style="color:#555; font-size:0.8em; margin-top:5px;">Stay tuned for the champion reveal!</div>
         {% endif %}
     </div>
     {% endif %}
