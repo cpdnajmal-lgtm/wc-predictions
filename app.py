@@ -1022,16 +1022,21 @@ def home():
 
         # --- Champion bonus map for leaderboard badges ---
         champ_bonus_map = {}
+        champion_predictors = {"winner_team": "", "winner_names": [], "finalist_team": "", "finalist_names": []}
         try:
             final_m = next((m for m in all_matches if m.get("id") == "match_104" and m.get("result_winner")), None)
             if final_m and all_champ_picks:
                 wc_w = final_m["result_winner"].strip()
                 fin_team = final_m["team_b"] if wc_w.lower() == final_m["team_a"].lower() else final_m["team_a"]
+                champion_predictors["winner_team"] = wc_w
+                champion_predictors["finalist_team"] = fin_team.strip()
                 for player, team in all_champ_picks:
                     if team.lower() == wc_w.lower():
                         champ_bonus_map[player] = 10
+                        champion_predictors["winner_names"].append(player)
                     elif team.lower() == fin_team.strip().lower():
                         champ_bonus_map[player] = 5
+                        champion_predictors["finalist_names"].append(player)
         except:
             pass
 
@@ -1096,6 +1101,7 @@ def home():
             sf_results=sf_results,
             champion_picks_data=champion_picks_data,
             champ_bonus_map=champ_bonus_map,
+            champion_predictors=champion_predictors,
             race_info=race_info,
             announcements=load_announcements(),
         )

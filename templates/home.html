@@ -205,8 +205,33 @@
         Winner correct = <span>1 pt</span> &nbsp;•&nbsp; Score correct = <span>1 pt</span> &nbsp;•&nbsp; Both correct = <span>3 pts 🔥</span>
     </div>
 
-    <!-- Champion Picks Widget -->
-    {% if champion_picks_data %}
+    <!-- Champion Predictors Section -->
+    {% if champion_predictors and champion_predictors.winner_names %}
+    <div style="background:linear-gradient(135deg, rgba(255,215,0,0.08), rgba(15,15,30,0.95)); border:1px solid rgba(255,215,0,0.5); border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 0 25px rgba(255,215,0,0.08);">
+        <div style="text-align:center; color:#ffd700; font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:2px; margin-bottom:10px;">🏆 They Called It! 🏆</div>
+        <div style="text-align:center; margin-bottom:10px;">
+            <span style="font-size:1.8em;">{{ get_flag(champion_predictors.winner_team) }}</span>
+            <div style="color:#ffd700; font-size:0.9em; font-weight:800; margin-top:4px;">Predicted {{ champion_predictors.winner_team }} as Champion</div>
+            <div style="color:#00d4aa; font-size:0.75em; margin-top:2px;">+10 bonus points each</div>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin-top:8px;">
+            {% for name in champion_predictors.winner_names %}
+            <span style="background:rgba(255,215,0,0.15); border:1px solid rgba(255,215,0,0.4); padding:5px 12px; border-radius:20px; font-size:0.8em; font-weight:600; color:#ffd700;">{{ name }}</span>
+            {% endfor %}
+        </div>
+        {% if champion_predictors.finalist_names %}
+        <div style="margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,215,0,0.15);">
+            <div style="text-align:center; color:#c0c0c0; font-size:0.7em; font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">🥈 Predicted {{ champion_predictors.finalist_team }} (Finalist) — +5 pts</div>
+            <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:5px;">
+                {% for name in champion_predictors.finalist_names %}
+                <span style="background:rgba(192,192,192,0.1); border:1px solid rgba(192,192,192,0.3); padding:4px 10px; border-radius:16px; font-size:0.75em; color:#c0c0c0;">{{ name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% elif champion_picks_data %}
+    <!-- Pre-result: show team counts -->
     <div style="display:block; background:rgba(15,15,30,0.8); border:1px solid rgba(255,215,0,0.3); border-radius:12px; padding:14px; margin-bottom:14px;">
         <div style="text-align:center; color:#ffd700; font-size:0.7em; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:8px;">🏆 Champion Predictions</div>
         <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
@@ -217,7 +242,6 @@
             </div>
             {% endfor %}
         </div>
-        <div style="text-align:center; margin-top:8px; color:#ffd700; font-size:0.8em; font-weight:600;">🇪🇸 Spain wins the World Cup!</div>
     </div>
     {% endif %}
 
