@@ -242,9 +242,11 @@
         <a href="{{ url_for('admin') }}" class="admin-btn">⚙️</a>
     </div>
 
+    {% if tournament_phase != "Tournament Complete 🏆" %}
     <div class="scoring">
         Winner correct = <span>1 pt</span> &nbsp;•&nbsp; Score correct = <span>1 pt</span> &nbsp;•&nbsp; Both correct = <span>3 pts 🔥</span>
     </div>
+    {% endif %}
 
     <!-- Champion Predictors Section -->
     {% if champion_predictors and champion_predictors.winner_names %}
