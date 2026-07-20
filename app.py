@@ -2198,6 +2198,16 @@ def my_today(player_name):
     return render_template("my_today.html", player=player_name, picks=picks)
 
 
+@app.route("/my-stats")
+def my_stats():
+    """Player selector for report card."""
+    players = load_players()
+    selected = request.args.get("player", "").strip()
+    if selected and selected in players:
+        return redirect(f"/my/{selected}")
+    return render_template("my_stats.html", players=players)
+
+
 @app.route("/my/<player_name>")
 def my_predictions(player_name):
     matches = load_matches()

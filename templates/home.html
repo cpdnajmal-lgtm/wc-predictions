@@ -192,13 +192,14 @@
 
     <div class="nav" style="flex-wrap:wrap;">
         <a href="{{ url_for('winner') }}" style="background:linear-gradient(135deg, #ffd700, #ff8c00); color:#0f0f23; font-size:0.85em; padding:10px 20px; font-weight:700;">🏆 Winner</a>
-        <a href="{{ url_for('final_awards') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">🎖️ Awards</a>
+        <a href="{{ url_for('final_awards') }}" style="background:rgba(255,215,0,0.15); color:#ffd700; font-size:0.8em; padding:10px 14px; border:1px solid rgba(255,215,0,0.4); position:relative;">🎖️ Awards <span style="position:absolute; top:-5px; right:-5px; background:#e74c3c; color:white; font-size:0.55em; padding:1px 4px; border-radius:6px; font-weight:700;">NEW</span></a>
         <a href="{{ url_for('my_picks') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📋 My Picks</a>
         <a href="{{ url_for('bracket') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">⚔️ Fixtures</a>
         <a href="{{ url_for('stats') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📊 Stats</a>
-        <a href="{{ url_for('head_to_head') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">⚔️ H2H</a>
+        <a href="{{ url_for('my_stats') }}" style="background:rgba(0,212,170,0.15); color:#00d4aa; font-size:0.8em; padding:10px 14px; border:1px solid rgba(0,212,170,0.4); position:relative;">📊 My Stats <span style="position:absolute; top:-5px; right:-5px; background:#e74c3c; color:white; font-size:0.55em; padding:1px 4px; border-radius:6px; font-weight:700;">NEW</span></a>
+        <a href="{{ url_for('head_to_head') }}" style="background:rgba(0,212,170,0.15); color:#00d4aa; font-size:0.8em; padding:10px 14px; border:1px solid rgba(0,212,170,0.4); position:relative;">⚔️ H2H <span style="position:absolute; top:-5px; right:-5px; background:#e74c3c; color:white; font-size:0.55em; padding:1px 4px; border-radius:6px; font-weight:700;">NEW</span></a>
         <a href="{{ url_for('stats') }}#records" onclick="localStorage.setItem('stats_tab','records')" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📈 Records</a>
-        <a href="{{ url_for('recap_message') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📤 Share</a>
+        <a href="{{ url_for('recap_message') }}" style="background:#2a2a5e; color:#eee; font-size:0.8em; padding:10px 14px;">📤 Recap</a>
         <a href="{{ url_for('admin') }}" class="admin-btn">⚙️</a>
     </div>
 
