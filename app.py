@@ -2201,34 +2201,262 @@ def my_today(player_name):
 @app.route("/my/<player_name>")
 def my_predictions(player_name):
     matches = load_matches()
+    players = load_players()
     predictions = load_predictions()
+    player_teams = load_player_teams()
     player_preds = predictions.get(player_name, {})
-    
-    history = []
+
+    if player_name not in players:
+        return f"Player '{player_name}' not found", 404
+
+    all_completed = [m for m in matches if m.get("result_winner")]
+
+    # Basic stats
+    total_predicted = 0
     total_points = 0
-    for match in matches:
+    correct_winners = 0
+    correct_scores = 0
+    perfects = 0
+    points_list = []
+
+    # Session tracking
+    session_points = {}
+    history = []
+
+    for match in all_completed:
         pred = player_preds.get(match["id"])
         if not pred:
             continue
-        points = 0
-        status = "pending"
-        if match.get("result_winner"):
-            status = "scored"
-            if pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower():
-                points += 1
-            if pred.get("scorer", "").strip() == match.get("result_scorer", "").strip():
-                points += 1
-            if points == 2:
-                points = 3
-        total_points += points
-        history.append({
-            "match": match,
-            "pred": pred,
-            "points": points,
-            "status": status,
-        })
-    
-    return render_template("my_predictions.html", player=player_name, history=history, total_points=total_points)
+        total_predicted += 1
+        w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+        s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+        pts = 3 if (w_ok and s_ok) else (1 if w_ok or s_ok else 0)
+        total_points += pts
+        points_list.append(pts)
+        if w_ok:
+            correct_winners += 1
+        if s_ok:
+            correct_scores += 1
+        if w_ok and s_ok:
+            perfects += 1
+
+        # Session
+        s_label = get_session_label(match.get("date", ""), match.get("kickoff", "00:00"))
+        if s_label:
+            session_points[s_label] = session_points.get(s_label, 0) + pts
+
+        history.append({"match": match, "pred": pred, "points": pts})
+
+    # Champion bonus
+    champ_bonus = 0
+    champ_pick = ""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT team FROM champion_picks WHERE player = %s", (player_name,))
+        row = cur.fetchone()
+        conn.close()
+        if row:
+            champ_pick = row[0]
+            final_m = next((m for m in all_completed if m.get("id") == "match_104"), None)
+            if final_m:
+                wc_winner = final_m["result_winner"].strip()
+                finalist = final_m["team_b"] if wc_winner.lower() == final_m["team_a"].lower() else final_m["team_a"]
+                if champ_pick.lower() == wc_winner.lower():
+                    champ_bonus = 10
+                elif champ_pick.lower() == finalist.strip().lower():
+                    champ_bonus = 5
+    except:
+        pass
+
+    grand_total = total_points + champ_bonus
+
+    # Rank
+    all_player_pts = {}
+    for p in players:
+        p_pts = 0
+        for match in all_completed:
+            pred = predictions.get(p, {}).get(match["id"])
+            if not pred:
+                continue
+            w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+            s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+            p_pts += 3 if (w_ok and s_ok) else (1 if w_ok or s_ok else 0)
+        # Add champion bonus for rank calculation
+        try:
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("SELECT team FROM champion_picks WHERE player = %s", (p,))
+            crow = cur.fetchone()
+            conn.close()
+            if crow:
+                final_m = next((m for m in all_completed if m.get("id") == "match_104"), None)
+                if final_m:
+                    wc_winner = final_m["result_winner"].strip()
+                    finalist = final_m["team_b"] if wc_winner.lower() == final_m["team_a"].lower() else final_m["team_a"]
+                    if crow[0].lower() == wc_winner.lower():
+                        p_pts += 10
+                    elif crow[0].lower() == finalist.strip().lower():
+                        p_pts += 5
+        except:
+            pass
+        all_player_pts[p] = p_pts
+    sorted_all = sorted(all_player_pts.items(), key=lambda x: x[1], reverse=True)
+    rank = next((i+1 for i, (p, _) in enumerate(sorted_all) if p == player_name), len(players))
+
+    # Best and worst sessions
+    best_session = max(session_points.items(), key=lambda x: x[1]) if session_points else ("", 0)
+    worst_session = min(session_points.items(), key=lambda x: x[1]) if session_points else ("", 0)
+
+    # Streaks
+    current_streak = 0
+    max_streak = 0
+    drought = 0
+    max_drought = 0
+    for pts in points_list:
+        if pts > 0:
+            current_streak += 1
+            max_streak = max(max_streak, current_streak)
+            drought = 0
+        else:
+            drought += 1
+            max_drought = max(max_drought, drought)
+            current_streak = 0
+
+    # King wins
+    king_wins = 0
+    for s_label, s_pts in session_points.items():
+        # Check if this player was king in this session
+        session_max = 0
+        for p in players:
+            p_session_pts = 0
+            for match in all_completed:
+                m_s_label = get_session_label(match.get("date", ""), match.get("kickoff", "00:00"))
+                if m_s_label != s_label:
+                    continue
+                pred = predictions.get(p, {}).get(match["id"])
+                if not pred:
+                    continue
+                w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+                s_ok2 = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+                p_session_pts += 3 if (w_ok and s_ok2) else (1 if w_ok or s_ok2 else 0)
+            session_max = max(session_max, p_session_pts)
+        if s_pts == session_max and s_pts >= 3:
+            king_wins += 1
+
+    # Accuracy
+    winner_pct = round(correct_winners * 100 / total_predicted) if total_predicted > 0 else 0
+    avg_pts = round(total_points / total_predicted, 1) if total_predicted > 0 else 0
+
+    stats = {
+        "total_predicted": total_predicted,
+        "total_matches": len(all_completed),
+        "total_points": total_points,
+        "grand_total": grand_total,
+        "champ_bonus": champ_bonus,
+        "champ_pick": champ_pick,
+        "rank": rank,
+        "total_players": len(players),
+        "correct_winners": correct_winners,
+        "correct_scores": correct_scores,
+        "perfects": perfects,
+        "winner_pct": winner_pct,
+        "avg_pts": avg_pts,
+        "best_session": best_session,
+        "worst_session": worst_session,
+        "max_streak": max_streak,
+        "max_drought": max_drought,
+        "king_wins": king_wins,
+    }
+
+    return render_template("report_card.html", player=player_name, stats=stats, history=history[-10:], player_teams=player_teams)
+
+
+@app.route("/h2h")
+def head_to_head():
+    """Head-to-head comparison between two players."""
+    players = load_players()
+    p1 = request.args.get("p1", "").strip()
+    p2 = request.args.get("p2", "").strip()
+
+    if not p1 or not p2 or p1 not in players or p2 not in players:
+        return render_template("h2h.html", players=players, result=None, p1=p1, p2=p2)
+
+    matches = load_matches()
+    predictions = load_predictions()
+    player_teams = load_player_teams()
+    all_completed = [m for m in matches if m.get("result_winner")]
+
+    p1_wins = 0
+    p2_wins = 0
+    ties = 0
+    p1_total = 0
+    p2_total = 0
+    p1_perfects = 0
+    p2_perfects = 0
+    p1_correct_w = 0
+    p2_correct_w = 0
+    highlights = []
+
+    for match in all_completed:
+        pred1 = predictions.get(p1, {}).get(match["id"])
+        pred2 = predictions.get(p2, {}).get(match["id"])
+        if not pred1 or not pred2:
+            continue
+
+        def calc_pts(pred, match):
+            w_ok = pred.get("winner", "").strip().lower() == match["result_winner"].strip().lower()
+            s_ok = pred.get("scorer", "").strip() == match.get("result_scorer", "").strip() and pred.get("scorer", "").strip() != ""
+            return 3 if (w_ok and s_ok) else (1 if w_ok or s_ok else 0), w_ok, (w_ok and s_ok)
+
+        pts1, w1, perf1 = calc_pts(pred1, match)
+        pts2, w2, perf2 = calc_pts(pred2, match)
+
+        p1_total += pts1
+        p2_total += pts2
+        if w1:
+            p1_correct_w += 1
+        if w2:
+            p2_correct_w += 1
+        if perf1:
+            p1_perfects += 1
+        if perf2:
+            p2_perfects += 1
+
+        if pts1 > pts2:
+            p1_wins += 1
+        elif pts2 > pts1:
+            p2_wins += 1
+        else:
+            ties += 1
+
+        # Highlight big differences
+        if abs(pts1 - pts2) >= 2:
+            highlights.append({
+                "match": match,
+                "p1_pts": pts1,
+                "p2_pts": pts2,
+                "p1_pred": pred1,
+                "p2_pred": pred2,
+            })
+
+    total_compared = p1_wins + p2_wins + ties
+
+    result = {
+        "p1_wins": p1_wins,
+        "p2_wins": p2_wins,
+        "ties": ties,
+        "total_compared": total_compared,
+        "p1_total": p1_total,
+        "p2_total": p2_total,
+        "p1_perfects": p1_perfects,
+        "p2_perfects": p2_perfects,
+        "p1_correct_w": p1_correct_w,
+        "p2_correct_w": p2_correct_w,
+        "highlights": highlights[-8:],
+    }
+
+    return render_template("h2h.html", players=players, result=result, p1=p1, p2=p2, player_teams=player_teams)
 
 
 @app.route("/fav", methods=["GET", "POST"])

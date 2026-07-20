@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 {{ player }} - Report Card</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(180deg, #0a0a12 0%, #1a1020 40%, #0d0d1a 100%); color: #eee; padding: 15px; max-width: 600px; margin: 0 auto; min-height: 100vh; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .player-name { font-size: 1.8em; font-weight: 800; margin-bottom: 4px; }
+        .rank-badge { display: inline-block; background: linear-gradient(135deg, #ffd700, #ff9800); color: #0f0f23; padding: 4px 14px; border-radius: 20px; font-weight: 800; font-size: 0.85em; }
+        .nav { text-align: center; margin-bottom: 20px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .nav a { color: #ffd700; text-decoration: none; font-size: 0.8em; background: rgba(255,215,0,0.1); padding: 6px 14px; border-radius: 16px; border: 1px solid rgba(255,215,0,0.3); }
+        .big-number { text-align: center; margin-bottom: 20px; }
+        .big-pts { font-size: 3.5em; font-weight: 900; color: #00d4aa; text-shadow: 0 0 20px rgba(0,212,170,0.3); line-height: 1; }
+        .big-label { color: #666; font-size: 0.85em; margin-top: 4px; }
+        .bonus-tag { color: #ffd700; font-size: 0.8em; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: rgba(15,15,30,0.8); border: 1px solid #2a2a5e; border-radius: 12px; padding: 14px; text-align: center; }
+        .stat-value { font-size: 1.6em; font-weight: 800; color: #eee; }
+        .stat-label { font-size: 0.7em; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+        .section { margin-bottom: 20px; }
+        .section-title { color: #ffd700; font-size: 0.8em; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,215,0,0.2); }
+        .fun-facts { background: rgba(15,15,30,0.8); border: 1px solid #2a2a5e; border-radius: 12px; padding: 14px; }
+        .fact { padding: 8px 0; border-bottom: 1px solid rgba(42,42,94,0.3); font-size: 0.85em; display: flex; justify-content: space-between; }
+        .fact:last-child { border-bottom: none; }
+        .fact-label { color: #888; }
+        .fact-value { color: #eee; font-weight: 700; }
+        .fact-value.gold { color: #ffd700; }
+        .fact-value.green { color: #00d4aa; }
+        .fact-value.red { color: #e74c3c; }
+        .history-title { color: #888; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .h-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: rgba(15,15,30,0.6); border-radius: 8px; margin-bottom: 6px; border: 1px solid #1a1a3e; }
+        .h-match { font-size: 0.8em; color: #aaa; }
+        .h-pts { font-weight: 800; padding: 2px 10px; border-radius: 12px; font-size: 0.85em; }
+        .h-pts-3 { color: #ffd700; background: rgba(255,215,0,0.12); }
+        .h-pts-1 { color: #00d4aa; background: rgba(0,212,170,0.12); }
+        .h-pts-0 { color: #e74c3c; background: rgba(231,76,60,0.12); }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="player-name">{% if player_teams.get(player) %}{{ get_flag(player_teams[player]) }} {% endif %}{{ player }}</div>
+        <div class="rank-badge">#{{ stats.rank }} of {{ stats.total_players }}</div>
+    </div>
+
+    <div class="nav">
+        <a href="{{ url_for('home') }}">← Home</a>
+        <a href="{{ url_for('head_to_head') }}">⚔️ H2H</a>
+        <a href="{{ url_for('final_awards') }}">🎖️ Awards</a>
+    </div>
+
+    <div class="big-number">
+        <div class="big-pts">{{ stats.grand_total }}</div>
+        <div class="big-label">Total Points</div>
+        {% if stats.champ_bonus > 0 %}
+        <div class="bonus-tag">includes +{{ stats.champ_bonus }} champion bonus (picked {{ stats.champ_pick }})</div>
+        {% elif stats.champ_pick %}
+        <div style="color:#888; font-size:0.75em; margin-top:4px;">Champion pick: {{ stats.champ_pick }}</div>
+        {% endif %}
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.winner_pct }}%</div>
+            <div class="stat-label">Winner Accuracy</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.perfects }}</div>
+            <div class="stat-label">Perfect Predictions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.avg_pts }}</div>
+            <div class="stat-label">Avg Pts/Match</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ stats.king_wins }}</div>
+            <div class="stat-label">King Crowns 👑</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Tournament Summary</div>
+        <div class="fun-facts">
+            <div class="fact">
+                <span class="fact-label">Matches Predicted</span>
+                <span class="fact-value">{{ stats.total_predicted }}/{{ stats.total_matches }}</span>
+            </div>
+            <div class="fact">
+                <span class="fact-label">Correct Winners</span>
+                <span class="fact-value green">{{ stats.correct_winners }}</span>
+            </div>
+            <div class="fact">
+                <span class="fact-label">Correct Scores</span>
+                <span class="fact-value green">{{ stats.correct_scores }}</span>
+            </div>
+            <div class="fact">
+                <span class="fact-label">Best Session</span>
+                <span class="fact-value gold">{{ stats.best_session[0] }} ({{ stats.best_session[1] }} pts)</span>
+            </div>
+            <div class="fact">
+                <span class="fact-label">Worst Session</span>
+                <span class="fact-value red">{{ stats.worst_session[0] }} ({{ stats.worst_session[1] }} pts)</span>
+            </div>
+            <div class="fact">
+                <span class="fact-label">Best Streak (pts > 0)</span>
+                <span class="fact-value">{{ stats.max_streak }} matches</span>
+            </div>
+            <div class="fact">
+                <span class="fact-label">Longest Drought (0 pts)</span>
+                <span class="fact-value red">{{ stats.max_drought }} matches</span>
+            </div>
+        </div>
+    </div>
+
+    {% if history %}
+    <div class="section">
+        <div class="section-title">Recent Predictions (last 10)</div>
+        {% for item in history %}
+        <div class="h-item">
+            <div class="h-match">{{ get_flag(item.match.team_a) }} {{ item.match.team_a }} vs {{ item.match.team_b }} {{ get_flag(item.match.team_b) }}</div>
+            <div class="h-pts {% if item.points == 3 %}h-pts-3{% elif item.points == 1 %}h-pts-1{% else %}h-pts-0{% endif %}">
+                {% if item.points == 3 %}+3 🔥{% elif item.points == 1 %}+1{% else %}0{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</body>
+</html>
